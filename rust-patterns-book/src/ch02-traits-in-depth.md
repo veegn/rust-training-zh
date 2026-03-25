@@ -286,11 +286,11 @@ trait Drawable {
 let shapes: Vec<Box<dyn Drawable>> = vec![/* ... */]; // ✅ Works
 
 // ❌ NOT object-safe — uses Self in return position
-trait Clonable {
+trait Cloneable {
     fn clone_self(&self) -> Self;
     //                       ^^^^ Can't know the concrete size at runtime
 }
-// let items: Vec<Box<dyn Clonable>> = ...; // ❌ Compile error
+// let items: Vec<Box<dyn Cloneable>> = ...; // ❌ Compile error
 
 // ❌ NOT object-safe — generic method
 trait Converter {

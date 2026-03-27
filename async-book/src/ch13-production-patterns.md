@@ -1,38 +1,38 @@
-# 13. Production Patterns 🔴
+# 13. Production Patterns / 13. 生产模式 🔴
 
-> **What you'll learn:**
-> - Graceful shutdown with `watch` channels and `select!`
-> - Backpressure: bounded channels prevent OOM
-> - Structured concurrency: `JoinSet` and `TaskTracker`
-> - Timeouts, retries, and exponential backoff
-> - Error handling: `thiserror` vs `anyhow`, the double-`?` pattern
-> - Tower: the middleware pattern used by axum, tonic, and hyper
+> **What you'll learn / 你将学到：**
+> - Graceful shutdown with `watch` channels and `select!` / 使用 `watch` 通道和 `select!` 实现优雅停机
+> - Backpressure: bounded channels prevent OOM / 背压机制：有界通道防止内存溢出 (OOM)
+> - Structured concurrency: `JoinSet` and `TaskTracker` / 结构化并发：`JoinSet` 和 `TaskTracker`
+> - Timeouts, retries, and exponential backoff / 超时、重试与指数级退避
+> - Error handling: `thiserror` vs `anyhow`, the double-`?` pattern / 错误处理：`thiserror` 对比 `anyhow`，“双问号”模式
+> - Tower: the middleware pattern used by axum, tonic, and hyper / Tower：axum、tonic 和 hyper 使用的中间件模式
 
-## Graceful Shutdown
+## Graceful Shutdown / 优雅停机
 
 Production servers must shut down cleanly — finish in-flight requests, flush buffers, close connections:
+
+生产环境的服务器必须能够干净地关闭 —— 完成正在进行的请求、刷新缓冲区、关闭连接：
 
 ```rust
 use tokio::signal;
 use tokio::sync::watch;
 
 async fn main_server() {
-    // Create a shutdown signal channel
+    // Create a shutdown signal channel / 创建一个停机信号通道
     let (shutdown_tx, shutdown_rx) = watch::channel(false);
 
-    // Spawn the server
+    // Spawn the server / 启动服务器
     let server_handle = tokio::spawn(run_server(shutdown_rx.clone()));
 
-    // Wait for Ctrl+C
+    // Wait for Ctrl+C / 等待 Ctrl+C 信号
     signal::ctrl_c().await.expect("Failed to listen for Ctrl+C");
     println!("Shutdown signal received, finishing in-flight requests...");
 
-    // Notify all tasks to shut down
-    // NOTE: .unwrap() is used for brevity. Production code should handle
-    // the case where all receivers have been dropped.
+    // Notify all tasks to shut down / 通知所有任务关闭
     shutdown_tx.send(true).unwrap();
 
-    // Wait for server to finish (with timeout)
+    // Wait for server to finish (with timeout) / 等待服务器完成（带超时限制）
     match tokio::time::timeout(
         std::time::Duration::from_secs(30),
         server_handle,
@@ -40,44 +40,6 @@ async fn main_server() {
         Ok(Ok(())) => println!("Server shut down gracefully"),
         Ok(Err(e)) => eprintln!("Server error: {e}"),
         Err(_) => eprintln!("Server shutdown timed out — forcing exit"),
-    }
-}
-
-async fn run_server(mut shutdown: watch::Receiver<bool>) {
-    loop {
-        tokio::select! {
-            // Accept new connections
-            conn = accept_connection() => {
-                let shutdown = shutdown.clone();
-                tokio::spawn(handle_connection(conn, shutdown));
-            }
-            // Shutdown signal
-            _ = shutdown.changed() => {
-                if *shutdown.borrow() {
-                    println!("Stopping accepting new connections");
-                    break;
-                }
-            }
-        }
-    }
-    // In-flight connections will finish on their own
-    // because they have their own shutdown_rx clone
-}
-
-async fn handle_connection(conn: Connection, mut shutdown: watch::Receiver<bool>) {
-    loop {
-        tokio::select! {
-            request = conn.next_request() => {
-                // Process the request fully — don't abandon mid-request
-                process_request(request).await;
-            }
-            _ = shutdown.changed() => {
-                if *shutdown.borrow() {
-                    // Finish current request, then exit
-                    break;
-                }
-            }
-        }
     }
 }
 ```
@@ -103,44 +65,49 @@ sequenceDiagram
     Main->>Main: All workers done → exit
 ```
 
-### Backpressure with Bounded Channels
+### Backpressure with Bounded Channels / 有界通道提供的背压机制
 
 Unbounded channels can lead to OOM if the producer is faster than the consumer. Always use bounded channels in production:
+
+如果不加限制，当生产者速度快于消费者时，无界通道会导致内存溢出（OOM）。在生产环境中，请务必使用有界通道：
 
 ```rust
 use tokio::sync::mpsc;
 
 async fn backpressure_example() {
     // Bounded channel: max 100 items buffered
+    // 有界通道：缓冲区最多存放 100 个项
     let (tx, mut rx) = mpsc::channel::<WorkItem>(100);
 
     // Producer: slows down naturally when buffer is full
+    // 生产者：当缓冲区满时会自动减速
     let producer = tokio::spawn(async move {
         for i in 0..1_000_000 {
             // send() is async — waits if buffer is full
-            // This creates natural backpressure!
+            // send() 是异步的 —— 如果缓冲区满，它会等待
+            // This creates natural backpressure! / 这就产生了天然的背压！
             tx.send(WorkItem { id: i }).await.unwrap();
         }
     });
 
     // Consumer: processes items at its own pace
+    // 消费者：按自己的步调处理项
     let consumer = tokio::spawn(async move {
         while let Some(item) = rx.recv().await {
             process(item).await; // Slow processing is OK — producer waits
+                                 // 即使处理很慢也没关系 —— 生产者会等待
         }
     });
 
     let _ = tokio::join!(producer, consumer);
 }
-
-// Compare with unbounded — DANGEROUS:
-// let (tx, rx) = mpsc::unbounded_channel(); // No backpressure!
-// Producer can fill memory indefinitely
 ```
 
-### Structured Concurrency: JoinSet and TaskTracker
+### Structured Concurrency: JoinSet and TaskTracker / 结构化并发：JoinSet 与 TaskTracker
 
 `JoinSet` groups related tasks and ensures they all complete:
+
+`JoinSet` 可将相关任务分组，并确保它们全部完成：
 
 ```rust
 use tokio::task::JoinSet;
@@ -149,14 +116,14 @@ use tokio::time::{sleep, Duration};
 async fn structured_concurrency() {
     let mut set = JoinSet::new();
 
-    // Spawn a batch of tasks
+    // Spawn a batch of tasks / 派生一批任务
     for url in get_urls() {
         set.spawn(async move {
             fetch_and_process(url).await
         });
     }
 
-    // Collect all results (order not guaranteed)
+    // Collect all results (order not guaranteed) / 收集所有结果（不保证顺序）
     let mut results = Vec::new();
     while let Some(result) = set.join_next().await {
         match result {
@@ -166,35 +133,17 @@ async fn structured_concurrency() {
         }
     }
 
-    // ALL tasks are done here — no dangling background work
+    // ALL tasks are done here / 所有任务在此处均已完成
     println!("Processed {} items", results.len());
-}
-
-// TaskTracker (tokio-util 0.7.9+) — wait for all spawned tasks
-use tokio_util::task::TaskTracker;
-
-async fn with_tracker() {
-    let tracker = TaskTracker::new();
-
-    for i in 0..10 {
-        tracker.spawn(async move {
-            sleep(Duration::from_millis(100 * i)).await;
-            println!("Task {i} done");
-        });
-    }
-
-    tracker.close(); // No more tasks will be added
-    tracker.wait().await; // Wait for ALL tracked tasks
-    println!("All tasks finished");
 }
 ```
 
-### Timeouts and Retries
+### Timeouts and Retries / 超时与重试
 
 ```rust
 use tokio::time::{timeout, sleep, Duration};
 
-// Simple timeout
+// Simple timeout / 简单的超时处理
 async fn with_timeout() -> Result<Response, Error> {
     match timeout(Duration::from_secs(5), fetch_data()).await {
         Ok(Ok(response)) => Ok(response),
@@ -203,7 +152,7 @@ async fn with_timeout() -> Result<Response, Error> {
     }
 }
 
-// Exponential backoff retry
+// Exponential backoff retry / 指数级退避重试
 async fn retry_with_backoff<F, Fut, T, E>(
     max_attempts: u32,
     base_delay_ms: u64,
@@ -221,38 +170,34 @@ where
             Ok(result) => return Ok(result),
             Err(e) => {
                 if attempt == max_attempts {
-                    eprintln!("Final attempt {attempt} failed: {e}");
                     return Err(e);
                 }
-                eprintln!("Attempt {attempt} failed: {e}, retrying in {delay:?}");
                 sleep(delay).await;
-                delay *= 2; // Exponential backoff
+                delay *= 2; // Exponential backoff / 指数级退避
             }
         }
     }
     unreachable!()
 }
-
-// Usage:
-// let result = retry_with_backoff(3, 100, || async {
-//     reqwest::get("https://api.example.com/data").await
-// }).await?;
 ```
 
-> **Production tip — add jitter**: The function above uses pure exponential backoff, but in
-> production many clients failing simultaneously will all retry at the same intervals (thundering
-> herd). Add random *jitter* — e.g., `sleep(delay + rand_jitter)` where `rand_jitter` is
-> `0..delay/4` — so retries spread out over time.
+> **Production tip — add jitter / 生产环境提示 —— 加入抖动**：The function above uses pure exponential backoff, but in production many clients failing simultaneously will all retry at the same intervals (thundering herd). Add random *jitter* so retries spread out over time.
+>
+> **生产建议**：上述函数使用的是纯指数退避，但在生产环境中，如果许多客户端同时失败，它们可能会在相同的时间间隔重试（造成惊群效应）。请加入随机 **抖动（jitter）**，使重试在时间上分散开。
 
-### Error Handling in Async Code
+### Error Handling in Async Code / 异步代码中的错误处理
 
 Async introduces unique error propagation challenges — spawned tasks create error boundaries, timeout errors wrap inner errors, and `?` interacts differently when futures cross task boundaries.
 
+异步带来了独特的错误传播挑战 —— 派生的任务会创建错误边界，超时错误会包装内部错误，当 future 跨越任务边界时，`?` 的交互方式也会有所不同。
+
 **`thiserror` vs `anyhow`** — choosing the right tool:
+
+**`thiserror` 对比 `anyhow`** —— 选择合适的工具：
 
 ```rust
 // thiserror: Define typed errors for libraries and public APIs
-// Every variant is explicit — callers can match on specific errors
+// thiserror：为库和公共 API 定义强类型错误
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -260,55 +205,40 @@ enum DiagError {
     #[error("IPMI command failed: {0}")]
     Ipmi(#[from] IpmiError),
 
-    #[error("Sensor {sensor} out of range: {value}°C (max {max}°C)")]
-    OverTemp { sensor: String, value: f64, max: f64 },
+    #[error("Sensor {sensor} out of range: {value}°C")]
+    OverTemp { sensor: String, value: f64 },
 
-    #[error("Operation timed out after {0:?}")]
-    Timeout(std::time::Duration),
-
-    #[error("Task panicked: {0}")]
-    TaskPanic(#[from] tokio::task::JoinError),
+    #[error("Operation timed out")]
+    Timeout,
 }
 
 // anyhow: Quick error handling for applications and prototypes
-// Wraps any error — no need to define types for every case
+// anyhow：用于应用程序和原型的快速错误处理
 use anyhow::{Context, Result};
 
 async fn run_diagnostics() -> Result<()> {
     let config = load_config()
         .await
-        .context("Failed to load diagnostic config")?;  // Adds context
+        .context("Failed to load diagnostic config")?; // 添加上下文信息
 
-    let result = run_gpu_test(&config)
+    run_gpu_test(&config)
         .await
-        .context("GPU diagnostic failed")?;              // Chains context
+        .context("GPU diagnostic failed")?; // 链式添加上下文
 
     Ok(())
 }
-// anyhow prints: "GPU diagnostic failed: IPMI command failed: timeout"
 ```
 
-| Crate | Use When | Error Type | Matching |
+| Crate / 库 | Use When / 适用场景 | Error Type / 错误类型 | Matching / 匹配方式 |
 |-------|----------|-----------|----------|
-| `thiserror` | Library code, public APIs | `enum MyError { ... }` | `match err { MyError::Timeout => ... }` |
-| `anyhow` | Applications, CLI tools, scripts | `anyhow::Error` (type-erased) | `err.downcast_ref::<MyError>()` |
-| Both together | Library exposes `thiserror`, app wraps with `anyhow` | Best of both | Library errors are typed, app doesn't care |
+| `thiserror` | Library code, public APIs / 库代码、公共 API | `enum MyError { ... }` | `match err { MyError::Timeout => ... }` |
+| `anyhow` | Applications, CLI tools / 应用程序、命令行工具 | `anyhow::Error` | `err.downcast_ref::<MyError>()` |
 
 **The double-`?` pattern** with `tokio::spawn`:
 
+使用了 `tokio::spawn` 的 **“双问号”模式**：
+
 ```rust
-use thiserror::Error;
-use tokio::task::JoinError;
-
-#[derive(Error, Debug)]
-enum AppError {
-    #[error("HTTP error: {0}")]
-    Http(#[from] reqwest::Error),
-
-    #[error("Task panicked: {0}")]
-    TaskPanic(#[from] JoinError),
-}
-
 async fn spawn_with_errors() -> Result<String, AppError> {
     let handle = tokio::spawn(async {
         let resp = reqwest::get("https://example.com").await?;
@@ -316,94 +246,43 @@ async fn spawn_with_errors() -> Result<String, AppError> {
     });
 
     // Double ?: First ? unwraps JoinError (task panic), second ? unwraps inner Result
+    // 双问号：第一个 ? 解开 JoinError（任务崩溃），第二个 ? 解开内部的 Result
     let result = handle.await??;
     Ok(result)
 }
 ```
 
-**The error boundary problem** — `tokio::spawn` erases context:
+### Tower: The Middleware Pattern / Tower：中间件模式
 
-```rust
-// ❌ Error context is lost across spawn boundaries:
-async fn bad_error_handling() -> Result<()> {
-    let handle = tokio::spawn(async {
-        some_fallible_work().await  // Returns Result<T, SomeError>
-    });
+The [Tower](https://docs.rs/tower) crate defines a composable `Service` trait — the backbone of async middleware in Rust:
 
-    // handle.await returns Result<Result<T, SomeError>, JoinError>
-    // The inner error has no context about what task failed
-    let result = handle.await??;
-    Ok(())
-}
-
-// ✅ Add context at the spawn boundary:
-async fn good_error_handling() -> Result<()> {
-    let handle = tokio::spawn(async {
-        some_fallible_work()
-            .await
-            .context("worker task failed")  // Context before crossing boundary
-    });
-
-    let result = handle.await
-        .context("worker task panicked")??;  // Context for JoinError too
-    Ok(())
-}
-```
-
-**Timeout errors** — wrapping vs replacing:
-
-```rust
-use tokio::time::{timeout, Duration};
-
-async fn with_timeout_context() -> Result<String, DiagError> {
-    let dur = Duration::from_secs(30);
-    match timeout(dur, fetch_sensor_data()).await {
-        Ok(Ok(data)) => Ok(data),
-        Ok(Err(e)) => Err(e),                      // Inner error preserved
-        Err(_) => Err(DiagError::Timeout(dur)),     // Timeout → typed error
-    }
-}
-```
-
-### Tower: The Middleware Pattern
-
-The [Tower](https://docs.rs/tower) crate defines a composable `Service` trait — the backbone of async middleware in Rust (used by `axum`, `tonic`, `hyper`):
-
-```rust
-// Tower's core trait (simplified):
-pub trait Service<Request> {
-    type Response;
-    type Error;
-    type Future: Future<Output = Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>>;
-    fn call(&mut self, req: Request) -> Self::Future;
-}
-```
-
-Middleware wraps a `Service` to add cross-cutting behavior — logging, timeouts, rate-limiting — without modifying inner logic:
+[Tower](https://docs.rs/tower) 库定义了一个可组合的 `Service` trait —— 这是 Rust 异步中间件的基石：
 
 ```rust
 use tower::{ServiceBuilder, timeout::TimeoutLayer, limit::RateLimitLayer};
 use std::time::Duration;
 
 let service = ServiceBuilder::new()
-    .layer(TimeoutLayer::new(Duration::from_secs(10)))       // Outermost: timeout
-    .layer(RateLimitLayer::new(100, Duration::from_secs(1))) // Then: rate limit
-    .service(my_handler);                                     // Innermost: your code
+    .layer(TimeoutLayer::new(Duration::from_secs(10)))       // Outermost: timeout / 最外层：超时
+    .layer(RateLimitLayer::new(100, Duration::from_secs(1))) // Then: rate limit / 然后：限流
+    .service(my_handler);                                     // Innermost: your code / 最内层：你的业务代码
 ```
 
-**Why this matters**: If you've used ASP.NET middleware or Express.js middleware, Tower is the Rust equivalent. It's how production Rust services add cross-cutting concerns without code duplication.
+**Why this matters**: If you've used ASP.NET or Express.js middleware, Tower is the Rust equivalent. It's how production Rust services add cross-cutting concerns without code duplication.
 
-### Exercise: Graceful Shutdown with Worker Pool
+**为什么这很重要**：如果你使用过 ASP.NET 或 Express.js 的中间件，Tower 就是 Rust 中的对应方案。它是生产级 Rust 服务在不重复代码的情况下添加横切关注点的方式。
+
+### Exercise: Graceful Shutdown with Worker Pool / 练习：带有工作池的优雅停机
 
 <details>
-<summary>🏋️ Exercise (click to expand)</summary>
+<summary>🏋️ Exercise (click to expand / 点击展开)</summary>
 
 **Challenge**: Build a task processor with a channel-based work queue, N worker tasks, and graceful shutdown on Ctrl+C. Workers should finish in-flight work before exiting.
 
+**挑战**：构建一个任务处理器，包含基于通道的工作队列、N 个工作任务，并在收到 Ctrl+C 时实现优雅停机。工作任务应在退出前完成当前正在处理的工作。
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案</summary>
 
 ```rust
 use tokio::sync::{mpsc, watch};
@@ -443,14 +322,10 @@ async fn main() {
         }));
     }
 
-    // Submit work
-    for i in 0..20 {
-        let _ = work_tx.send(WorkItem { id: i, payload: format!("task-{i}") }).await;
-        sleep(Duration::from_millis(50)).await;
-    }
+    // Submit work ... / 提交工作 ...
 
     // On Ctrl+C: signal shutdown, wait for workers
-    // NOTE: .unwrap() is used for brevity — handle errors in production.
+    // 在 Ctrl+C 时：发出停机信号，等待工作任务完成
     tokio::signal::ctrl_c().await.unwrap();
     shutdown_tx.send(true).unwrap();
     for h in handles { let _ = h.await; }
@@ -461,14 +336,14 @@ async fn main() {
 </details>
 </details>
 
-> **Key Takeaways — Production Patterns**
-> - Use a `watch` channel + `select!` for coordinated graceful shutdown
-> - Bounded channels (`mpsc::channel(N)`) provide **backpressure** — senders block when the buffer is full
-> - `JoinSet` and `TaskTracker` provide **structured concurrency**: track, abort, and await task groups
-> - Always add timeouts to network operations — `tokio::time::timeout(dur, fut)`
-> - Tower's `Service` trait is the standard middleware pattern for production Rust services
+> **Key Takeaways — Production Patterns / 关键要点：生产模式**
+> - Use a `watch` channel + `select!` for coordinated graceful shutdown / 使用 `watch` 通道 + `select!` 进行协调一致的优雅停机
+> - Bounded channels (`mpsc::channel(N)`) provide **backpressure** / 有界通道（`mpsc::channel(N)`）提供了 **背压 (backpressure)** 机制
+> - `JoinSet` and `TaskTracker` provide **structured concurrency** / `JoinSet` 和 `TaskTracker` 为 Rust 带来了 **结构化并发 (structured concurrency)**
+> - Always add timeouts to network operations / 务必为网络操作添加超时处理
+> - Tower's `Service` trait is the standard middleware pattern / Tower 的 `Service` trait 是标准的中间件模式
 
-> **See also:** [Ch 8 — Tokio Deep Dive](ch08-tokio-deep-dive.md) for channels and sync primitives, [Ch 12 — Common Pitfalls](ch12-common-pitfalls.md) for cancellation hazards during shutdown
+> **See also / 延伸阅读：** [Ch 8 — Tokio Deep Dive / 第 8 章：Tokio 深入解析](ch08-tokio-deep-dive.md) for channels, [Ch 12 — Common Pitfalls / 第 12 章：常见陷阱](ch12-common-pitfalls.md) for cancellation hazards
 
 ***
 

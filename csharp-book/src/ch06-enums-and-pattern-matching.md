@@ -1,11 +1,12 @@
-## Algebraic Data Types vs C# Unions
+## Algebraic Data Types vs C# Unions / 代数数据类型与 C# Union 对比
 
-> **What you'll learn:** Rust's algebraic data types (enums with data) vs C#'s limited discriminated unions,
-> `match` expressions with exhaustive checking, guard clauses, and nested pattern destructuring.
+> **What you'll learn / 你将学到：** Rust's algebraic data types (enums with data) vs C#'s limited discriminated unions, `match` expressions with exhaustive checking, guard clauses, and nested pattern destructuring.
 >
-> **Difficulty:** 🟡 Intermediate
+> Rust 的代数数据类型（可携带数据的 enum）与 C# 中受限的判别联合的区别，带穷尽检查的 `match` 表达式、守卫条件，以及嵌套模式解构。
+>
+> **Difficulty / 难度：** 🟡 Intermediate / 中级
 
-### C# Discriminated Unions (Limited)
+### C# Discriminated Unions (Limited) / C# 的判别联合（能力有限）
 ```csharp
 // C# - Limited union support with inheritance
 public abstract class Result
@@ -40,11 +41,11 @@ public static double Area(Shape shape) => shape switch
 {
     Circle(var radius) => Math.PI * radius * radius,
     Rectangle(var width, var height) => width * height,
-    _ => throw new ArgumentException("Unknown shape")  // [ERROR] Runtime error possible
+    _ => throw new ArgumentException("Unknown shape")  // Runtime error possible
 };
 ```
 
-### Rust Algebraic Data Types (Enums)
+### Rust Algebraic Data Types (Enums) / Rust 的代数数据类型（Enum）
 ```rust
 // Rust - True algebraic data types with exhaustive pattern matching
 #[derive(Debug, Clone)]
@@ -66,7 +67,7 @@ impl Shape {
             Shape::Circle { radius } => std::f64::consts::PI * radius * radius,
             Shape::Rectangle { width, height } => width * height,
             Shape::Triangle { base, height } => 0.5 * base * height,
-            // [OK] Compiler error if any variant is missing!
+            // Compiler error if any variant is missing!
         }
     }
 }
@@ -101,8 +102,8 @@ graph TD
         CS_SUCCESS["class Success : Result"]
         CS_ERROR["class Error : Result"]
         CS_MATCH["Manual Match method<br/>or switch expressions"]
-        CS_RUNTIME["[ERROR] Runtime exceptions<br/>for missing cases"]
-        CS_HEAP["[ERROR] Heap allocation<br/>for class inheritance"]
+        CS_RUNTIME["Runtime exceptions<br/>for missing cases"]
+        CS_HEAP["Heap allocation<br/>for class inheritance"]
         
         CS_ABSTRACT --> CS_SUCCESS
         CS_ABSTRACT --> CS_ERROR
@@ -116,9 +117,9 @@ graph TD
         RUST_ENUM["enum Shape { ... }"]
         RUST_VARIANTS["Circle { radius }<br/>Rectangle { width, height }<br/>Triangle { base, height }"]
         RUST_MATCH["match shape { ... }"]
-        RUST_EXHAUSTIVE["[OK] Exhaustive checking<br/>Compile-time guarantee"]
-        RUST_STACK["[OK] Stack allocation<br/>Efficient memory use"]
-        RUST_ZERO["[OK] Zero-cost abstraction"]
+        RUST_EXHAUSTIVE["Exhaustive checking<br/>Compile-time guarantee"]
+        RUST_STACK["Stack allocation<br/>Efficient memory use"]
+        RUST_ZERO["Zero-cost abstraction"]
         
         RUST_ENUM --> RUST_VARIANTS
         RUST_VARIANTS --> RUST_MATCH
@@ -136,11 +137,13 @@ graph TD
 
 ***
 
-## Enums and Pattern Matching
+## Enums and Pattern Matching / 枚举与模式匹配
 
 Rust enums are much more powerful than C# enums - they can hold data and are the foundation of type-safe programming.
 
-### C# Enum Limitations
+Rust 的枚举远比 C# 枚举强大。它们不仅能表示离散分支，还能携带数据，是 Rust 类型安全编程的重要基础。
+
+### C# Enum Limitations / C# 枚举的局限
 ```csharp
 // C# enum - just named constants
 public enum Status
@@ -187,7 +190,7 @@ public class Error : Result
 }
 ```
 
-### Rust Enum Power
+### Rust Enum Power / Rust 枚举的强大之处
 ```rust
 // Simple enum (like C# enum)
 #[derive(Debug, PartialEq)]
@@ -223,7 +226,7 @@ enum HttpResponse {
 }
 ```
 
-### Pattern Matching with Match
+### Pattern Matching with Match / 使用 `match` 进行模式匹配
 ```csharp
 // C# switch statement (limited)
 public string HandleStatus(Status status)
@@ -306,7 +309,7 @@ fn handle_http_response(response: HttpResponse) -> String {
 }
 ```
 
-### Guards and Advanced Patterns
+### Guards and Advanced Patterns / 守卫与高级模式
 ```rust
 // Pattern matching with guards
 fn describe_number(x: i32) -> String {
@@ -333,12 +336,14 @@ fn describe_age(age: u32) -> String {
 ```
 
 <details>
-<summary><strong>🏋️ Exercise: Command Parser</strong> (click to expand)</summary>
+<summary><strong>Exercise: Command Parser / 练习：命令解析器</strong> (click to expand / 点击展开)</summary>
 
-**Challenge**: Model a CLI command system using Rust enums. Parse string input into a `Command` enum and execute each variant. Handle unknown commands with proper error handling.
+**Challenge / 挑战：** Model a CLI command system using Rust enums. Parse string input into a `Command` enum and execute each variant. Handle unknown commands with proper error handling.
+
+使用 Rust 枚举为一个 CLI 命令系统建模。把字符串输入解析成 `Command` 枚举，并执行每个分支。对于未知命令，使用合适的错误处理方式。
 
 ```rust
-// Starter code — fill in the blanks
+// Starter code - fill in the blanks
 #[derive(Debug)]
 enum Command {
     // TODO: Add variants for Quit, Echo(String), Move { x: i32, y: i32 }, Count(u32)
@@ -357,7 +362,7 @@ fn execute(cmd: &Command) -> String {
 ```
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution / 参考答案</summary>
 
 ```rust
 #[derive(Debug)]
@@ -402,12 +407,13 @@ fn execute(cmd: &Command) -> String {
 }
 ```
 
-**Key takeaways**:
-- Each enum variant can hold different data — no need for class hierarchies
-- `match` forces you to handle every variant, preventing forgotten cases
-- `?` operator chains error propagation cleanly — no nested try-catch
+**Key takeaways / 关键要点：**
+- Each enum variant can hold different data - no need for class hierarchies  
+  每个枚举分支都能携带不同数据，不需要再构造一整套类层级
+- `match` forces you to handle every variant, preventing forgotten cases  
+  `match` 强制你处理每一个分支，避免遗漏
+- `?` operator chains error propagation cleanly - no nested try-catch  
+  `?` 操作符让错误传播更简洁，不需要层层嵌套 try-catch
 
 </details>
 </details>
-
-

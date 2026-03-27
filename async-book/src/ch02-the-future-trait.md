@@ -1,14 +1,16 @@
-# 2. The Future Trait 🟡
+# 2. The Future Trait / 2. `Future` Trait 🟡
 
-> **What you'll learn:**
-> - The `Future` trait: `Output`, `poll()`, `Context`, `Waker`
-> - How a waker tells the executor "poll me again"
-> - The contract: never call `wake()` = your program silently hangs
-> - Implementing a real future by hand (`Delay`)
+> **What you'll learn / 你将学到：**
+> - The `Future` trait: `Output`, `poll()`, `Context`, `Waker` / `Future` trait 的组成：`Output`、`poll()`、`Context` 与 `Waker`
+> - How a waker tells the executor "poll me again" / Waker 如何告知执行器“请再次轮询我”
+> - The contract: never call `wake()` = your program silently hangs / 契约：如果不调用 `wake()`，程序就会静默挂起
+> - Implementing a real future by hand (`Delay`) / 手动落实一个真实的 future（`Delay`）
 
-## Anatomy of a Future
+## Anatomy of a Future / Future 的解剖
 
 Everything in async Rust ultimately implements this trait:
+
+Async Rust 中的一切最终都实现了这个 trait：
 
 ```rust
 pub trait Future {
@@ -25,7 +27,9 @@ pub enum Poll<T> {
 
 That's it. A `Future` is anything that can be *polled* — asked "are you done yet?" — and responds with either "yes, here's the result" or "not yet, I'll wake you up when I'm ready."
 
-### Output, poll(), Context, Waker
+就这么简单。`Future` 是任何可以被 *poll*（轮询）的对象 —— 即被询问“你做完了吗？” —— 并回答“做完了，这是结果”或“还没呢，等我准备好了会叫醒你”。
+
+### Output, poll(), Context, Waker / Output、poll()、Context 与 Waker
 
 ```mermaid
 sequenceDiagram
@@ -50,6 +54,8 @@ sequenceDiagram
 
 Let's break down each piece:
 
+让我们分解每个部分：
+
 ```rust
 use std::future::Future;
 use std::pin::Pin;
@@ -67,15 +73,17 @@ impl Future for Ready42 {
 }
 ```
 
-**The components**:
-- **`Output`** — the type of value produced when the future completes
-- **`poll()`** — called by the executor to check progress; returns `Ready(value)` or `Pending`
-- **`Pin<&mut Self>`** — ensures the future won't be moved in memory (we'll cover why in Ch. 4)
-- **`Context`** — carries the `Waker` so the future can signal the executor when it's ready to make progress
+**The components / 组成部分**:
+- **`Output`** — the type of value produced when the future completes / Future 完成时产生的值的类型
+- **`poll()`** — called by the executor to check progress; returns `Ready(value)` or `Pending` / 由执行器调用以检查进度；返回 `Ready(value)` 或 `Pending`
+- **`Pin<&mut Self>`** — ensures the future won't be moved in memory (we'll cover why in Ch. 4) / 确保 future 不会在内存中被移动（我们将在第 4 章解释原因）
+- **`Context`** — carries the `Waker` so the future can signal the executor when it's ready to make progress / 携带 `Waker`，以便 future 在准备好继续时通知执行器
 
-### The Waker Contract
+### The Waker Contract / Waker 契约
 
 The `Waker` is the callback mechanism. When a future returns `Pending`, it *must* arrange for `waker.wake()` to be called later — otherwise the executor will never poll it again and the program hangs.
+
+`Waker` 是一种回调机制。当 future 返回 `Pending` 时，它 *必须* 安排在之后调用 `waker.wake()` —— 否则执行器永远不会再次轮询它，程序就会挂起。
 
 ```rust
 use std::task::{Context, Poll, Waker};
@@ -142,18 +150,24 @@ impl Future for Delay {
 > **Key insight**: In C#, the TaskScheduler handles waking automatically.
 > In Rust, **you** (or the I/O library you use) are responsible for calling
 > `waker.wake()`. Forget it, and your program silently hangs.
+>
+> **关键洞察**：在 C# 中，TaskScheduler 会自动处理唤醒。而在 Rust 中，**你**（或者你使用的 I/O 库）负责调用 `waker.wake()`。如果忘了这一步，你的程序就会静默挂起。
 
-### Exercise: Implement a CountdownFuture
+### Exercise: Implement a CountdownFuture / 练习：实现一个倒计时 Future
 
 <details>
-<summary>🏋️ Exercise (click to expand)</summary>
+<summary>🏋️ Exercise / 练习（点击展开）</summary>
 
 **Challenge**: Implement a `CountdownFuture` that counts down from N to 0, printing the current count each time it's polled. When it reaches 0, it completes with `Ready("Liftoff!")`.
 
+**挑战**：实现一个 `CountdownFuture`，从 N 倒数到 0，每次被轮询时打印当前数值。当达到 0 时，返回 `Ready("Liftoff!")` 完成。
+
 *Hint*: The future needs to store the current count and decrement it on each poll. Remember to always re-register the waker!
 
+*提示*：Future 需要存储当前计数并在每次轮询时递减。记得一定要重新注册 waker！
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案</summary>
 
 ```rust
 use std::future::Future;
@@ -189,16 +203,18 @@ impl Future for CountdownFuture {
 
 **Key takeaway**: This future is polled once per count. Each time it returns `Pending`, it immediately wakes itself to be polled again. In production, you'd use a timer instead of busy-polling.
 
+**关键点**：这个 future 每一跳会被轮询一次。每次返回 `Pending` 时，它都会立即唤醒自己以便再次被轮询。在生产环境中，你会使用定时器而不是这种忙碌轮询。
+
 </details>
 </details>
 
-> **Key Takeaways — The Future Trait**
-> - `Future::poll()` returns `Poll::Ready(value)` or `Poll::Pending`
-> - A future must register a `Waker` before returning `Pending` — the executor uses it to know when to re-poll
-> - `Pin<&mut Self>` guarantees the future won't be moved in memory (needed for self-referential state machines — see Ch 4)
-> - Everything in async Rust — `async fn`, `.await`, combinators — is built on this one trait
+> **Key Takeaways — The Future Trait / 关键要点：Future Trait**
+> - `Future::poll()` returns `Poll::Ready(value)` or `Poll::Pending` / `Future::poll()` 返回 `Poll::Ready(value)` 或 `Poll::Pending`
+> - A future must register a `Waker` before returning `Pending` — the executor uses it to know when to re-poll / Future 在返回 `Pending` 之前必须注册一个 `Waker` —— 执行器通过它知道何时重新轮询
+> - `Pin<&mut Self>` guarantees the future won't be moved in memory (needed for self-referential state machines — see Ch 4) / `Pin<&mut Self>` 保证 future 不会在内存中移动（自引用状态机需要此特性 —— 见第 4 章）
+> - Everything in async Rust — `async fn`, `.await`, combinators — is built on this one trait / Async Rust 中的一切 —— `async fn`、`.await`、组合器 —— 都构建在这一 trait 之上
 
-> **See also:** [Ch 3 — How Poll Works](ch03-how-poll-works.md) for the executor loop, [Ch 6 — Building Futures by Hand](ch06-building-futures-by-hand.md) for more complex implementations
+> **See also / 延伸阅读：** [Ch 3 — How Poll Works / 第 3 章：poll 的工作机制](ch03-how-poll-works.md) for the executor loop, [Ch 6 — Building Futures by Hand / 第 6 章：手写 Future](ch06-building-futures-by-hand.md) for more complex implementations
 
 ***
 

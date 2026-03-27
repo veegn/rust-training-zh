@@ -1,28 +1,32 @@
-# 2. Traits In Depth 🟡
+# 2. Traits In Depth / 2. Trait 深入解析 🟡
 
-> **What you'll learn:**
-> - Associated types vs generic parameters — and when to use each
-> - GATs, blanket impls, marker traits, and trait object safety rules
-> - How vtables and fat pointers work under the hood
-> - Extension traits, enum dispatch, and typed command patterns
+> **What you'll learn / 你将学到：**
+> - Associated types vs generic parameters — and when to use each / 关联类型 vs 泛型参数 —— 以及何时使用它们
+> - GATs, blanket impls, marker traits, and trait object safety rules / GAT、blanket impl、标记 trait 以及 trait 对象安全规则
+> - How vtables and fat pointers work under the hood / vtable 和脂肪指针的底层工作原理
+> - Extension traits, enum dispatch, and typed command patterns / 扩展 trait、枚举分发以及类型化命令模式
 
-## Associated Types vs Generic Parameters
+## Associated Types vs Generic Parameters / 关联类型 vs 泛型参数
 
 Both let a trait work with different types, but they serve different purposes:
 
+二者都能让 trait 处理不同的类型，但它们的用途不同：
+
 ```rust
 // --- ASSOCIATED TYPE: One implementation per type ---
+// --- 关联类型：每个类型只有一个实现 ---
 trait Iterator {
-    type Item; // Each iterator produces exactly ONE kind of item
+    type Item; // Each iterator produces exactly ONE kind of item / 每个迭代器只产生一种类型的项
 
     fn next(&mut self) -> Option<Self::Item>;
 }
 
 // A custom iterator that always yields i32 — there's no choice
+// 一个总是产生 i32 的自定义迭代器 —— 没有其他选择
 struct Counter { max: i32, current: i32 }
 
 impl Iterator for Counter {
-    type Item = i32; // Exactly one Item type per implementation
+    type Item = i32; // Exactly one Item type per implementation / 每个实现只有一个 Item 类型
     fn next(&mut self) -> Option<i32> {
         if self.current < self.max {
             self.current += 1;
@@ -34,11 +38,13 @@ impl Iterator for Counter {
 }
 
 // --- GENERIC PARAMETER: Multiple implementations per type ---
+// --- 泛型参数：每个类型可以有多个实现 ---
 trait Convert<T> {
     fn convert(&self) -> T;
 }
 
 // A single type can implement Convert for MANY target types:
+// 一个类型可以为多种目标类型实现 Convert：
 impl Convert<f64> for i32 {
     fn convert(&self) -> f64 { *self as f64 }
 }
@@ -47,23 +53,26 @@ impl Convert<String> for i32 {
 }
 ```
 
-**When to use which**:
+**When to use which / 何时该用哪一个**：
 
-| Use | When |
+| Use / 使用 | When / 何时 |
 |-----|------|
-| **Associated type** | There's exactly ONE natural output/result per implementing type. `Iterator::Item`, `Deref::Target`, `Add::Output` |
-| **Generic parameter** | A type can meaningfully implement the trait for MANY different types. `From<T>`, `AsRef<T>`, `PartialEq<Rhs>` |
+| **Associated type** / **关联类型** | There's exactly ONE natural output/result per implementing type (e.g., `Iterator::Item`). / 每个实现类型恰好有一个自然的输出/结果（例如 `Iterator::Item`）。 |
+| **Generic parameter** / **泛型参数** | A type can meaningfully implement the trait for MANY different types (e.g., `From<T>`). / 一个类型可以有意义地为许多不同的类型实现该 trait（例如 `From<T>`）。 |
 
-**Intuition**: If it makes sense to ask "what is the `Item` of this iterator?", use associated type. If it makes sense to ask "can this convert to `f64`? to `String`? to `bool`?", use a generic parameter.
+**Intuition / 直觉解析**：If it makes sense to ask "what is the `Item` of this iterator?", use associated type. If it makes sense to ask "can this convert to `f64`? to `String`? to `bool`?", use a generic parameter.
+
+**直觉解析**：如果问“这个迭代器的 `Item` 是什么？”是有意义的，请使用关联类型。如果问“这个类型能转换成 `f64` 吗？转换成 `String` 吗？转换成 `bool` 吗？”是有意义的，请使用泛型参数。
 
 ```rust
-// Real-world example: std::ops::Add
+// Real-world example: std::ops::Add / 现实世界示例：std::ops::Add
 trait Add<Rhs = Self> {
-    type Output; // Associated type — addition has ONE result type
+    type Output; // Associated type — addition has ONE result type / 关联类型 —— 加法只有一个结果类型
     fn add(self, rhs: Rhs) -> Self::Output;
 }
 
 // Rhs is a generic parameter — you can add different types to Meters:
+// Rhs 是一个泛型参数 —— 你可以向 Meters 添加不同的类型：
 struct Meters(f64);
 struct Centimeters(f64);
 
@@ -77,19 +86,21 @@ impl Add<Centimeters> for Meters {
 }
 ```
 
-### Generic Associated Types (GATs)
+### Generic Associated Types (GATs) / 泛型关联类型 (GAT)
 
-Since Rust 1.65, associated types can have generic parameters of their own.
-This enables **lending iterators** — iterators that return references tied to
-the iterator rather than to the underlying collection:
+Since Rust 1.65, associated types can have generic parameters of their own. This enables **lending iterators** — iterators that return references tied to the iterator rather than to the underlying collection:
+
+从 Rust 1.65 开始，关联类型可以拥有自己的泛型参数。这使得 **借用迭代器（lending iterators）** 成为可能 —— 这种迭代器返回的引用绑定到迭代器本身，而不是底层的集合：
 
 ```rust
 // Without GATs — impossible to express a lending iterator:
+// 没有 GAT —— 无法表达借用迭代器：
 // trait LendingIterator {
-//     type Item<'a>;  // ← This was rejected before 1.65
+//     type Item<'a>;  // ← This was rejected before 1.65 / 1.65 之前被拒绝
 // }
 
 // With GATs (Rust 1.65+):
+// 使用 GAT (Rust 1.65+):
 trait LendingIterator {
     type Item<'a> where Self: 'a;
 
@@ -97,6 +108,7 @@ trait LendingIterator {
 }
 
 // Example: an iterator that yields overlapping windows
+// 示例：一个产生重叠窗口的迭代器
 struct WindowIter<'data> {
     data: &'data [u8],
     pos: usize,
@@ -118,13 +130,15 @@ impl<'data> LendingIterator for WindowIter<'data> {
 }
 ```
 
-> **When you need GATs**: Lending iterators, streaming parsers, or any trait
-> where the associated type's lifetime depends on the `&self` borrow.
-> For most code, plain associated types are sufficient.
+> **When you need GATs / 何时需要 GAT**：Lending iterators, streaming parsers, or any trait where the associated type's lifetime depends on the `&self` borrow. For most code, plain associated types are sufficient.
+>
+> **何时需要 GAT**：借用迭代器、流式解析器，或者任何关联类型的生命周期依赖于 `&self` 借用的 trait。对于大多数代码，普通的关联类型就足够了。
 
-### Supertraits and Trait Hierarchies
+### Supertraits and Trait Hierarchies / Supertrait 与 Trait 层次结构
 
 Traits can require other traits as prerequisites, forming hierarchies:
+
+Trait 可以要求其他 trait 作为先决条件，从而形成层次结构：
 
 ```mermaid
 graph BT
@@ -158,19 +172,24 @@ graph BT
 ```
 
 > Arrows point from subtrait to supertrait: implementing `Error` requires `Display` + `Debug`.
+>
+> 箭头从子 trait 指向 supertrait：实现 `Error` 需要同时实现 `Display` 和 `Debug`。
 
 A trait can require that implementors also implement other traits:
+
+Trait 可以要求实现者同时实现其他 trait：
 
 ```rust
 use std::fmt;
 
-// Display is a supertrait of Error
+// Display is a supertrait of Error / Display 是 Error 的 supertrait
 trait Error: fmt::Display + fmt::Debug {
     fn source(&self) -> Option<&(dyn Error + 'static)> { None }
 }
 // Any type implementing Error MUST also implement Display and Debug
+// 任何实现 Error 的类型也必须实现 Display 和 Debug
 
-// Build your own hierarchies:
+// Build your own hierarchies / 构建你自己的层次结构：
 trait Identifiable {
     fn id(&self) -> u64;
 }
@@ -179,12 +198,13 @@ trait Timestamped {
     fn created_at(&self) -> chrono::DateTime<chrono::Utc>;
 }
 
-// Entity requires both:
+// Entity requires both / Entity 同时需要这两者：
 trait Entity: Identifiable + Timestamped {
     fn is_active(&self) -> bool;
 }
 
 // Implementing Entity forces you to implement all three:
+// 实现 Entity 会强制你实现全部这三个 trait：
 struct User { id: u64, name: String, created: chrono::DateTime<chrono::Utc> }
 
 impl Identifiable for User {
@@ -198,55 +218,63 @@ impl Entity for User {
 }
 ```
 
-### Blanket Implementations
+### Blanket Implementations / Blanket 实现
 
 Implement a trait for ALL types that satisfy some bound:
 
+为满足某些约束的所有类型实现一个 trait：
+
 ```rust
 // std does this: any type that implements Display automatically gets ToString
+// 标准库的工作方式：任何实现了 Display 的类型都会自动获得 ToString
 impl<T: fmt::Display> ToString for T {
     fn to_string(&self) -> String {
         format!("{self}")
     }
 }
 // Now i32, &str, your custom types — anything with Display — gets to_string() for free.
+// 现在 i32、&str 以及你的自定义类型 —— 只要有 Display，就能免费获得 to_string()。
 
-// Your own blanket impl:
+// Your own blanket impl / 你自己的 blanket 实现：
 trait Loggable {
     fn log(&self);
 }
 
-// Every Debug type is automatically Loggable:
+// Every Debug type is automatically Loggable / 每个 Debug 类型都会自动成为 Loggable：
 impl<T: std::fmt::Debug> Loggable for T {
     fn log(&self) {
         eprintln!("[LOG] {self:?}");
     }
 }
 
-// Now ANY Debug type has .log():
+// Now ANY Debug type has .log() / 现在任何 Debug 类型都有了 .log() 方法：
 // 42.log();              // [LOG] 42
 // "hello".log();         // [LOG] "hello"
 // vec![1, 2, 3].log();   // [LOG] [1, 2, 3]
 ```
 
-> **Caution**: Blanket impls are powerful but irreversible — you can't add a
+> **Caution / 注意**：Blanket impls are powerful but irreversible — you can't add a
 > more specific impl for a type that's already covered by a blanket impl
 > (orphan rules + coherence). Design them carefully.
+>
+> **注意**：Blanket 实现非常强大，但也是不可逆的 —— 你不能为一个已经被 blanket 实现覆盖的类型添加更具体的实现（受限于孤儿规则和一致性）。请谨慎设计。
 
-### Marker Traits
+### Marker Traits / 标记 Trait (Marker Traits)
 
 Traits with no methods — they mark a type as having some property:
 
-```rust
-// Standard library marker traits:
-// Send    — safe to transfer between threads
-// Sync    — safe to share (&T) between threads
-// Unpin   — safe to move after pinning
-// Sized   — has a known size at compile time
-// Copy    — can be duplicated with memcpy
+不包含任何方法的 trait —— 它们将某个类型标记为具有特定属性：
 
-// Your own marker trait:
-/// Marker: this sensor has been factory-calibrated
+```rust
+// Standard library marker traits / 标准库中的标记 trait：
+// Send    — safe to transfer between threads / 可以安全地在线程间转移
+// Sync    — safe to share (&T) between threads / 可以安全地在线程间共享 (&T)
+// Unpin   — safe to move after pinning / pin 后仍然可以安全移动
+// Sized   — has a known size at compile time / 编译时具有已知大小
+// Copy    — can be duplicated with memcpy / 可以通过 memcpy 复制
+
+// Your own marker trait / 你自己的标记 trait：
+/// Marker: this sensor has been factory-calibrated / 标记：该传感器已通过工厂校准
 trait Calibrated {}
 
 struct RawSensor { reading: f64 }
@@ -255,41 +283,49 @@ struct CalibratedSensor { reading: f64 }
 impl Calibrated for CalibratedSensor {}
 
 // Only calibrated sensors can be used in production:
+// 只有经过校准的传感器才能在生产环境中使用：
 fn record_measurement<S: Calibrated>(sensor: &S) {
     // ...
 }
-// record_measurement(&RawSensor { reading: 0.0 }); // ❌ Compile error
+// record_measurement(&RawSensor { reading: 0.0 }); // ❌ Compile error / 编译错误
 // record_measurement(&CalibratedSensor { reading: 0.0 }); // ✅
 ```
 
 This connects directly to the **type-state pattern** in Chapter 3.
 
-### Trait Object Safety Rules
+这与第 3 章中的 **状态类型模式 (type-state pattern)** 直接相关。
+
+### Trait Object Safety Rules / Trait 对象安全规则
 
 Not every trait can be used as `dyn Trait`. A trait is **object-safe** only if:
 
-1. **No `Self: Sized` bound** on the trait itself
-2. **No generic type parameters** on methods
-3. **No use of `Self` in return position** (except via indirection like `Box<Self>`)
-4. **No associated functions** (methods must have `&self`, `&mut self`, or `self`)
+并非所有的 trait 都可以作为 `dyn Trait` 使用。一个 trait 只有在满足以下条件时才是 **对象安全（object-safe）** 的：
+
+1.  **No `Self: Sized` bound** on the trait itself / trait 本身没有 `Self: Sized` 约束
+2.  **No generic type parameters** on methods / 方法上没有泛型参数
+3.  **No use of `Self` in return position** (except via indirection like `Box<Self>`) / 在返回位置没有使用 `Self`（通过 `Box<Self>` 等间接方式除外）
+4.  **No associated functions** (methods must have `&self`, `&mut self`, or `self`) / 没有关联函数（方法必须带有 `&self`、`&mut self` 或 `self`）
 
 ```rust
 // ✅ Object-safe — can be used as dyn Drawable
+// ✅ 对象安全 —— 可以用作 dyn Drawable
 trait Drawable {
     fn draw(&self);
     fn bounding_box(&self) -> (f64, f64, f64, f64);
 }
 
-let shapes: Vec<Box<dyn Drawable>> = vec![/* ... */]; // ✅ Works
+let shapes: Vec<Box<dyn Drawable>> = vec![/* ... */]; // ✅ Works / 行得通
 
 // ❌ NOT object-safe — uses Self in return position
+// ❌ 不对象安全 —— 在返回位置使用了 Self
 trait Cloneable {
     fn clone_self(&self) -> Self;
-    //                       ^^^^ Can't know the concrete size at runtime
+    //                       ^^^^ Can't know the concrete size at runtime / 运行时无法知道具体大小
 }
-// let items: Vec<Box<dyn Cloneable>> = ...; // ❌ Compile error
+// let items: Vec<Box<dyn Cloneable>> = ...; // ❌ Compile error / 编译错误
 
 // ❌ NOT object-safe — generic method
+// ❌ 不对象安全 —— 泛型方法
 trait Converter {
     fn convert<T>(&self) -> T;
     //        ^^^ The vtable can't contain infinite monomorphizations
@@ -316,19 +352,23 @@ trait MyTrait {
 
 // Now dyn MyTrait is valid, but generic_method can only be called
 // when the concrete type is known.
+// 现在 dyn MyTrait 是有效的，但 generic_method 只能在具体类型已知时调用。
 ```
 
-> **Rule of thumb**: If you plan to use `dyn Trait`, keep methods simple —
-> no generics, no `Self` in return types, no `Sized` bounds. When in doubt,
-> try `let _: Box<dyn YourTrait>;` and let the compiler tell you.
+> **Rule of thumb / 经验法则**：If you plan to use `dyn Trait`, keep methods simple — no generics, no `Self` in return types, no `Sized` bounds. When in doubt, try `let _: Box<dyn YourTrait>;` and let the compiler tell you.
+>
+> **经验法则**：如果你计划使用 `dyn Trait`，请保持方法简单 —— 不要使用泛型，不要在返回类型中使用 `Self`，不要使用 `Sized` 约束。如果不确定，试着写一行 `let _: Box<dyn YourTrait>;`，让编译器告诉你答案。
 
-### Trait Objects Under the Hood — vtables and Fat Pointers
+### Trait Objects Under the Hood — vtables and Fat Pointers / Trait 对象底层原理 —— vtable 与脂肪指针
 
 A `&dyn Trait` (or `Box<dyn Trait>`) is a **fat pointer** — two machine words:
+
+`&dyn Trait`（或 `Box<dyn Trait>`）是一个 **脂肪指针（fat pointer）** —— 包含两个机器字（machine words）：
 
 ```text
 ┌──────────────────────────────────────────────────┐
 │  &dyn Drawable (on 64-bit: 16 bytes total)       │
+│  &dyn Drawable (在 64 位系统上：总共 16 字节)      │
 ├──────────────┬───────────────────────────────────┤
 │  data_ptr    │  vtable_ptr                       │
 │  (8 bytes)   │  (8 bytes)                        │
@@ -336,8 +376,9 @@ A `&dyn Trait` (or `Box<dyn Trait>`) is a **fat pointer** — two machine words:
 │  ┌─────────┐ │  ┌──────────────────────────────┐ │
 │  │ Circle  │ │  │ vtable for <Circle as        │ │
 │  │ {       │ │  │           Drawable>          │ │
-│  │  r: 5.0 │ │  │                              │ │
-│  │ }       │ │  │  drop_in_place: 0x7f...a0    │ │
+│  │  r: 5.0 │ │  │ <Circle as Drawable> 的 vtable │ │
+│  │ }       │ │  │                              │ │
+│  │         │ │  │  drop_in_place: 0x7f...a0    │ │
 │  └─────────┘ │  │  size:           8           │ │
 │              │  │  align:          8           │ │
 │              │  │  draw:          0x7f...b4    │ │
@@ -346,16 +387,15 @@ A `&dyn Trait` (or `Box<dyn Trait>`) is a **fat pointer** — two machine words:
 └──────────────┴───────────────────────────────────┘
 ```
 
-**How a vtable call works** (e.g., `shape.draw()`):
+**How a vtable call works / vtable 调用是如何工作的** (e.g., `shape.draw()`):
 
-1. Load `vtable_ptr` from the fat pointer (second word)
-2. Index into the vtable to find the `draw` function pointer
-3. Call it, passing `data_ptr` as the `self` argument
+1.  Load `vtable_ptr` from the fat pointer (second word) / 从脂肪指针中加载 `vtable_ptr`（第二个字）
+2.  Index into the vtable to find the `draw` function pointer / 在 vtable 中索引以找到 `draw` 函数指针
+3.  Call it, passing `data_ptr` as the `self` argument / 调用它，并将 `data_ptr` 作为 `self` 参数传递
 
-This is similar to C++ virtual dispatch in cost (one pointer indirection
-per call), but Rust stores the vtable pointer in the fat pointer rather
-than inside the object — so a plain `Circle` on the stack carries no
-vtable pointer at all.
+This is similar to C++ virtual dispatch in cost (one pointer indirection per call), but Rust stores the vtable pointer in the fat pointer rather than inside the object — so a plain `Circle` on the stack carries no vtable pointer at all.
+
+这在开销上与 C++ 的虚函数分发类似（每次调用一次指针间接跳转），但 Rust 将 vtable 指针存储在脂肪指针中，而不是对象内部 —— 因此栈上普通的 `Circle` 根本不携带 vtable 指针。
 
 ```rust
 trait Drawable {
@@ -385,41 +425,45 @@ fn main() {
 
     // Each element is a fat pointer: (data_ptr, vtable_ptr)
     // The vtable for Circle and Square are DIFFERENT
+    // 每个元素都是一个脂肪指针：(data_ptr, vtable_ptr)
+    // Circle 和 Square 的 vtable 是不同的
     for shape in &shapes {
         shape.draw();  // vtable dispatch → Circle::draw or Square::draw
         println!("  area = {:.2}", shape.area());
     }
 
-    // Size comparison:
+    // Size comparison / 大小比较：
     println!("size_of::<&Circle>()        = {}", size_of::<&Circle>());
-    // → 8 bytes (one pointer — the compiler knows the type)
+    // → 8 bytes (one pointer — the compiler knows the type) / 8 字节（一个指针 —— 编译器知道具体类型）
     println!("size_of::<&dyn Drawable>()  = {}", size_of::<&dyn Drawable>());
-    // → 16 bytes (data_ptr + vtable_ptr)
+    // → 16 bytes (data_ptr + vtable_ptr) / 16 字节 (data_ptr + vtable_ptr)
 }
 ```
 
-**Performance cost model**:
+**Performance cost model / 性能代价模型**：
 
-| Aspect | Static dispatch (`impl Trait` / generics) | Dynamic dispatch (`dyn Trait`) |
+| Aspect / 方面 | Static dispatch / 静态分发 (`impl Trait` / generics) | Dynamic dispatch / 动态分发 (`dyn Trait`) |
 |--------|------------------------------------------|-------------------------------|
-| Call overhead | Zero — inlined by LLVM | One pointer indirection per call |
-| Inlining | ✅ Compiler can inline | ❌ Opaque function pointer |
-| Binary size | Larger (one copy per type) | Smaller (one shared function) |
-| Pointer size | Thin (1 word) | Fat (2 words) |
-| Heterogeneous collections | ❌ | ✅ `Vec<Box<dyn Trait>>` |
+| Call overhead / 调用开销 | Zero — inlined by LLVM / 零 —— 由 LLVM 内联 | One pointer indirection per call / 每次调用一次指针间接跳转 |
+| Inlining / 内联 | ✅ Compiler can inline / 编译器可以内联 | ❌ Opaque function pointer / 不透明的函数指针 |
+| Binary size / 二进制大小 | Larger (one copy per type) / 较大（每个类型一份副本） | Smaller (one shared function) / 较小（一个共享函数） |
+| Pointer size / 指针大小 | Thin (1 word) / 细指针（1 个字） | Fat (2 words) / 脂肪指针（2 个字） |
+| Heterogeneous collections / 异构集合 | ❌ | ✅ `Vec<Box<dyn Trait>>` |
 
-> **When vtable cost matters**: In tight loops calling a trait method millions
-> of times, the indirection and inability to inline can be significant (2-10×
-> slower). For cold paths, configuration, or plugin architectures, the
-> flexibility of `dyn Trait` is worth the small cost.
+> **When vtable cost matters / 何时需要考虑 vtable 开销**：In tight loops calling a trait method millions of times, the indirection and inability to inline can be significant (2-10× slower). For cold paths, configuration, or plugin architectures, the flexibility of `dyn Trait` is worth the small cost.
+>
+> **何时需要考虑 vtable 开销**：在数百万次调用 trait 方法的紧凑循环中，间接跳转和无法内联的影响可能非常显著（慢 2-10 倍）。对于冷代码路径、配置或插件架构，`dyn Trait` 的灵活性值得这点微小的开销。
 
-### Higher-Ranked Trait Bounds (HRTBs)
+### Higher-Ranked Trait Bounds (HRTBs) / 高阶 Trait 约束 (HRTB)
 
 Sometimes you need a function that works with references of *any* lifetime, not a specific one. This is where `for<'a>` syntax appears:
+
+有时你需要一个能处理 *任何* 生命周期的引用的函数，而不仅仅是某个特定生命周期。这就是 `for<'a>` 语法的用武之地：
 
 ```rust
 // Problem: this function needs a closure that can process
 // references with ANY lifetime, not just one specific lifetime.
+// 问题：该函数需要一个能够处理任何生命周期引用的闭包。
 
 // ❌ This is too restrictive — 'a is fixed by the caller:
 // fn apply<'a, F: Fn(&'a str) -> &'a str>(f: F, data: &'a str) -> &'a str
@@ -438,16 +482,18 @@ fn main() {
 }
 ```
 
-**When you encounter HRTBs**:
-- `Fn(&T) -> &U` traits — the compiler infers `for<'a>` automatically in most cases
-- Custom trait implementations that must work across different borrows
-- Deserialization with `serde`: `for<'de> Deserialize<'de>`
+**When you encounter HRTBs / 何时会遇到 HRTB**：
+- `Fn(&T) -> &U` traits — the compiler infers `for<'a>` automatically in most cases / `Fn(&T) -> &U` trait —— 编译器在大多数情况下会自动推断 `for<'a>`。
+- Custom trait implementations that must work across different borrows / 必须跨不同借用工作的自定义 trait 实现。
+- Deserialization with `serde`: `for<'de> Deserialize<'de>` / 使用 `serde` 进行反序列化：`for<'de> Deserialize<'de>`。
 
 ```rust,ignore
 // serde's DeserializeOwned is defined as:
 // trait DeserializeOwned: for<'de> Deserialize<'de> {}
 // Meaning: "can be deserialized from data with ANY lifetime"
 // (i.e., the result doesn't borrow from the input)
+// 含义：“可以从具有任何生命周期的数据中反序列化”
+// （即：结果不从输入中借用）
 
 use serde::de::DeserializeOwned;
 
@@ -456,54 +502,73 @@ fn parse_json<T: DeserializeOwned>(input: &str) -> T {
 }
 ```
 
-> **Practical advice**: You'll rarely write `for<'a>` yourself. It mostly appears
-> in trait bounds on closure parameters, where the compiler handles it implicitly.
-> But recognizing it in error messages ("expected a `for<'a> Fn(&'a ...)` bound")
-> helps you understand what the compiler is asking for.
+> **Practical advice / 建议**：You'll rarely write `for<'a>` yourself. It mostly appears in trait bounds on closure parameters, where the compiler handles it implicitly. But recognizing it in error messages ("expected a `for<'a> Fn(&'a ...)` bound") helps you understand what the compiler is asking for.
+>
+> 你很少需要亲手编写 `for<'a>`。它大多出现在闭包参数的 trait 约束中，编译器会隐式处理。但在错误消息中识别出它（“expected a `for<'a> Fn(&'a ...)` bound”）有助于你理解编译器的要求。
 
-### `impl Trait` — Argument Position vs Return Position
+    serde_json::from_str(input).unwrap()
+}
+```
+
+> **Practical advice / 建议**：You'll rarely write `for<'a>` yourself. It mostly appears in trait bounds on closure parameters, where the compiler handles it implicitly. But recognizing it in error messages ("expected a `for<'a> Fn(&'a ...)` bound") helps you understand what the compiler is asking for.
+>
+> 你很少需要亲手编写 `for<'a>`。它大多出现在闭包参数的 trait 约束中，编译器会隐式处理。但在错误消息中识别出它（“expected a `for<'a> Fn(&'a ...)` bound”）有助于你理解编译器的要求。
+
+### `impl Trait` — Argument Position vs Return Position / `impl Trait` —— 参数位置 vs 返回位置
 
 `impl Trait` appears in two positions with **different semantics**:
 
+`impl Trait` 出现在两个位置，具有 **不同的语义**：
+
 ```rust
 // --- Argument-Position impl Trait (APIT) ---
+// --- 参数位置的 impl Trait (APIT) ---
 // "Caller chooses the type" — syntactic sugar for a generic parameter
+// “调用者选择类型” —— 泛型参数的语法糖
 fn print_all(items: impl Iterator<Item = i32>) {
     for item in items { println!("{item}"); }
 }
-// Equivalent to:
+// Equivalent to / 等同于：
 fn print_all_verbose<I: Iterator<Item = i32>>(items: I) {
     for item in items { println!("{item}"); }
 }
-// Caller decides: print_all(vec![1,2,3].into_iter())
-//                 print_all(0..10)
+// Caller decides / 调用者决定：
+// print_all(vec![1,2,3].into_iter())
+// print_all(0..10)
 
 // --- Return-Position impl Trait (RPIT) ---
+// --- 返回位置的 impl Trait (RPIT) ---
 // "Callee chooses the type" — the function picks one concrete type
+// “被调用者（函数）选择类型” —— 函数选择一个具体的类型
 fn evens(limit: i32) -> impl Iterator<Item = i32> {
     (0..limit).filter(|x| x % 2 == 0)
     // The concrete type is Filter<Range<i32>, Closure>
     // but the caller only sees "some Iterator<Item = i32>"
+    // 具体类型是 Filter<Range<i32>, Closure>
+    // 但调用者只看到“某种 Iterator<Item = i32>”
 }
 ```
 
-**Key difference**:
+**Key difference / 关键点比较**：
 
 | | APIT (`fn foo(x: impl T)`) | RPIT (`fn foo() -> impl T`) |
 |---|---|---|
-| Who picks the type? | Caller | Callee (function body) |
-| Monomorphized? | Yes — one copy per type | Yes — one concrete type |
-| Turbofish? | No (`foo::<X>()` not allowed) | N/A |
-| Equivalent to | `fn foo<X: T>(x: X)` | Existential type |
+| Who picks the type? / 谁来选择类型？ | Caller (调用者) | Callee (函数体) |
+| Monomorphized? / 是否单态化？ | Yes — one copy per type / 是 —— 每个类型一份副本 | Yes — one concrete type / 是 —— 对应一个具体类型 |
+| Turbofish? / Turbo 鱼语法？ | No (`foo::<X>()` not allowed) / 否 (不允许 `foo::<X>()`) | N/A |
+| Equivalent to / 类似于 | `fn foo<X: T>(x: X)` | Existential type / 存在类型 |
 
-#### RPIT in Trait Definitions (RPITIT)
+#### RPIT in Trait Definitions (RPITIT) / Trait 定义中的 RPIT (RPITIT)
 
 Since Rust 1.75, you can use `-> impl Trait` directly in trait definitions:
+
+从 Rust 1.75 开始，你可以直接在 trait 定义中使用 `-> impl Trait`：
 
 ```rust
 trait Container {
     fn items(&self) -> impl Iterator<Item = &str>;
     //                 ^^^^ Each implementor returns its own concrete type
+    //                 ^^^^ 每个实现者返回其自己的具体类型
 }
 
 struct CsvRow {
@@ -525,53 +590,56 @@ impl Container for FixedFields {
 }
 ```
 
-> **Before Rust 1.75**, you had to use `Box<dyn Iterator>` or an associated
-> type to achieve this in traits. RPITIT removes the allocation.
+> **Before Rust 1.75**, you had to use `Box<dyn Iterator>` or an associated type to achieve this in traits. RPITIT removes the allocation.
+>
+> **在 Rust 1.75 之前**，你必须使用 `Box<dyn Iterator>` 或关联类型才能在 trait 中实现该功能。RPITIT 消除了堆内存分配。
 
-#### `impl Trait` vs `dyn Trait` — Decision Guide
+#### `impl Trait` vs `dyn Trait` — Decision Guide / `impl Trait` vs `dyn Trait` —— 决策指南
 
 ```text
-Do you know the concrete type at compile time?
-├── YES → Use impl Trait or generics (zero cost, inlinable)
-└── NO  → Do you need a heterogeneous collection?
-     ├── YES → Use dyn Trait (Box<dyn T>, &dyn T)
-     └── NO  → Do you need the SAME trait object across an API boundary?
-          ├── YES → Use dyn Trait
-          └── NO  → Use generics / impl Trait
+Do you know the concrete type at compile time? / 编译时是否知道具体类型？
+├── YES (是) → Use impl Trait or generics (zero cost, inlinable) / 使用 impl Trait 或泛型（零开销，可内联）
+└── NO (否)  → Do you need a heterogeneous collection? / 是否需要异构集合？
+     ├── YES (是) → Use dyn Trait (Box<dyn T>, &dyn T)
+     └── NO (否)  → Do you need the SAME trait object across an API boundary? / 是否需要在 API 边界使用相同的 trait 对象？
+          ├── YES (是) → Use dyn Trait
+          └── NO (否)  → Use generics / impl Trait
 ```
 
-| Feature | `impl Trait` | `dyn Trait` |
+| Feature / 特性 | `impl Trait` | `dyn Trait` |
 |---------|-------------|------------|
-| Dispatch | Static (monomorphized) | Dynamic (vtable) |
-| Performance | Best — inlinable | One indirection per call |
-| Heterogeneous collections | ❌ | ✅ |
-| Binary size per type | One copy each | Shared code |
-| Trait must be object-safe? | No | Yes |
-| Works in trait definitions | ✅ (Rust 1.75+) | Always |
+| Dispatch / 分发 | Static (monomorphized) / 静态 (单态化) | Dynamic (vtable) / 动态 (vtable) |
+| Performance / 性能 | Best — inlinable / 极佳 —— 可内联 | One indirection per call / 每次调用一次间接跳转 |
+| Heterogeneous collections / 异构集合 | ❌ | ✅ |
+| Binary size per type / 每个类型的二进制大小 | One copy each / 每个类型一份副本 | Shared code / 代码共享 |
+| Trait must be object-safe? / Trait 必须对象安全？ | No / 否 | Yes / 是 |
+| Works in trait definitions / 在 trait 定义中可用 | ✅ (Rust 1.75+) | Always / 始终可用 |
 
 ***
 
-## Type Erasure with `Any` and `TypeId`
+## Type Erasure with `Any` and `TypeId` / 使用 `Any` 和 `TypeId` 进行类型擦除
 
-Sometimes you need to store values of *unknown* types and downcast them later — a pattern
-familiar from `void*` in C or `object` in C#. Rust provides this through `std::any::Any`:
+Sometimes you need to store values of *unknown* types and downcast them later — a pattern familiar from `void*` in C or `object` in C#. Rust provides this through `std::any::Any`:
+
+有时你需要存储 *未知* 类型的值并在稍后进行向下转型 (downcast) —— 这种模式在 C 语言的 `void*` 或 C# 的 `object` 中很常见。Rust 通过 `std::any::Any` 提供此功能：
 
 ```rust
 use std::any::Any;
 
-// Store heterogeneous values:
+// Store heterogeneous values / 存储异构值：
 fn log_value(value: &dyn Any) {
     if let Some(s) = value.downcast_ref::<String>() {
         println!("String: {s}");
     } else if let Some(n) = value.downcast_ref::<i32>() {
         println!("i32: {n}");
     } else {
-        // TypeId lets you inspect the type at runtime:
+        // TypeId lets you inspect the type at runtime / TypeId 允许在运行时检查类型：
         println!("Unknown type: {:?}", value.type_id());
     }
 }
 
 // Useful for plugin systems, event buses, or ECS-style architectures:
+// 对插件系统、事件总线或 ECS 风格的架构非常有用：
 struct AnyMap(std::collections::HashMap<std::any::TypeId, Box<dyn Any + Send>>);
 
 impl AnyMap {
@@ -598,10 +666,9 @@ fn main() {
 }
 ```
 
-> **When to use `Any`**: Plugin/extension systems, type-indexed maps (`typemap`),
-> error downcasting (`anyhow::Error::downcast_ref`). Prefer generics or trait
-> objects when the set of types is known at compile time — `Any` is a last resort
-> that trades compile-time safety for flexibility.
+> **When to use `Any` / 何时使用 `Any`**：Plugin/extension systems, type-indexed maps (`typemap`), error downcasting (`anyhow::Error::downcast_ref`). Prefer generics or trait objects when the set of types is known at compile time — `Any` is a last resort that trades compile-time safety for flexibility.
+>
+> **何时使用 `Any`**：插件/扩展系统、类型索引映射 (`typemap`)、错误向下转型 (`anyhow::Error::downcast_ref`)。如果在编译时已知类型集，请优先使用泛型或 trait 对象 —— `Any` 是最后的手段，它牺牲了编译时安全性以换取灵活性。
 
 ***
 

@@ -1,14 +1,16 @@
-# 1. Generics — The Full Picture 🟢
+# 1. Generics — The Full Picture / 泛型全景图 🟢
 
-> **What you'll learn:**
-> - How monomorphization gives zero-cost generics — and when it causes code bloat
-> - The decision framework: generics vs enums vs trait objects
-> - Const generics for compile-time array sizes and `const fn` for compile-time evaluation
-> - When to trade static dispatch for dynamic dispatch on cold paths
+> **What you'll learn / 你将学到：**
+> - How monomorphization gives zero-cost generics — and when it causes code bloat / 单态化如何实现零成本泛型 —— 以及何时会引发代码膨胀
+> - The decision framework: generics vs enums vs trait objects / 决策框架：泛型 vs 枚举 vs trait 对象
+> - Const generics for compile-time array sizes and `const fn` for compile-time evaluation / 用于编译期数组大小的 const 泛型，以及用于编译期计算的 `const fn`
+> - When to trade static dispatch for dynamic dispatch on cold paths / 何时在冷代码路径上将静态分发换为动态分发
 
-## Monomorphization and Zero Cost
+## Monomorphization and Zero Cost / 单态化与零成本
 
 Generics in Rust are **monomorphized** — the compiler generates a specialized copy of each generic function for every concrete type it's used with. This is the opposite of Java/C# where generics are erased at runtime.
+
+Rust 中的泛型是 **单态化（monomorphized）** 的 —— 编译器会为每个使用的具体类型生成一份该泛型函数的专门副本。这与 Java/C# 不同，后者的泛型在运行时会被擦除。
 
 ```rust
 fn max_of<T: PartialOrd>(a: T, b: T) -> T {
@@ -16,129 +18,96 @@ fn max_of<T: PartialOrd>(a: T, b: T) -> T {
 }
 
 fn main() {
-    max_of(3_i32, 5_i32);     // Compiler generates max_of_i32
-    max_of(2.0_f64, 7.0_f64); // Compiler generates max_of_f64
-    max_of("a", "z");         // Compiler generates max_of_str
+    max_of(3_i32, 5_i32);     // Compiler generates max_of_i32 / 编译器生成 max_of_i32
+    max_of(2.0_f64, 7.0_f64); // Compiler generates max_of_f64 / 编译器生成 max_of_f64
+    max_of("a", "z");         // Compiler generates max_of_str / 编译器生成 max_of_str
 }
 ```
 
-**What the compiler actually produces** (conceptually):
+**What the compiler actually produces / 编译器实际生成的内容** (conceptually / 概念上):
 
 ```rust
 // Three separate functions — no runtime dispatch, no vtable:
+// 三个独立的函数 —— 没有运行时分发，没有 vtable：
 fn max_of_i32(a: i32, b: i32) -> i32 { if a >= b { a } else { b } }
 fn max_of_f64(a: f64, b: f64) -> f64 { if a >= b { a } else { b } }
 fn max_of_str<'a>(a: &'a str, b: &'a str) -> &'a str { if a >= b { a } else { b } }
 ```
 
-> **Why does `max_of_str` need `<'a>` but `max_of_i32` doesn't?**  `i32` and `f64`
+> **Why does `max_of_str` need `<'a>` but `max_of_i32` doesn't?** `i32` and `f64`
 > are `Copy` types — the function returns an owned value. But `&str` is a reference,
 > so the compiler must know the returned reference's lifetime. The `<'a>` annotation
 > says "the returned `&str` lives at least as long as both inputs."
+>
+> **为什么 `max_of_str` 需要 `<'a>` 而 `max_of_i32` 不需要？** `i32` 和 `f64` 是 `Copy` 类型 —— 函数返回的是拥有所有权的值。但 `&str` 是引用，因此编译器必须知道返回引用的生命周期。`<'a>` 标注的意思是“返回的 `&str` 至少与两个输入参数活得一样久”。
 
-**Advantages**: Zero runtime cost — identical to hand-written specialized code. The optimizer can inline, vectorize, and specialize each copy independently.
+**Advantages / 优点**：Zero runtime cost — identical to hand-written specialized code. The optimizer can inline, vectorize, and specialize each copy independently.
 
-**Comparison with C++**: Rust generics work like C++ templates but with one crucial difference — **bounds checking happens at definition, not instantiation**. In C++, a template compiles only when used with a specific type, leading to cryptic error messages deep in library code. In Rust, `T: PartialOrd` is checked when you define the function, so errors are caught early and messages are clear.
+**优点**：零运行时开销 —— 与手写的针对特定类型的代码完全一致。优化器可以独立地对每个副本进行内联、向量化和专门优化。
+
+**Comparison with C++ / 与 C++ 的比较**：Rust generics work like C++ templates but with one crucial difference — **bounds checking happens at definition, not instantiation**.
+
+**与 C++ 的比较**：Rust 泛型的工作原理类似于 C++ 模板，但有一个关键区别 —— **约束检查发生在定义时，而不是实例化时**。
 
 ```rust
 // Rust: error at definition site — "T doesn't implement Display"
+// Rust：在定义位置报错 —— “T 未实现 Display”
 fn broken<T>(val: T) {
     println!("{val}"); // ❌ Error: T doesn't implement Display
 }
 
-// Fix: add the bound
+// Fix: add the bound / 修复：添加约束
 fn fixed<T: std::fmt::Display>(val: T) {
     println!("{val}"); // ✅
 }
 ```
 
-### When Generics Hurt: Code Bloat
+### When Generics Hurt: Code Bloat / 泛型的副作用：代码膨胀
 
 Monomorphization has a cost — binary size. Each unique instantiation duplicates the function body:
 
+单态化是有代价的 —— 即二进制文件体积。每个唯一的实例化都会复制一份函数体：
+
 ```rust
-// This innocent function...
+// This innocent function... / 这个看似无辜的函数……
 fn serialize<T: serde::Serialize>(value: &T) -> Vec<u8> {
     serde_json::to_vec(value).unwrap()
 }
 
 // ...used with 50 different types → 50 copies in the binary.
+// ……如果用于 50 种不同的类型 → 二进制文件中就会有 50 份副本。
 ```
 
-**Mitigation strategies**:
+**Mitigation strategies / 缓解策略**：
 
 ```rust
 // 1. Extract the non-generic core ("outline" pattern)
+// 1. 提取非泛型核心（“轮廓”模式）
 fn serialize<T: serde::Serialize>(value: &T) -> Result<Vec<u8>, serde_json::Error> {
-    // Generic part: only the serialization call
     let json_value = serde_json::to_value(value)?;
-    // Non-generic part: extracted into a separate function
     serialize_value(json_value)
 }
 
 fn serialize_value(value: serde_json::Value) -> Result<Vec<u8>, serde_json::Error> {
     // This function exists only ONCE in the binary
+    // 此函数在二进制文件中只存在一份
     serde_json::to_vec(&value)
 }
 
-// 2. Use trait objects (dynamic dispatch) when inlining isn't critical
+// 2. Use trait objects (dynamic dispatch) / 2. 使用 trait 对象（动态分发）
 fn log_item(item: &dyn std::fmt::Display) {
-    // One copy — uses vtable for dispatch
+    // One copy — uses vtable for dispatch / 只有一份拷贝 —— 使用 vtable 进行分发
     println!("[LOG] {item}");
 }
 ```
 
-> **Rule of thumb**: Use generics for hot paths where inlining matters.
-> Use `dyn Trait` for cold paths (error handling, logging, configuration)
-> where a vtable call is negligible.
+### Generics vs Enums vs Trait Objects — Decision Guide / 决策指南
 
-### Generics vs Enums vs Trait Objects — Decision Guide
-
-Three ways to handle "different types, same interface" in Rust:
-
-| Approach | Dispatch | Known at | Extensible? | Overhead |
+| Approach / 方式 | Dispatch / 分发 | Known at / 确定时机 | Extensible? / 可扩展？ | Overhead / 开销 |
 |----------|----------|----------|-------------|----------|
-| **Generics** (`impl Trait` / `<T: Trait>`) | Static (monomorphized) | Compile time | ✅ (open set) | Zero — inlined |
-| **Enum** | Match arm | Compile time | ❌ (closed set) | Zero — no vtable |
-| **Trait object** (`dyn Trait`) | Dynamic (vtable) | Runtime | ✅ (open set) | Vtable pointer + indirect call |
-
-```rust
-// --- GENERICS: Open set, zero cost, compile-time ---
-fn process<H: Handler>(handler: H, request: Request) -> Response {
-    handler.handle(request) // Monomorphized — one copy per H
-}
-
-// --- ENUM: Closed set, zero cost, exhaustive matching ---
-enum Shape {
-    Circle(f64),
-    Rect(f64, f64),
-    Triangle(f64, f64, f64),
-}
-
-impl Shape {
-    fn area(&self) -> f64 {
-        match self {
-            Shape::Circle(r) => std::f64::consts::PI * r * r,
-            Shape::Rect(w, h) => w * h,
-            Shape::Triangle(a, b, c) => {
-                let s = (a + b + c) / 2.0;
-                (s * (s - a) * (s - b) * (s - c)).sqrt()
-            }
-        }
-    }
-}
-// Adding a new variant forces updating ALL match arms — the compiler
-// enforces exhaustiveness. Great for "I control all the variants."
-
-// --- TRAIT OBJECT: Open set, runtime cost, extensible ---
-fn log_all(items: &[Box<dyn std::fmt::Display>]) {
-    for item in items {
-        println!("{item}"); // vtable dispatch
-    }
-}
-```
-
-**Decision flowchart**:
+| **Generics** (`impl Trait` / `<T: Trait>`) | Static (静态) | Compile time (编译期) | ✅ (open set / 开放集合) | Zero — inlined (零 - 内联) |
+| **Enum** | Match arm | Compile time (编译期) | ❌ (closed set / 封闭集合) | Zero (零) |
+| **Trait object** (`dyn Trait`) | Dynamic (动态) | Runtime (运行时) | ✅ (open set / 开放集合) | Vtable overhead (vtable 开销) |
 
 ```mermaid
 flowchart TD
@@ -166,12 +135,14 @@ flowchart TD
     style H fill:#fef9e7,stroke:#f1c40f,color:#000
 ```
 
-### Const Generics
+### Const Generics / Const 泛型
 
 Since Rust 1.51, you can parameterize types and functions over *constant values*, not just types:
 
+从 Rust 1.51 开始，你可以针对 **常量值** 而不仅仅是类型来对类型和函数进行参数化：
+
 ```rust
-// Array wrapper parameterized over size
+// Array wrapper parameterized over size / 针对大小进行参数化的数组包装器
 struct Matrix<const ROWS: usize, const COLS: usize> {
     data: [[f64; COLS]; ROWS],
 }
@@ -191,143 +162,38 @@ impl<const ROWS: usize, const COLS: usize> Matrix<ROWS, COLS> {
         result
     }
 }
-
-// The compiler enforces dimensional correctness:
-fn multiply<const M: usize, const N: usize, const P: usize>(
-    a: &Matrix<M, N>,
-    b: &Matrix<N, P>, // N must match!
-) -> Matrix<M, P> {
-    let mut result = Matrix::<M, P>::new();
-    for i in 0..M {
-        for j in 0..P {
-            for k in 0..N {
-                result.data[i][j] += a.data[i][k] * b.data[k][j];
-            }
-        }
-    }
-    result
-}
-
-// Usage:
-let a = Matrix::<2, 3>::new(); // 2×3
-let b = Matrix::<3, 4>::new(); // 3×4
-let c = multiply(&a, &b);      // 2×4 ✅
-
-// let d = Matrix::<5, 5>::new();
-// multiply(&a, &d); // ❌ Compile error: expected Matrix<3, _>, got Matrix<5, 5>
 ```
 
-> **C++ comparison**: This is similar to `template<int N>` in C++, but Rust
-> const generics are type-checked eagerly and don't suffer from SFINAE complexity.
+### Const Functions (const fn) / Const 函数
 
-### Const Functions (const fn)
+`const fn` marks a function as evaluable at compile time — Rust's equivalent of C++ `constexpr`.
 
-`const fn` marks a function as evaluable at compile time — Rust's equivalent
-of C++ `constexpr`. The result can be used in `const` and `static` contexts:
+`const fn` 将函数标记为在编译期可求值 —— 相当于 Rust 中的 C++ `constexpr`。
 
 ```rust
-// Basic const fn — evaluated at compile time when used in const context
+// Basic const fn — evaluated at compile time / 基础 const fn —— 在编译期求值
 const fn celsius_to_fahrenheit(c: f64) -> f64 {
     c * 9.0 / 5.0 + 32.0
 }
 
-const BOILING_F: f64 = celsius_to_fahrenheit(100.0); // Computed at compile time
-const FREEZING_F: f64 = celsius_to_fahrenheit(0.0);  // 32.0
-
-// Const constructors — create statics without lazy_static!
-struct BitMask(u32);
-
-impl BitMask {
-    const fn new(bit: u32) -> Self {
-        BitMask(1 << bit)
-    }
-
-    const fn or(self, other: BitMask) -> Self {
-        BitMask(self.0 | other.0)
-    }
-
-    const fn contains(&self, bit: u32) -> bool {
-        self.0 & (1 << bit) != 0
-    }
-}
-
-// Static lookup table — no runtime cost, no lazy initialization
-const GPIO_INPUT:  BitMask = BitMask::new(0);
-const GPIO_OUTPUT: BitMask = BitMask::new(1);
-const GPIO_IRQ:    BitMask = BitMask::new(2);
-const GPIO_IO:     BitMask = GPIO_INPUT.or(GPIO_OUTPUT);
-
-// Register maps as const arrays:
-const SENSOR_THRESHOLDS: [u16; 4] = {
-    let mut table = [0u16; 4];
-    table[0] = 50;   // Warning
-    table[1] = 70;   // High
-    table[2] = 85;   // Critical
-    table[3] = 100;  // Shutdown
-    table
-};
-// The entire table exists in the binary — no heap, no runtime init.
+const BOILING_F: f64 = celsius_to_fahrenheit(100.0); // Computed at compile time / 编译期计算
 ```
 
-**What you CAN do in `const fn`** (as of Rust 1.79+):
-- Arithmetic, bit operations, comparisons
-- `if`/`else`, `match`, `loop`, `while` (control flow)
-- Creating and modifying local variables (`let mut`)
-- Calling other `const fn`s
-- References (`&`, `&mut` — within the const context)
-- `panic!()` (becomes a compile error if reached at compile time)
-
-**What you CANNOT do** (yet):
-- Heap allocation (`Box`, `Vec`, `String`)
-- Trait method calls (only inherent methods)
-- Floating-point in some contexts (stabilized for basic ops)
-- I/O or side effects
-
-```rust
-// const fn with panic — becomes a compile-time error:
-const fn checked_div(a: u32, b: u32) -> u32 {
-    if b == 0 {
-        panic!("division by zero"); // Compile error if b is 0 at const time
-    }
-    a / b
-}
-
-const RESULT: u32 = checked_div(100, 4);  // ✅ 25
-// const BAD: u32 = checked_div(100, 0);  // ❌ Compile error: "division by zero"
-```
-
-> **C++ comparison**: `const fn` is Rust's `constexpr`. The key difference:
-> Rust's version is opt-in and the compiler rigorously verifies that only
-> const-compatible operations are used. In C++, `constexpr` functions can
-> silently fall back to runtime evaluation — in Rust, a `const` context
-> *requires* compile-time evaluation or it's a hard error.
-
-> **Practical advice**: Make constructors and simple utility functions `const fn`
-> whenever possible — it costs nothing and enables callers to use them in const
-> contexts. For hardware diagnostic code, `const fn` is ideal for register
-> definitions, bitmask construction, and threshold tables.
-
-> **Key Takeaways — Generics**
-> - Monomorphization gives zero-cost abstractions but can cause code bloat — use `dyn Trait` for cold paths
-> - Const generics (`[T; N]`) replace C++ template tricks with compile-time–checked array sizes
-> - `const fn` eliminates `lazy_static!` for compile-time–computable values
-
-> **See also:** [Ch 2 — Traits In Depth](ch02-traits-in-depth.md) for trait bounds, associated types, and trait objects. [Ch 4 — PhantomData](ch04-phantomdata-types-that-carry-no-data.md) for zero-sized generic markers.
+> **Key Takeaways — Generics / 关键要点：泛型**
+> - Monomorphization gives zero-cost abstractions but can cause code bloat / 单态化提供了零成本抽象，但可能导致代码膨胀
+> - Const generics (`[T; N]`) replace C++ template tricks / Const 泛型 (`[T; N]`) 替代了 C++ 的模板技巧
+> - `const fn` eliminates `lazy_static!` for simple values / `const fn` 针对简单值消除了对 `lazy_static!` 的需求
 
 ---
 
-### Exercise: Generic Cache with Eviction ★★ (~30 min)
+### Exercise: Generic Cache with Eviction / 练习：带逐出机制的泛型缓存 ★★
 
-Build a generic `Cache<K, V>` struct that stores key-value pairs with a configurable maximum capacity. When full, the oldest entry is evicted (FIFO). Requirements:
+Build a generic `Cache<K, V>` struct that stores key-value pairs with a configurable maximum capacity. When full, the oldest entry is evicted (FIFO).
 
-- `fn new(capacity: usize) -> Self`
-- `fn insert(&mut self, key: K, value: V)` — evicts the oldest if at capacity
-- `fn get(&self, key: &K) -> Option<&V>`
-- `fn len(&self) -> usize`
-- Constrain `K: Eq + Hash + Clone`
+构建一个泛型 `Cache<K, V>` 结构体，用于存储键值对，并具有可配置的最大容量。当缓存满时，将逐出最旧的条目（FIFO）。
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案</summary>
 
 ```rust
 use std::collections::{HashMap, VecDeque};
@@ -369,19 +235,6 @@ impl<K: Eq + Hash + Clone, V> Cache<K, V> {
     fn len(&self) -> usize {
         self.map.len()
     }
-}
-
-fn main() {
-    let mut cache = Cache::new(3);
-    cache.insert("a", 1);
-    cache.insert("b", 2);
-    cache.insert("c", 3);
-    assert_eq!(cache.len(), 3);
-
-    cache.insert("d", 4); // Evicts "a"
-    assert_eq!(cache.get(&"a"), None);
-    assert_eq!(cache.get(&"d"), Some(&4));
-    println!("Cache works! len = {}", cache.len());
 }
 ```
 

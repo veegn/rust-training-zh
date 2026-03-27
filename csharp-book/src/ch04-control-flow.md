@@ -1,12 +1,12 @@
-## Functions vs Methods
+## Functions vs Methods / 函数与方法
 
-> **What you'll learn:** Functions and methods in Rust vs C#, the critical distinction between
-> expressions and statements, `if`/`match`/`loop`/`while`/`for` syntax, and how Rust's
-> expression-oriented design eliminates the need for ternary operators.
+> **What you'll learn / 你将学到：** Functions and methods in Rust vs C#, the critical distinction between expressions and statements, `if`/`match`/`loop`/`while`/`for` syntax, and how Rust's expression-oriented design eliminates the need for ternary operators.
 >
-> **Difficulty:** 🟢 Beginner
+> Rust 与 C# 中函数和方法的差异、表达式与语句之间的关键区别、`if`/`match`/`loop`/`while`/`for` 的写法，以及 Rust 的表达式导向设计如何让三元运算符变得不再必要。
+>
+> **Difficulty / 难度：** 🟢 Beginner / 初级
 
-### C# Function Declaration
+### C# Function Declaration / C# 中的函数声明
 ```csharp
 // C# - Methods in classes
 public class Calculator
@@ -31,7 +31,7 @@ public class Calculator
 }
 ```
 
-### Rust Function Declaration
+### Rust Function Declaration / Rust 中的函数声明
 ```rust
 // Rust - Standalone functions
 fn add(a: i32, b: i32) -> i32 {
@@ -57,17 +57,17 @@ fn main() {
 }
 ```
 
-### Expression vs Statement (Important!)
+### Expression vs Statement (Important!) / 表达式与语句（非常重要）
 
 ```mermaid
 graph LR
-    subgraph "C# — Statements"
+    subgraph "C# - Statements"
         CS1["if (cond)"] --> CS2["return 42;"]
         CS1 --> CS3["return 0;"]
         CS2 --> CS4["Value exits via return"]
         CS3 --> CS4
     end
-    subgraph "Rust — Expressions"
+    subgraph "Rust - Expressions"
         RS1["if cond"] --> RS2["42  (no semicolon)"]
         RS1 --> RS3["0  (no semicolon)"]
         RS2 --> RS4["Block IS the value"]
@@ -107,7 +107,7 @@ fn get_value_ternary(condition: bool) -> i32 {
 }
 ```
 
-### Function Parameters and Return Types
+### Function Parameters and Return Types / 参数与返回类型
 ```rust
 // No parameters, no return value (returns unit type ())
 fn say_hello() {
@@ -126,15 +126,15 @@ fn divide_and_remainder(dividend: i32, divisor: i32) -> (i32, i32) {
 
 fn main() {
     let (quotient, remainder) = divide_and_remainder(10, 3);
-    println!("10 ÷ 3 = {} remainder {}", quotient, remainder);
+    println!("10 / 3 = {} remainder {}", quotient, remainder);
 }
 ```
 
 ***
 
-## Control Flow Basics
+## Control Flow Basics / 控制流基础
 
-### Conditional Statements
+### Conditional Statements / 条件语句
 ```csharp
 // C# if statements
 int x = 5;
@@ -179,7 +179,7 @@ let message = if x > 10 {
 };
 ```
 
-### Loops
+### Loops / 循环
 ```csharp
 // C# loops
 // For loop
@@ -241,7 +241,7 @@ loop {
 }
 ```
 
-### Loop Control
+### Loop Control / 循环控制
 ```csharp
 // C# loop control
 for (int i = 0; i < 10; i++)
@@ -275,12 +275,14 @@ for i in 0..10 {
 
 
 <details>
-<summary><strong>🏋️ Exercise: Temperature Converter</strong> (click to expand)</summary>
+<summary><strong>Exercise: Temperature Converter / 练习：温度转换器</strong> (click to expand / 点击展开)</summary>
 
-**Challenge**: Convert this C# program to idiomatic Rust. Use expressions, pattern matching, and proper error handling.
+**Challenge / 挑战：** Convert this C# program to idiomatic Rust. Use expressions, pattern matching, and proper error handling.
+
+把下面这段 C# 代码翻译成符合 Rust 惯用风格的版本。请使用表达式、模式匹配和合适的错误处理。
 
 ```csharp
-// C# — convert this to Rust
+// C# - convert this to Rust
 public static double Convert(double value, string from, string to)
 {
     double celsius = from switch
@@ -301,7 +303,7 @@ public static double Convert(double value, string from, string to)
 ```
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution / 参考答案</summary>
 
 ```rust
 #[derive(Debug, Clone, Copy)]
@@ -337,12 +339,13 @@ fn main() -> Result<(), String> {
 }
 ```
 
-**Key takeaways**:
-- Enums replace magic strings — exhaustive matching catches missing units at compile time
-- `Result<T, E>` replaces exceptions — the caller sees possible failures in the signature
-- `match` is an expression that returns a value — no `return` statements needed
+**Key takeaways / 关键要点：**
+- Enums replace magic strings - exhaustive matching catches missing units at compile time  
+  枚举替代“魔法字符串”，穷尽匹配能在编译期发现遗漏的单位
+- `Result<T, E>` replaces exceptions - the caller sees possible failures in the signature  
+  `Result<T, E>` 取代异常，调用方能直接从函数签名看到可能失败的情况
+- `match` is an expression that returns a value - no `return` statements needed  
+  `match` 是可返回值的表达式，不需要层层 `return`
 
 </details>
 </details>
-
-

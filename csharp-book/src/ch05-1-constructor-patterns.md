@@ -1,11 +1,12 @@
-## Constructor Patterns
+## Constructor Patterns / 构造器模式
 
-> **What you'll learn:** How to create Rust structs without traditional constructors — `new()` conventions,
-> the `Default` trait, factory methods, and the builder pattern for complex initialization.
+> **What you'll learn / 你将学到：** How to create Rust structs without traditional constructors - `new()` conventions, the `Default` trait, factory methods, and the builder pattern for complex initialization.
 >
-> **Difficulty:** 🟢 Beginner
+> 如何在没有传统构造函数语法的情况下创建 Rust 结构体，包括 `new()` 约定、`Default` trait、工厂方法，以及用于复杂初始化的 builder 模式。
+>
+> **Difficulty / 难度：** 🟢 Beginner / 初级
 
-### C# Constructor Patterns
+### C# Constructor Patterns / C# 构造器模式
 ```csharp
 public class Configuration
 {
@@ -40,7 +41,7 @@ public class Configuration
 }
 ```
 
-### Rust Constructor Patterns
+### Rust Constructor Patterns / Rust 构造模式
 ```rust
 #[derive(Debug)]
 pub struct Configuration {
@@ -114,7 +115,7 @@ fn main() {
 }
 ```
 
-### Builder Pattern Implementation
+### Builder Pattern Implementation / Builder 模式实现
 ```rust
 // More complex builder pattern
 #[derive(Debug)]
@@ -211,19 +212,25 @@ fn main() {
 
 ---
 
-## Exercises
+## Exercises / 练习
 
 <details>
-<summary><strong>🏋️ Exercise: Builder with Validation</strong> (click to expand)</summary>
+<summary><strong>Exercise: Builder with Validation / 练习：带校验的 Builder</strong> (click to expand / 点击展开)</summary>
 
 Create an `EmailBuilder` that:
-1. Requires `to` and `subject` (builder won't compile without them — use a typestate or validate in `build()`)
-2. Has optional `body` and `cc` (Vec of addresses)
-3. `build()` returns `Result<Email, String>` — rejects empty `to` or `subject`
-4. Write tests proving invalid inputs are rejected
+
+创建一个 `EmailBuilder`，要求如下：
+1. Requires `to` and `subject` (builder won't compile without them - use a typestate or validate in `build()`)  
+   必须提供 `to` 和 `subject`（可以用 typestate，也可以在 `build()` 中校验）
+2. Has optional `body` and `cc` (Vec of addresses)  
+   支持可选的 `body` 和 `cc`（地址 `Vec`）
+3. `build()` returns `Result<Email, String>` - rejects empty `to` or `subject`  
+   `build()` 返回 `Result<Email, String>`，并拒绝空的 `to` 或 `subject`
+4. Write tests proving invalid inputs are rejected  
+   编写测试，证明非法输入会被拒绝
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution / 参考答案</summary>
 
 ```rust
 #[derive(Debug)]
@@ -289,5 +296,3 @@ mod tests {
 </details>
 
 ***
-
-

@@ -1,13 +1,16 @@
-## `Vec<T>` vs `List<T>`
+## `Vec<T>` vs `List<T>` / `Vec<T>` 与 `List<T>`
 
-> **What you'll learn:** `Vec<T>` vs `List<T>`, `HashMap` vs `Dictionary`, safe access patterns
-> (why Rust returns `Option` instead of throwing), and the ownership implications of collections.
+> **What you'll learn / 你将学到：** `Vec<T>` vs `List<T>`, `HashMap` vs `Dictionary`, safe access patterns (why Rust returns `Option` instead of throwing), and the ownership implications of collections.
 >
-> **Difficulty:** 🟢 Beginner
+> `Vec<T>` 与 `List<T>` 的区别、`HashMap` 与 `Dictionary` 的区别、安全访问模式（为什么 Rust 返回 `Option` 而不是抛异常），以及集合与所有权之间的关系。
+>
+> **Difficulty / 难度：** 🟢 Beginner / 初级
 
 `Vec<T>` is Rust's equivalent to C#'s `List<T>`, but with ownership semantics.
 
-### C# `List<T>`
+`Vec<T>` 可以看作 Rust 对应于 C# `List<T>` 的类型，但它同时带有 Rust 的所有权语义。
+
+### C# `List<T>` / C# 中的 `List<T>`
 ```csharp
 // C# List<T> - Reference type, heap allocated
 var numbers = new List<int>();
@@ -26,7 +29,7 @@ void ProcessList(List<int> list)
 }
 ```
 
-### Rust `Vec<T>`
+### Rust `Vec<T>` / Rust 中的 `Vec<T>`
 ```rust
 // Rust Vec<T> - Owned type, heap allocated
 let mut numbers = Vec::new();
@@ -36,12 +39,12 @@ numbers.push(3);
 
 // Method that takes ownership
 process_vec(numbers);
-// println!("{:?}", numbers);  // ❌ Error: numbers was moved
+// println!("{:?}", numbers);  // Error: numbers was moved
 
 // Method that borrows
 let mut numbers = vec![1, 2, 3];  // vec! macro for convenience
 process_vec_borrowed(&mut numbers);
-println!("{:?}", numbers);  // ✅ Still accessible
+println!("{:?}", numbers);  // Still accessible
 
 fn process_vec(mut vec: Vec<i32>) {  // Takes ownership
     vec.push(4);
@@ -55,7 +58,7 @@ fn process_vec_borrowed(vec: &mut Vec<i32>) {  // Borrows mutably
 }
 ```
 
-### Creating and Initializing Vectors
+### Creating and Initializing Vectors / 创建和初始化向量
 ```csharp
 // C# List initialization
 var numbers = new List<int> { 1, 2, 3, 4, 5 };
@@ -77,7 +80,7 @@ let from_range: Vec<i32> = (1..=5).collect();
 let from_array = vec![1, 2, 3];
 ```
 
-### Common Operations Comparison
+### Common Operations Comparison / 常见操作对照
 ```csharp
 // C# List operations
 var list = new List<int> { 1, 2, 3 };
@@ -109,7 +112,7 @@ let count = vec.len();          // Get count
 let contains = vec.contains(&3); // Check if contains
 ```
 
-### Safe Access Patterns
+### Safe Access Patterns / 安全访问模式
 ```csharp
 // C# - Exception-based bounds checking
 public int SafeAccess(List<int> list, int index)
@@ -148,11 +151,13 @@ fn main() {
 
 ***
 
-## HashMap vs Dictionary
+## HashMap vs Dictionary / HashMap 与 Dictionary
 
 HashMap is Rust's equivalent to C#'s `Dictionary<K,V>`.
 
-### C# Dictionary
+HashMap 可以视为 Rust 中对应 C# `Dictionary<K, V>` 的集合类型。
+
+### C# Dictionary / C# 中的 Dictionary
 ```csharp
 // C# Dictionary<TKey, TValue>
 var scores = new Dictionary<string, int>
@@ -183,7 +188,7 @@ foreach (var kvp in scores)
 }
 ```
 
-### Rust HashMap
+### Rust HashMap / Rust 中的 HashMap
 ```rust
 use std::collections::HashMap;
 
@@ -217,7 +222,7 @@ for (name, score) in &scores {
 }
 ```
 
-### HashMap Operations
+### HashMap Operations / HashMap 常见操作
 ```csharp
 // C# Dictionary operations
 var dict = new Dictionary<string, int>();
@@ -251,7 +256,7 @@ map.entry("key".to_string()).and_modify(|v| *v += 1); // Modify if exists
 let value = map.get("missing").copied().unwrap_or(0);
 ```
 
-### Ownership with HashMap Keys and Values
+### Ownership with HashMap Keys and Values / HashMap 中键和值的所有权
 ```rust
 // Understanding ownership with HashMap
 fn ownership_example() {
@@ -262,8 +267,8 @@ fn ownership_example() {
     let value = String::from("Alice");
     
     map.insert(key, value);
-    // println!("{}", key);   // ❌ Error: key was moved
-    // println!("{}", value); // ❌ Error: value was moved
+    // println!("{}", key);   // Error: key was moved
+    // println!("{}", value); // Error: value was moved
     
     // Access via references
     if let Some(name) = map.get("name") {
@@ -285,9 +290,9 @@ fn string_slice_keys() {
 
 ***
 
-## Working with Collections
+## Working with Collections / 操作集合
 
-### Iteration Patterns
+### Iteration Patterns / 迭代模式
 ```csharp
 // C# iteration patterns
 var numbers = new List<int> { 1, 2, 3, 4, 5 };
@@ -331,7 +336,7 @@ let evens: Vec<i32> = numbers.iter().filter(|&x| x % 2 == 0).cloned().collect();
 let doubled: Vec<i32> = numbers.into_iter().map(|x| x * 2).collect();
 ```
 
-### Iterator vs IntoIterator vs Iter
+### Iterator vs IntoIterator vs Iter / `iter`、`into_iter` 与 `iter_mut`
 ```rust
 // Understanding different iteration methods
 fn iteration_methods() {
@@ -359,7 +364,7 @@ fn iteration_methods() {
 }
 ```
 
-### Collecting Results
+### Collecting Results / 收集结果
 ```csharp
 // C# - Processing collections with potential errors
 public List<int> ParseNumbers(List<string> inputs)
@@ -409,12 +414,14 @@ fn main() {
 
 ---
 
-## Exercises
+## Exercises / 练习
 
 <details>
-<summary><strong>🏋️ Exercise: LINQ to Iterators</strong> (click to expand)</summary>
+<summary><strong>Exercise: LINQ to Iterators / 练习：把 LINQ 改写为迭代器</strong> (click to expand / 点击展开)</summary>
 
 Translate this C# LINQ query to idiomatic Rust iterators:
+
+把下面这段 C# LINQ 查询翻译成符合 Rust 惯用风格的迭代器链：
 
 ```csharp
 var result = students
@@ -426,14 +433,18 @@ var result = students
 ```
 
 Use this struct:
+
+使用这个结构体：
 ```rust
 struct Student { name: String, grade: u32 }
 ```
 
-Return a `Vec<String>` of the top 3 students with grade ≥ 90, formatted as `"Name: Grade"`.
+Return a `Vec<String>` of the top 3 students with grade >= 90, formatted as `"Name: Grade"`.
+
+返回一个 `Vec<String>`，包含成绩 >= 90 的前 3 名学生，格式为 `"Name: Grade"`。
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution / 参考答案</summary>
 
 ```rust
 #[derive(Debug)]
@@ -462,11 +473,11 @@ fn main() {
 }
 ```
 
-**Key difference from C#**: Rust iterators are lazy (like LINQ), but `.sort_by()` is eager and in-place — there's no lazy `OrderBy`. You sort first, then chain lazy operations.
+**Key difference from C# / 与 C# 的关键差异：** Rust iterators are lazy (like LINQ), but `.sort_by()` is eager and in-place - there's no lazy `OrderBy`. You sort first, then chain lazy operations.
+
+Rust 的迭代器和 LINQ 一样是惰性的，但 `.sort_by()` 是立即执行且原地排序的；Rust 没有惰性的 `OrderBy`。因此通常先排序，再继续接后续惰性操作。
 
 </details>
 </details>
 
 ***
-
-

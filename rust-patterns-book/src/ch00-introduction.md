@@ -55,19 +55,21 @@ Each chapter is tagged with a difficulty level:
 | **Part II: Concurrency & Runtime / 并发与运行时** | | | |
 | 5. Channels 🟢 | `mpsc`, crossbeam, `select!`, actors / `mpsc`、crossbeam、`select!`、actor | 1-2 hours / 1-2 小时 | Can implement a channel-based worker pool / 能实现基于 channel 的 worker pool |
 | 6. Concurrency 🟡 | Threads, rayon, Mutex, RwLock, atomics / 线程、rayon、Mutex、RwLock、原子类型 | 2-3 hours / 2-3 小时 | Can pick the right sync primitive for a scenario / 能为具体场景选择合适的同步原语 |
-| 7. Closures 🟢 | `Fn`/`FnMut`/`FnOnce`, combinators / `Fn`/`FnMut`/`FnOnce`、组合器 | 1-2 hours / 1-2 小时 | Can write a higher-order function that accepts closures / 能编写接受闭包的高阶函数 |
-| 8. Smart Pointers 🟡 | Box, Rc, Arc, RefCell, Cow, Pin / Box、Rc、Arc、RefCell、Cow、Pin | 2-3 hours / 2-3 小时 | Can explain when to use each smart pointer / 能解释每种智能指针的适用场景 |
+| 7. Closures 🟢 | Fn, FnMut, FnOnce, higher-order functions / Fn、FnMut、FnOnce、高阶函数 | 1-2 hours / 1-2 小时 | Can explain the three closure traits / 能解释三种闭包 trait |
+| 8. Functional vs Imperative 🟡 | Iterator combinators, adapters, side-effect management / 迭代器组合器、适配器、副作用管理 | 1-2 hours / 1-2 小时 | Can explain when to use `.fold()` vs `for` loop / 能解释何时使用 `.fold()` 而不是 `for` 循环 |
+| 9. Smart Pointers 🟡 | Box, Rc, Arc, RefCell, Cow, Pin / Box、Rc、Arc、RefCell、Cow、Pin | 2-3 hours / 2-3 小时 | Can explain when to use each smart pointer / 能解释每种智能指针的适用场景 |
 | **Part III: Systems & Production / 系统与生产实践** | | | |
-| 9. Error Handling 🟢 | thiserror, anyhow, `?` operator / thiserror、anyhow、`?` 操作符 | 1-2 hours / 1-2 小时 | Can design an error type hierarchy / 能设计错误类型层次结构 |
-| 10. Serialization 🟡 | serde, zero-copy, binary data / serde、零拷贝、二进制数据 | 2-3 hours / 2-3 小时 | Can write a custom serde deserializer / 能写自定义 serde 反序列化器 |
-| 11. Unsafe 🔶 | Superpowers, FFI, UB pitfalls, allocators / 五种“超能力”、FFI、UB 陷阱、分配器 | 2-3 hours / 2-3 小时 | Can wrap unsafe code in a sound safe API / 能把 unsafe 代码封装成健全的安全 API |
-| 12. Macros 🟡 | `macro_rules!`, proc macros, `syn`/`quote` / `macro_rules!`、过程宏、`syn`/`quote` | 2-3 hours / 2-3 小时 | Can write a declarative macro with `tt` munching / 能写出使用 `tt` munching 的声明式宏 |
-| 13. Testing 🟢 | Unit/integration/doc tests, proptest, criterion / 单元测试、集成测试、文档测试、proptest、criterion | 1-2 hours / 1-2 小时 | Can set up property-based tests / 能搭建属性测试 |
-| 14. API Design 🟡 | Module layout, ergonomic APIs, feature flags / 模块布局、易用 API、feature 标志 | 2-3 hours / 2-3 小时 | Can apply the "parse, don't validate" pattern / 能应用“先解析，不要事后校验”的模式 |
-| 15. Async 🔶 | Futures, Tokio, common pitfalls / Future、Tokio、常见陷阱 | 1-2 hours / 1-2 小时 | Can identify async anti-patterns / 能识别 async 反模式 |
+| 10. Error Handling 🟢 | thiserror, anyhow, `?` operator / thiserror、anyhow、`?` 操作符 | 1-2 hours / 1-2 小时 | Can design an error type hierarchy / 能设计错误类型层次结构 |
+| 11. Serialization 🟡 | serde, zero-copy, binary data / serde、零拷贝、二进制数据 | 2-3 hours / 2-3 小时 | Can write a custom serde deserializer / 能写自定义 serde 反序列化器 |
+| 12. Unsafe 🔶 | Superpowers, FFI, UB pitfalls, allocators / 五种“超能力”、FFI、UB 陷阱、分配器 | 2-3 hours / 2-3 小时 | Can wrap unsafe code in a sound safe API / 能把 unsafe 代码封装成健全的安全 API |
+| 13. Macros 🟡 | `macro_rules!`, proc macros, `syn`/`quote` / `macro_rules!`、过程宏、`syn`/`quote` | 2-3 hours / 2-3 小时 | Can write a declarative macro with `tt` munching / 能写出使用 `tt` munching 的声明式宏 |
+| 14. Testing 🟢 | Unit/integration/doc tests, proptest, criterion / 单元测试、集成测试、文档测试、proptest、criterion | 1-2 hours / 1-2 小时 | Can set up property-based tests / 能搭建属性测试 |
+| 15. API Design 🟡 | Module layout, ergonomic APIs, feature flags / 模块布局、易用 API、feature 标志 | 2-3 hours / 2-3 小时 | Can apply the "parse, don't validate" pattern / 能应用“先解析，不要事后校验”的模式 |
+| 16. Async 🔶 | Futures, Tokio, common pitfalls / Future、Tokio、常见陷阱 | 1-2 hours / 1-2 小时 | Can identify async anti-patterns / 能识别 async 反模式 |
+| 17. Exercises 🟢 | Comprehensive practice problems / 综合练习题 | 4-8 hours / 4-8 小时 | Can solve common Rust pattern puzzles / 能解决常见的 Rust 模式谜题 |
 | **Appendices / 附录** | | | |
-| Reference Card / 速查卡 | Quick-look trait bounds, lifetimes, patterns / trait 约束、生命周期、模式速查 | As needed / 按需查阅 | - |
-| Capstone Project / 综合项目 | Type-safe task scheduler / 类型安全任务调度器 | 4-6 hours / 4-6 小时 | Submit a working implementation / 完成一个可运行实现 |
+| 18. Reference Card / 速查卡 | Quick-look trait bounds, lifetimes, patterns / trait 约束、生命周期、模式速查 | As needed / 按需查阅 | - |
+| 19. Capstone Project / 综合项目 | Type-safe task scheduler / 类型安全任务调度器 | 4-6 hours / 4-6 小时 | Submit a working implementation / 完成一个可运行实现 |
 
 **Total estimated time**: 30-45 hours for thorough study with exercises.
 
@@ -122,47 +124,55 @@ OS threads, scoped threads, rayon, Mutex/RwLock/Atomics, Condvar, OnceLock, lock
 `Fn`/`FnMut`/`FnOnce`, closures as parameters/return values, combinators, higher-order APIs.  
 `Fn`/`FnMut`/`FnOnce`、闭包作为参数和返回值、组合器与高阶 API。
 
-**[8. Smart Pointers and Interior Mutability / 8. 智能指针与内部可变性](ch08-smart-pointers-and-interior-mutability.md)** 🟡  
+**[8. Functional vs. Imperative: When Elegance Wins / 8. 函数式与命令式：优雅何时胜出](ch08-functional-vs-imperative-when-elegance-wins.md)** 🟢  
+Iterator combinators, adapters, side-effect management, functional vs imperative performance.  
+迭代器组合器、适配器、副作用管理、函数式与命令式的性能权衡。
+
+**[9. Smart Pointers and Interior Mutability / 9. 智能指针与内部可变性](ch09-smart-pointers-and-interior-mutability.md)** 🟡  
 Box, Rc, Arc, Weak, Cell/RefCell, Cow, Pin, ManuallyDrop.  
 Box、Rc、Arc、Weak、Cell/RefCell、Cow、Pin、ManuallyDrop。
 
 ### Part III: Systems & Production / 第三部分：系统与生产实践
 
-**[9. Error Handling Patterns / 9. 错误处理模式](ch09-error-handling-patterns.md)** 🟢  
+**[10. Error Handling Patterns / 10. 错误处理模式](ch10-error-handling-patterns.md)** 🟢  
 thiserror vs anyhow, `#[from]`, `.context()`, `?` operator, panics.  
 thiserror 与 anyhow 的对比、`#[from]`、`.context()`、`?` 操作符与 panic。
 
-**[10. Serialization, Zero-Copy, and Binary Data / 10. 序列化、零拷贝与二进制数据](ch10-serialization-zero-copy-and-binary-data.md)** 🟡  
+**[11. Serialization, Zero-Copy, and Binary Data / 11. 序列化、零拷贝与二进制数据](ch11-serialization-zero-copy-and-binary-data.md)** 🟡  
 serde fundamentals, enum representations, zero-copy deserialization, `repr(C)`, `bytes::Bytes`.  
 serde 基础、枚举表示方式、零拷贝反序列化、`repr(C)`、`bytes::Bytes`。
 
-**[11. Unsafe Rust - Controlled Danger / 11. Unsafe Rust：受控的危险](ch11-unsafe-rust-controlled-danger.md)** 🔶  
+**[12. Unsafe Rust - Controlled Danger / 12. Unsafe Rust：受控的危险](ch12-unsafe-rust-controlled-danger.md)** 🔶  
 Five superpowers, sound abstractions, FFI, UB pitfalls, arena/slab allocators.  
 五种“超能力”、健全抽象、FFI、UB 陷阱、arena/slab 分配器。
 
-**[12. Macros - Code That Writes Code / 12. 宏：生成代码的代码](ch12-macros-code-that-writes-code.md)** 🟡  
+**[13. Macros - Code That Writes Code / 13. 宏：生成代码的代码](ch13-macros-code-that-writes-code.md)** 🟡  
 `macro_rules!`, when (not) to use macros, proc macros, derive macros, `syn`/`quote`.  
 `macro_rules!`、宏的适用与不适用场景、过程宏、派生宏、`syn`/`quote`。
 
-**[13. Testing and Benchmarking Patterns / 13. 测试与基准模式](ch13-testing-and-benchmarking-patterns.md)** 🟢  
+**[14. Testing and Benchmarking Patterns / 14. 测试与基准模式](ch14-testing-and-benchmarking-patterns.md)** 🟢  
 Unit/integration/doc tests, proptest, criterion, mocking strategies.  
 单元测试、集成测试、文档测试、proptest、criterion 与 mock 策略。
 
-**[14. Crate Architecture and API Design / 14. Crate 架构与 API 设计](ch14-crate-architecture-and-api-design.md)** 🟡  
+**[15. Crate Architecture and API Design / 15. Crate 架构与 API 设计](ch15-crate-architecture-and-api-design.md)** 🟡  
 Module layout, API design checklist, ergonomic parameters, feature flags, workspaces.  
 模块布局、API 设计清单、易用参数设计、feature 标志与工作区。
 
-**[15. Async/Await Essentials / 15. Async/Await 核心要点](ch15-asyncawait-essentials.md)** 🔶  
+**[16. Async/Await Essentials / 16. Async/Await 核心要点](ch16-asyncawait-essentials.md)** 🔶  
 Futures, Tokio quick-start, common pitfalls. (For deep async coverage, see our Async Rust Training.)  
 Future、Tokio 快速入门与常见陷阱。（若需深入异步内容，请参考 Async Rust Training。）
 
+**[17. Exercises / 17. 练习](ch17-exercises.md)** 🟢  
+Comprehensive practice problems and challenges.  
+全书知识点综合练习与挑战。
+
 ### Appendices / 附录
 
-**[Summary and Reference Card / 总结与速查卡](ch17-summary-and-reference-card.md)**  
+**[Summary and Reference Card / 总结与速查卡](ch18-summary-and-reference-card.md)**  
 Pattern decision guide, trait bounds cheat sheet, lifetime elision rules, further reading.  
 模式决策指南、trait 约束速查、生命周期省略规则与延伸阅读。
 
-**[Capstone Project: Type-Safe Task Scheduler / 综合项目：类型安全任务调度器](ch18-capstone-project.md)**  
+**[Capstone Project: Type-Safe Task Scheduler / 综合项目：类型安全任务调度器](ch19-capstone-project.md)**  
 Integrate generics, traits, typestate, channels, error handling, and testing into a complete system.  
 将泛型、trait、typestate、channel、错误处理与测试整合为完整系统。
 

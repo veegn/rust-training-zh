@@ -1,4 +1,4 @@
-# 16. Async/Await Essentials / 16. Async/Await 核心要点 🔴
+# 16. Async/Await Essentials / 16. Async/Await 核心要点 🔶
 
 > **What you'll learn / 你将学到：**
 > - How Rust's `Future` trait differs from Go's goroutines and Python's asyncio / Rust 的 `Future` trait 与 Go 的 goroutine 以及 Python 的 asyncio 有何不同
@@ -41,11 +41,10 @@ async fn fetch_data(url: &str) -> Result<Vec<u8>, reqwest::Error> {
 ### Tokio Quick Start / Tokio 快速上手
 
 ```toml
-```
-
 # Cargo.toml
 [dependencies]
 tokio = { version = "1", features = ["full"] }
+```
 
 ```rust,ignore
 use tokio::time::{sleep, Duration};

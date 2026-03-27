@@ -66,9 +66,9 @@ fn main() {
 
 ### Exercise 2: Unit-of-Measure with PhantomData ★★ (~30 min) / 练习 2：结合 PhantomData 的计量单位
 
-Extend the unit-of-measure pattern from Ch4 to support:
+Extend the unit-of-measure pattern from Ch 4 to support:
 
-扩展第五章（原书中为 Ch4）中的计量单位模式，以支持：
+扩展第 4 章中的计量单位模式，以支持：
 
 - `Meters`, `Seconds`, `Kilograms` / 米、秒、千克
 - Addition of same units / 相同单位的加法
@@ -463,7 +463,7 @@ fn main() {
 
 ---
 
-### Exercise 7: Safe Wrapper around Unsafe (Ch11) ★★★ (~45 min) / 练习 7：Unsafe 的安全封装（第 11 章）
+### Exercise 7: Safe Wrapper around Unsafe (Ch 12) ★★★ (~45 min) / 练习 7：Unsafe 的安全封装（第 12 章）
 
 Write a `FixedVec<T, const N: usize>` — a fixed-capacity, stack-allocated vector. Requirements:
 
@@ -545,7 +545,7 @@ fn main() {
 
 ---
 
-### Exercise 8: Declarative Macro — `map!` (Ch12) ★ (~15 min) / 练习 8：声明式宏 —— `map!`（第 12 章）
+### Exercise 8: Declarative Macro — `map!` (Ch 13) ★ (~15 min) / 练习 8：声明式宏 —— `map!`（第 13 章）
 
 Write a `map!` macro that creates a `HashMap` from key-value pairs, similar to `vec![]`:
 
@@ -609,7 +609,7 @@ fn main() {
 
 ---
 
-### Exercise 9: Custom serde Deserialization (Ch10) ★★★ (~45 min) / 练习 9：自定义 serde 反序列化（第 10 章）
+### Exercise 9: Custom serde Deserialization (Ch 11) ★★★ (~45 min) / 练习 9：自定义 serde 反序列化（第 11 章）
 
 Design a `Duration` wrapper that deserializes from human-readable strings like `"30s"`, `"5m"`, `"2h"` using a custom serde deserializer. The struct should also serialize back to the same format.
 

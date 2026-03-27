@@ -352,7 +352,7 @@ mod tests {
 > - `criterion` provides statistically rigorous benchmarks with HTML reports / `criterion` 提供了具有统计学严谨性的基准测试及 HTML 报告
 > - Mock via trait generics + test doubles, not mock frameworks / 通过 trait 泛型 + 测试桩（test doubles）进行 Mock，而非通过 Mock 框架
 
-> **See also / 延伸阅读**：[Ch 13 — Macros](ch13-macros-code-that-writes-code.md) 了解如何测试由宏生成的代码。[Ch 15 — API Design](ch15-crate-architecture-and-api-design.md) 了解模块布局如何影响测试的组织形式。
+> **See also / 延伸阅读**：[Ch 13 — Macros](ch13-macros-code-that-writes-code.md) 了解如何测试由宏生成的代码。[Ch 15 — Crate Architecture and API Design](ch15-crate-architecture-and-api-design.md) 了解模块布局如何影响测试的组织形式。
 
 ---
 

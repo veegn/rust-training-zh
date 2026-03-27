@@ -71,7 +71,7 @@ fn main() -> Result<()> {
 | | `thiserror` | `anyhow` |
 |---|---|---|
 | **Use in / 用于** | Libraries, shared crates / 库、共享 crate | Applications, binaries / 应用程序、二进制文件 |
-| **Error types / 错误类型** | Concrete enums — callers can match / 具体的枚举 —— 调用者可以进行 match | `anyhow::Error` — opaque / 封闭的（Opaque） |
+| **Error types / 错误类型** | Concrete enums — callers can match / 具体的枚举 —— 调用者可以进行 match | `anyhow::Error` — opaque / `anyhow::Error` —— 不透明的（Opaque） |
 | **Effort / 开发工作量** | Define your error enum / 定义你的错误枚举 | Just use `Result<T>` / 直接使用 `Result<T>` 即可 |
 | **Downcasting / 向下转型** | Not needed — pattern match / 不需要 —— 利用模式匹配 | `error.downcast_ref::<MyError>()` |
 
@@ -210,9 +210,9 @@ match result {
 > - `#[from]` auto-generates `From` impls; `.context()` adds human-readable wrappers / `#[from]` 自动生成 `From` 实现；`.context()` 添加人类可读的包装层
 > - `?` desugars to `From::from()` + early return; works in `main()` returning `Result` / `?` 会反糖化为 `From::from()` + 提前返回；可在返回 `Result` 的 `main()` 函数中使用
 
-> **See also / 另请参阅:** [Ch 14 — API Design](ch14-crate-architecture-and-api-design.md) for "parse, don't validate" patterns. [Ch 11 — Serialization](ch11-serialization-zero-copy-and-binary-data.md) for serde error handling.
+> **See also / 另请参阅:** [Ch 15 — Crate Architecture and API Design](ch15-crate-architecture-and-api-design.md) for "parse, don't validate" patterns. [Ch 11 — Serialization](ch11-serialization-zero-copy-and-binary-data.md) for serde error handling.
 >
-> 参见 [第 14 章 —— API 设计](ch14-crate-architecture-and-api-design.md) 了解“解析而非验证”模式。参见 [第 11 章 —— 序列化](ch11-serialization-zero-copy-and-binary-data.md) 了解 serde 错误处理。
+> 参见 [第 15 章 —— Crate 架构与 API 设计](ch15-crate-architecture-and-api-design.md) 了解“解析而非验证”模式。参见 [第 11 章 —— 序列化](ch11-serialization-zero-copy-and-binary-data.md) 了解 serde 错误处理。
 
 ```mermaid
 flowchart LR

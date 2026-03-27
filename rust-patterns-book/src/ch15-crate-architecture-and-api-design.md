@@ -959,7 +959,7 @@ cargo bench -- parse_config  # Run specific benchmark / 运行特定的基准测
 > - `#[non_exhaustive]` on public enums prevents breaking changes when adding variants / 公共枚举上的 `#[non_exhaustive]` 标签能防止添加变体时导致破坏性变更
 > - `#[must_use]` catches silent discards of important values / `#[must_use]` 能捕获对重要数值的静默丢弃
 
-> **See also / 延伸阅读**：[Ch 09 — Error Handling](ch09-error-handling-patterns.md) 了解公共 API 中的错误类型设计。[Ch 14 — Testing](ch14-testing-and-benchmarking-patterns.md) 了解如何测试 crate 的公共 API。
+> **See also / 延伸阅读**：[Ch 10 — Error Handling Patterns](ch10-error-handling-patterns.md) 了解公共 API 中的错误类型设计。[Ch 14 — Testing and Benchmarking Patterns](ch14-testing-and-benchmarking-patterns.md) 了解如何测试 crate 的公共 API。
 
 ---
 

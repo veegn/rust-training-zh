@@ -1428,7 +1428,7 @@ Multiple mixins can share the same ingredient — no diamond problem:
 > 3.  **Blanket impl** = `impl<T: HasX + HasY> Mixin for T {}` — auto-injects methods / **Blanket 实现** = `impl<T: HasX + HasY> Mixin for T {}` —— 自动注入方法
 > 4.  **Conditional methods** = `where Self::Spi: DmaCapable` on individual defaults / **条件方法** = 在单个默认方法上使用 `where Self::Spi: DmaCapable`
 > 5.  **Partial platforms** = test structs that only impl the needed ingredients / **部分平台** = 仅实现所需组件的测试结构体
-> 6.  **No runtime cost** — the compiler generates specialised code for each platform type / **无运行时开销** —— 编译其会为每个平台类型生成专门的代码
+> 6.  **No runtime cost** — the compiler generates specialised code for each platform type / **无运行时开销** —— 编译器会为每个平台类型生成专门的代码
 
 ***
 

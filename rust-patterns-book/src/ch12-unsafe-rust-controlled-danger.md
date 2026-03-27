@@ -1,4 +1,4 @@
-# 12. Unsafe Rust — Controlled Danger / 12. Unsafe Rust：受控的危险 🔴
+# 12. Unsafe Rust — Controlled Danger / 12. Unsafe Rust：受控的危险 🔶
 
 > **What you'll learn / 你将学到：**
 > - The five unsafe superpowers and when each is needed / 五种 Unsafe “超能力”及其适用场景
@@ -463,7 +463,7 @@ graph TD
 > - FFI requires `extern "C"`, `#[repr(C)]`, and careful null/lifetime handling / FFI 需要 `extern "C"`、`#[repr(C)]` 以及对空指针/生命周期的谨慎处理
 > - Arena and slab allocators trade general-purpose flexibility for allocation speed / Arena 和 Slab 分配器通过牺牲通用灵活性来换取分配速度
 
-> **See also / 延伸阅读**：[Ch 4 — PhantomData](ch04-phantomdata-types-that-carry-no-data.md) 了解与 unsafe 代码相关的型变（variance）和 drop-check 交互。[Ch 8 — Smart Pointers](ch08-smart-pointers-and-interior-mutability.md) 了解 Pin 和自引用类型。
+> **See also / 延伸阅读**：[Ch 4 — PhantomData](ch04-phantomdata-types-that-carry-no-data.md) 了解与 unsafe 代码相关的型变（variance）和 drop-check 交互。[Ch 9 — Smart Pointers](ch09-smart-pointers-and-interior-mutability.md) 了解 Pin 和自引用类型。
 
 ---
 

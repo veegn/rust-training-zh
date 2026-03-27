@@ -1,4 +1,4 @@
-# 4. PhantomData — Types That Carry No Data / 4. PhantomData —— 不携带数据的类型 🔴
+# 4. PhantomData — Types That Carry No Data / 4. PhantomData —— 不携带数据的类型 🔶
 
 > **What you'll learn / 你将学到：**
 > - Why `PhantomData<T>` exists and the three problems it solves / 为什么 `PhantomData<T>` 存在以及它解决的三个问题

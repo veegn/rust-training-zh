@@ -514,7 +514,7 @@ fn main() {
 > - Zero-copy deserialization (`&'a str` in structs) avoids allocation for read-heavy workloads / 零拷贝反序列化（结构体中的 `&'a str`）可避免读密集型工作负载中的分配开销。
 > - `repr(C)` + `zerocopy`/`bytemuck` for hardware register layouts; `bytes::Bytes` for reference-counted buffers / 对于硬件寄存器布局，使用 `repr(C)` + `zerocopy`/`bytemuck`；对于引用计数缓冲区，使用 `bytes::Bytes`。
 
-> **See also: / 另请参阅：** [Ch 9 — Error Handling](ch09-error-handling-patterns.md) 了解如何将 `serde` 错误与 `thiserror` 结合。 [Ch 11 — Unsafe](ch11-unsafe-rust-controlled-danger.md) 了解 `repr(C)` 和 FFI 数据布局。
+> **See also: / 另请参阅：** [Ch 10 — Error Handling](ch10-error-handling-patterns.md) 了解如何将 `serde` 错误与 `thiserror` 结合。 [Ch 12 — Unsafe](ch12-unsafe-rust-controlled-danger.md) 了解 `repr(C)` 和 FFI 数据布局。
 
 ```mermaid
 flowchart LR

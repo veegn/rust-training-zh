@@ -12,9 +12,9 @@ This project integrates patterns from across the book into a single, production-
 > - PhantomData for zero-cost state markers (Ch 4) / 用于零成本状态标记的 PhantomData（第 4 章）
 > - Channels for worker communication (Ch 5) / 用于工作线程通信的通道（第 5 章）
 > - Concurrency with scoped threads (Ch 6) / 使用作用域线程的并发（第 6 章）
-> - Error handling with `thiserror` (Ch 9) / 使用 `thiserror` 进行错误处理（第 9 章）
-> - Testing with property-based tests (Ch 13) / 使用基于属性的测试进行测试（第 13 章 / 原书为 Ch13）
-> - API design with `TryFrom` and validated types (Ch 14) / 使用 `TryFrom` 和经验证类型的 API 设计（第 14 章 / 原书为 Ch14）
+> - Error handling with `thiserror` (Ch 10) / 使用 `thiserror` 进行错误处理（第 10 章）
+> - Testing with property-based tests (Ch 14) / 使用基于属性的测试进行测试（第 14 章）
+> - API design with `TryFrom` and validated types (Ch 15) / 使用 `TryFrom` 和经验证类型的 API 设计（第 15 章）
 
 ## The Problem / 问题背景描述
 
@@ -80,7 +80,7 @@ struct Task<State, R> {
 Each transition method should consume `self` and return the new state:
 
 每一个转换方法都应该消耗（consume） `self` 并返回新状态：
-麻
+
 
 ```rust
 impl<R> Task<Pending, R> {
@@ -314,7 +314,7 @@ Once the basic scheduler works, try these enhancements:
 1.  **Priority queue / 优先级队列**：Add a `Priority` newtype (1–10) and process higher-priority tasks first / 添加 `Priority` 新类型（1–10）并优先处理高优先级任务
 2.  **Retry policy / 重试策略**：Failed tasks retry up to N times before being marked permanently failed / 失败的任务在被标记为永久失败前最多重试 N 次
 3.  **Cancellation / 取消机制**：Add a `cancel(TaskId)` method that removes pending tasks / 添加 `cancel(TaskId)` 方法来移除等待中的任务
-4.  **Async version / 异步版本**：Port to `tokio::spawn` with `tokio::sync::mpsc` channels (Ch 15) / 迁移到带 `tokio::sync::mpsc` 通道的 `tokio::spawn`（第 16 章 / 原书为 Ch15）
+4.  **Async version / 异步版本**：Port to `tokio::spawn` with `tokio::sync::mpsc` channels (Ch 16) / 迁移到带 `tokio::sync::mpsc` 通道的 `tokio::spawn`（第 16 章）
 5.  **Metrics / 指标统计**：Track per-worker task counts, average execution time, and failure rates / 统计每个工作线程的任务数、平均执行时间和失败率
 
 ***

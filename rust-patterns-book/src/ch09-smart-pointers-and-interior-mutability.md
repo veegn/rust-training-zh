@@ -6,7 +6,7 @@
 > - `Cell`, `RefCell`, and `Cow` for interior mutability patterns / 用于内部可变性模式的 `Cell`、`RefCell` 和 `Cow`
 > - `Pin` for self-referential types and `ManuallyDrop` for lifecycle control / 用于自引用类型的 `Pin` 和用于生命周期控制的 `ManuallyDrop`
 
-## Box, Rc, Arc — Heap Allocation and Sharing
+
 
 ## Box, Rc, Arc — Heap Allocation and Sharing / Box, Rc, Arc —— 堆分配与共享
 

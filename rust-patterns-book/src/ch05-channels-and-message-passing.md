@@ -300,9 +300,9 @@ fn main() {
 > - `select!` replaces complex multi-source polling with declarative channel selection / `select!` 通过声明式的通道选择，取代了复杂的多个源的轮询
 > - Bounded channels provide natural backpressure; unbounded channels risk OOM / 有界通道提供自然的背压；无界通道则存在内存溢出 (OOM) 的风险
 
-> **See also / 另请参阅：** [Ch 6 — Concurrency](ch06-concurrency-vs-parallelism-vs-threads.md) for threads, Mutex, and shared state. [Ch 15 — Async](ch15-asyncawait-essentials.md) for async channels (`tokio::sync::mpsc`).
+> **See also / 另请参阅：** [Ch 6 — Concurrency](ch06-concurrency-vs-parallelism-vs-threads.md) for threads, Mutex, and shared state. [Ch 16 — Async/Await Essentials](ch16-asyncawait-essentials.md) for async channels (`tokio::sync::mpsc`).
 >
-> 参见 [Ch 6 —— 并发](ch06-concurrency-vs-parallelism-vs-threads.md) 了解线程、互斥锁和共享状态。参见 [Ch 15 —— Async](ch15-asyncawait-essentials.md) 了解异步通道 (`tokio::sync::mpsc`)。
+> 参见 [Ch 6 —— 并发](ch06-concurrency-vs-parallelism-vs-threads.md) 了解线程、互斥锁和共享状态。参见 [Ch 16 —— Async/Await 核心要点](ch16-asyncawait-essentials.md) 了解异步通道 (`tokio::sync::mpsc`)。
 
 ---
 

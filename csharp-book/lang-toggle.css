@@ -1,0 +1,46 @@
+/* Toggle visibility based on the active language */
+body.lang-en .lang-zh { display: none !important; }
+body.lang-zh .lang-en { display: none !important; }
+
+/* Styles for the toggle button in the header */
+#lang-toggle {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+body.theme-ayu #lang-toggle, 
+body.theme-navy #lang-toggle, 
+body.theme-coal #lang-toggle {
+    background: #333;
+    color: #eee;
+    border-color: #555;
+}
+
+#lang-toggle:hover {
+    background: #f0f0f0;
+}
+
+body.theme-ayu #lang-toggle:hover,
+body.theme-navy #lang-toggle:hover,
+body.theme-coal #lang-toggle:hover {
+    background: #444;
+}
+
+.lang-btn {
+    padding: 2px 6px;
+    border-radius: 3px;
+    transition: 0.2s;
+}
+
+.lang-btn.active {
+    background: #007bff;
+    color: white;
+}

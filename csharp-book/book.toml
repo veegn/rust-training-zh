@@ -11,7 +11,8 @@ build-dir = "book"
 git-repository-url = "https://github.com/microsoft/RustTraining"
 default-theme = "light"
 preferred-dark-theme = "ayu"
-additional-js = ["mermaid.min.js", "mermaid-init.js"]
+additional-js = ["mermaid.min.js", "mermaid-init.js", "lang-toggle.js"]
+additional-css = ["lang-toggle.css"]
 
 [preprocessor.mermaid]
 command = "mdbook-mermaid"

@@ -1,15 +1,24 @@
-## Unsafe Rust
+## Unsafe Rust | Unsafe Rust / 不安全 Rust
 
 > **What you'll learn:** What `unsafe` permits (raw pointers, FFI, unchecked casts), safe wrapper patterns,
 > C# P/Invoke vs Rust FFI for calling native code, and the safety checklist for `unsafe` blocks.
 >
-> **Difficulty:** 🔴 Advanced
+> **你将学到什么：** `unsafe` 允许做哪些事（原始指针、FFI、非检查转换），如何为不安全代码包一层安全封装，
+> C# 的 P/Invoke 与 Rust FFI 调用原生代码的方式对比，以及编写 `unsafe` 代码时应遵守的安全检查清单。
+>
+> **Difficulty:** Advanced
+>
+> **难度：** 高级
 
 Unsafe Rust allows you to perform operations that the borrow checker cannot verify. Use it sparingly and with clear documentation.
 
-> **Advanced coverage**: For safe abstraction patterns over unsafe code (arena allocators, lock-free structures, custom vtables), see [Rust Patterns](../../rust-patterns-book/src/summary.md).
+Unsafe Rust 允许你执行那些借用检查器无法验证安全性的操作。它应该谨慎使用，并且配合清晰的文档与注释。
 
-### When You Need Unsafe
+> **Advanced coverage**: For safe abstraction patterns over unsafe code (arena allocators, lock-free structures, custom vtables), see [Rust Patterns](../../rust-patterns-book/src/summary.md).
+>
+> **进阶阅读：** 如果你想进一步了解如何在 unsafe 代码之上构建安全抽象（如 arena 分配器、无锁结构、自定义 vtable 等），可以看 [Rust Patterns](../../rust-patterns-book/src/summary.md)。
+
+### When You Need Unsafe | 什么时候需要 `unsafe`
 ```rust
 // 1. Dereferencing raw pointers
 let mut value = 42;
@@ -33,7 +42,7 @@ unsafe {
 static mut COUNTER: u32 = 0;
 // SAFETY: single-threaded context; no concurrent access to COUNTER.
 unsafe {
-    COUNTER += 1; // Not thread-safe — caller must ensure synchronization
+    COUNTER += 1; // Not thread-safe - caller must ensure synchronization
 }
 
 // 4. Implementing unsafe traits
@@ -42,7 +51,7 @@ unsafe trait UnsafeTrait {
 }
 ```
 
-### C# Comparison: unsafe Keyword
+### C# Comparison: unsafe Keyword | C# 对比：`unsafe` 关键字
 ```csharp
 // C# unsafe - similar concept, different scope
 unsafe void UnsafeExample()
@@ -66,7 +75,7 @@ unsafe void PinnedExample()
 }
 ```
 
-### Safe Wrappers
+### Safe Wrappers | 安全封装
 ```rust
 /// The key pattern: wrap unsafe code in a safe API
 pub struct SafeBuffer {
@@ -78,12 +87,12 @@ impl SafeBuffer {
         SafeBuffer { data: vec![0; size] }
     }
     
-    /// Safe API — bounds-checked access
+    /// Safe API - bounds-checked access
     pub fn get(&self, index: usize) -> Option<u8> {
         self.data.get(index).copied()
     }
     
-    /// Fast unchecked access — unsafe but wrapped safely with bounds check
+    /// Fast unchecked access - unsafe but wrapped safely with bounds check
     pub fn get_unchecked_safe(&self, index: usize) -> Option<u8> {
         if index < self.data.len() {
             // SAFETY: we just checked that index is in bounds
@@ -95,16 +104,22 @@ impl SafeBuffer {
 }
 ```
 
+```text
+Rust 社区对 unsafe 的核心态度不是“不要碰”，而是“把它限制在尽可能小的边界里，并只向外暴露安全 API”。
+```
+
 ***
 
-## Interop with C# via FFI
+## Interop with C# via FFI | 通过 FFI 与 C# 互操作
 
 Rust can expose C-compatible functions that C# can call via P/Invoke.
+
+Rust 可以导出符合 C ABI 的函数，供 C# 通过 P/Invoke 调用。
 
 ```mermaid
 graph LR
     subgraph "C# Process"
-        CS["C# Code"] -->|"P/Invoke"| MI["Marshal Layer\nUTF-16 → UTF-8\nstruct layout"]
+        CS["C# Code"] -->|"P/Invoke"| MI["Marshal Layer\nUTF-16 -> UTF-8\nstruct layout"]
     end
     MI -->|"C ABI call"| FFI["FFI Boundary"]
     subgraph "Rust cdylib (.so / .dll)"
@@ -117,7 +132,7 @@ graph LR
     style Safe fill:#c8e6c9,color:#000
 ```
 
-### Rust Library (compiled as cdylib)
+### Rust Library (compiled as cdylib) | Rust 库（编译为 `cdylib`）
 ```rust
 // src/lib.rs
 #[no_mangle]
@@ -148,7 +163,7 @@ pub extern "C" fn process_string(input: *const std::os::raw::c_char) -> i32 {
 crate-type = ["cdylib"]
 ```
 
-### C# Consumer (P/Invoke)
+### C# Consumer (P/Invoke) | C# 调用端（P/Invoke）
 ```csharp
 using System.Runtime.InteropServices;
 
@@ -167,15 +182,20 @@ int sum = RustInterop.add_numbers(5, 3);  // 8
 int len = RustInterop.process_string("Hello from C#!");  // 15
 ```
 
-### FFI Safety Checklist
+### FFI Safety Checklist | FFI 安全检查清单
 
 When exposing Rust functions to C#, these rules prevent the most common bugs:
 
-1. **Always use `extern "C"`** — without it, Rust uses its own (unstable) calling convention. C# P/Invoke expects the C ABI.
+当你把 Rust 函数暴露给 C# 调用时，下面这些规则可以避免最常见的问题：
 
-2. **`#[no_mangle]`** — prevents the Rust compiler from mangling the function name. Without it, C# can't find the symbol.
+1. **Always use `extern "C"`** - without it, Rust uses its own (unstable) calling convention. C# P/Invoke expects the C ABI.
+1. **始终使用 `extern "C"`**。否则 Rust 会使用自身的调用约定，而 C# 的 P/Invoke 期望的是 C ABI。
 
-3. **Never let a panic cross the FFI boundary** — a Rust panic unwinding into C# is **undefined behavior**. Catch panics at FFI entry points:
+2. **`#[no_mangle]`** - prevents the Rust compiler from mangling the function name. Without it, C# can't find the symbol.
+2. **使用 `#[no_mangle]`**。它可以防止 Rust 编译器修改函数符号名，否则 C# 可能找不到导出的符号。
+
+3. **Never let a panic cross the FFI boundary** - a Rust panic unwinding into C# is **undefined behavior**. Catch panics at FFI entry points:
+3. **绝不能让 panic 穿过 FFI 边界**。Rust 的 panic 如果一路展开进 C#，会导致**未定义行为**。应在 FFI 入口捕获 panic：
     ```rust
     #[no_mangle]
     pub extern "C" fn safe_ffi_function() -> i32 {
@@ -189,25 +209,30 @@ When exposing Rust functions to C#, these rules prevent the most common bugs:
     }
     ```
 
-4. **Opaque vs transparent structs** — if C# only holds a pointer (opaque handle), `#[repr(C)]` is not needed. If C# reads struct fields via `StructLayout`, you **must** use `#[repr(C)]`:
+4. **Opaque vs transparent structs** - if C# only holds a pointer (opaque handle), `#[repr(C)]` is not needed. If C# reads struct fields via `StructLayout`, you **must** use `#[repr(C)]`:
+4. **区分 opaque 与 transparent struct**。如果 C# 只是持有一个不透明指针句柄，就不一定需要 `#[repr(C)]`；但如果 C# 要按字段直接解析结构体（`StructLayout`），那就**必须**使用 `#[repr(C)]`：
     ```rust
-    // Opaque — C# only holds IntPtr. No #[repr(C)] needed.
+    // Opaque - C# only holds IntPtr. No #[repr(C)] needed.
     pub struct Connection { /* Rust-only fields */ }
 
-    // Transparent — C# marshals fields directly. MUST use #[repr(C)].
+    // Transparent - C# marshals fields directly. MUST use #[repr(C)].
     #[repr(C)]
     pub struct Point { pub x: f64, pub y: f64 }
     ```
 
-5. **Null pointer checks** — always validate pointers before dereferencing. C# can pass `IntPtr.Zero`.
+5. **Null pointer checks** - always validate pointers before dereferencing. C# can pass `IntPtr.Zero`.
+5. **检查空指针**。在解引用之前总要先验证指针是否为空。C# 完全可能传入 `IntPtr.Zero`。
 
-6. **String encoding** — C# uses UTF-16 internally. `MarshalAs(UnmanagedType.LPUTF8Str)` converts to UTF-8 for Rust's `CStr`. Document this contract explicitly.
+6. **String encoding** - C# uses UTF-16 internally. `MarshalAs(UnmanagedType.LPUTF8Str)` converts to UTF-8 for Rust's `CStr`. Document this contract explicitly.
+6. **明确字符串编码**。C# 内部使用 UTF-16，而 `MarshalAs(UnmanagedType.LPUTF8Str)` 会把它转换成 UTF-8，供 Rust 的 `CStr` 使用。这个约定必须写清楚。
 
-### End-to-End Example: Opaque Handle with Lifecycle Management
+### End-to-End Example: Opaque Handle with Lifecycle Management | 端到端示例：带生命周期管理的不透明句柄
 
 This pattern is common in production: Rust owns an object, C# holds an opaque handle, and explicit create/destroy functions manage the lifecycle.
 
-**Rust side** (`src/lib.rs`):
+这是生产环境里很常见的模式：对象所有权在 Rust 侧，C# 只持有一个不透明句柄，通过显式的创建/销毁函数来管理生命周期。
+
+**Rust side** (`src/lib.rs`)：
 ```rust
 use std::ffi::{c_char, CStr};
 
@@ -260,7 +285,7 @@ pub extern "C" fn processor_free(ptr: *mut ImageProcessor) {
 }
 ```
 
-**C# side**:
+**C# side**：
 ```csharp
 using System.Runtime.InteropServices;
 
@@ -300,22 +325,26 @@ public sealed class ImageProcessor : IDisposable
     }
 }
 
-// Usage — IDisposable ensures Rust memory is freed
+// Usage - IDisposable ensures Rust memory is freed
 using var proc = new ImageProcessor(1920, 1080);
 proc.Grayscale();
-// proc.Dispose() called automatically → processor_free() → Rust drops the Vec
+// proc.Dispose() called automatically -> processor_free() -> Rust drops the Vec
 ```
 
 > **Key insight**: This is the Rust equivalent of C#'s `SafeHandle` pattern. Rust's `Box::into_raw` / `Box::from_raw` transfers ownership across the FFI boundary, and the C# `IDisposable` wrapper ensures cleanup.
+>
+> **关键理解：** 这可以看作 Rust 对应 C# `SafeHandle` 模式的写法。Rust 通过 `Box::into_raw` / `Box::from_raw` 在 FFI 边界两侧转移所有权，而 C# 侧的 `IDisposable` 包装器负责确保资源被释放。
 
 ---
 
-## Exercises
+## Exercises | 练习
 
 <details>
-<summary><strong>🏋️ Exercise: Safe Wrapper for Raw Pointer</strong> (click to expand)</summary>
+<summary><strong>Exercise: Safe Wrapper for Raw Pointer | 练习：为原始指针构建安全封装</strong> (click to expand / 点击展开)</summary>
 
 You receive a raw pointer from a C library. Write a safe Rust wrapper:
+
+你从一个 C 库拿到了原始指针。请为它编写一个安全的 Rust 封装：
 
 ```rust
 // Simulated C API
@@ -331,8 +360,14 @@ Requirements:
 3. Provide a safe `&[u8]` view via `as_slice()`
 4. Ensure `SafeBuffer::new()` returns `None` if the pointer is null
 
+要求：
+1. 创建一个 `SafeBuffer` 结构体来包装原始指针
+2. 实现 `Drop`，在析构时调用 `lib_free_buffer`
+3. 通过 `as_slice()` 提供安全的 `&[u8]` 视图
+4. 确保 `SafeBuffer::new()` 在返回空指针时给出 `None`
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution | 参考答案</summary>
 
 ```rust,ignore
 struct SafeBuffer {
@@ -372,12 +407,11 @@ fn process(buf: &SafeBuffer) {
 }
 ```
 
-**Key pattern**: Encapsulate `unsafe` in a small module with `// SAFETY:` comments. Expose a 100% safe public API. This is how Rust's standard library works — `Vec`, `String`, `HashMap` all contain unsafe internally but present safe interfaces.
+**Key pattern**: Encapsulate `unsafe` in a small module with `// SAFETY:` comments. Expose a 100% safe public API. This is how Rust's standard library works - `Vec`, `String`, `HashMap` all contain unsafe internally but present safe interfaces.
+
+**关键模式：** 把 `unsafe` 限制在一个很小的模块内，并配上 `// SAFETY:` 注释说明不变量；对外只暴露 100% 安全的 API。Rust 标准库本身就是这样做的，`Vec`、`String`、`HashMap` 内部都有 unsafe，但对外接口是安全的。
 
 </details>
 </details>
 
 ***
-
-
-

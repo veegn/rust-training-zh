@@ -1,10 +1,20 @@
-## Variables and Mutability
+## Variables and Mutability / 变量与可变性
 
 > **What you'll learn:** Rust's variable declaration and mutability model vs C#'s `var`/`const`,
 > primitive type mappings, the critical `String` vs `&str` distinction, type inference,
 > and how Rust handles casting and conversions differently from C#.
 >
+> **你将学到什么：** Rust 的变量声明与可变性模型和 C# 的 `var`/`const` 有什么不同，
+> 常见基础类型如何映射，为什么 `String` 与 `&str` 的区别至关重要，
+> 以及 Rust 在类型推断、类型转换和强制转换上的思路为何不同于 C#。
+>
 > **Difficulty:** 🟢 Beginner
+>
+> **难度：** 初级
+
+Variables are one of the first places where Rust feels familiar on the surface but behaves very differently underneath.
+
+变量是 Rust 中最容易让 C# 开发者“看起来熟悉、实际上差异很大”的地方之一。
 
 ### C# Variable Declaration
 ```csharp

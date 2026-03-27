@@ -1,14 +1,22 @@
-## Exceptions vs `Result<T, E>`
+## Exceptions vs `Result<T, E>` | 异常 vs `Result<T, E>`
 
 > **What you'll learn:** Why Rust replaces exceptions with `Result<T, E>` and `Option<T>`,
 > the `?` operator for concise error propagation, and how explicit error handling
 > eliminates hidden control flow that plagues C# `try`/`catch` code.
 >
-> **Difficulty:** 🟡 Intermediate
+> **你将学到什么：** 为什么 Rust 用 `Result<T, E>` 和 `Option<T>` 替代异常，
+> 如何使用 `?` 操作符进行简洁的错误传播，以及显式错误处理如何消除 C# `try`/`catch`
+> 代码中常见的隐藏控制流问题。
+>
+> **Difficulty:** Intermediate
+>
+> **难度：** 中级
 >
 > **See also**: [Crate-Level Error Types](ch09-1-crate-level-error-types-and-result-alias.md) for production error patterns with `thiserror` and `anyhow`, and [Essential Crates](ch15-1-essential-crates-for-c-developers.md) for the error crate ecosystem.
+>
+> **另见：** [Crate 级错误类型](ch09-1-crate-level-error-types-and-result-alias.md) 了解基于 `thiserror` 和 `anyhow` 的生产级错误处理模式；[常用 Crate](ch15-1-essential-crates-for-c-developers.md) 则介绍错误处理相关生态。
 
-### C# Exception-Based Error Handling
+### C# Exception-Based Error Handling | C# 基于异常的错误处理
 ```csharp
 // C# - Exception-based error handling
 public class UserService
@@ -50,7 +58,7 @@ public class UserService
 }
 ```
 
-### Rust Result-Based Error Handling
+### Rust Result-Based Error Handling | Rust 基于 `Result` 的错误处理
 ```rust
 use std::fmt;
 
@@ -155,7 +163,7 @@ graph TD
 
 ***
 
-### The ? Operator: Propagating Errors Concisely
+### The ? Operator: Propagating Errors Concisely | `?` 操作符：简洁地传播错误
 ```csharp
 // C# - Exception propagation (implicit)
 public async Task<string> ProcessFileAsync(string path)
@@ -183,7 +191,7 @@ fn process_content(content: &str) -> Result<String, ConfigError> {
 }
 ```
 
-### `Option<T>` for Nullable Values
+### `Option<T>` for Nullable Values | 用 `Option<T>` 表示可空值
 ```csharp
 // C# - Nullable reference types
 public string? FindUserName(int userId)
@@ -232,7 +240,7 @@ fn process_user(user_id: u32) {
 }
 ```
 
-### Combining Option and Result
+### Combining Option and Result | 组合使用 `Option` 与 `Result`
 ```rust
 fn safe_divide(a: f64, b: f64) -> Option<f64> {
     if b != 0.0 {
@@ -259,13 +267,18 @@ fn main() {
 }
 ```
 
+```text
+Rust 的关键点不是“没有异常”，而是成功与失败都被写进了类型系统，调用者必须正面处理它。
+```
+
 ***
 
-
 <details>
-<summary><strong>🏋️ Exercise: Build a Crate-Level Error Type</strong> (click to expand)</summary>
+<summary><strong>Exercise: Build a Crate-Level Error Type | 练习：构建 Crate 级错误类型</strong> (click to expand / 点击展开)</summary>
 
 **Challenge**: Create an `AppError` enum for a file processing application that can fail due to I/O errors, JSON parse errors, and validation errors. Implement `From` conversions for automatic `?` propagation.
+
+**挑战：** 为一个文件处理应用创建 `AppError` 枚举。它可能因为 I/O 错误、JSON 解析错误和校验错误而失败。请实现 `From` 转换，使 `?` 能自动传播这些错误。
 
 ```rust
 // Starter code
@@ -278,8 +291,8 @@ use std::io;
 // TODO: Define type alias: type Result<T> = std::result::Result<T, AppError>;
 
 fn load_config(path: &str) -> Result<Config> {
-    let content = std::fs::read_to_string(path)?;  // io::Error → AppError
-    let config: Config = serde_json::from_str(&content)?;  // serde error → AppError
+    let content = std::fs::read_to_string(path)?;  // io::Error -> AppError
+    let config: Config = serde_json::from_str(&content)?;  // serde error -> AppError
     if config.name.is_empty() {
         return Err(AppError::Validation("name cannot be empty".into()));
     }
@@ -288,7 +301,7 @@ fn load_config(path: &str) -> Result<Config> {
 ```
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution | 参考答案</summary>
 
 ```rust
 use std::io;
@@ -330,7 +343,12 @@ fn load_config(path: &str) -> Result<Config> {
 - The `Result<T>` alias eliminates boilerplate throughout your crate
 - Unlike C# exceptions, the error type is visible in every function signature
 
-</details>
-</details>
+**关键要点：**
+- `thiserror` 可以通过属性自动生成 `Display` 和 `Error` 实现
+- `#[from]` 会生成 `From<T>` 实现，从而支持 `?` 自动转换错误
+- `Result<T>` 类型别名可以减少整个 crate 中的样板代码
+- 和 C# 的异常不同，Rust 会在每个函数签名中显式暴露错误类型
 
+</details>
+</details>
 

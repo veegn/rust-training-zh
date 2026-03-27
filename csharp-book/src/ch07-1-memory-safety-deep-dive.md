@@ -1,11 +1,16 @@
-## References vs Pointers
+## References vs Pointers | 引用与指针
 
 > **What you'll learn:** Rust references vs C# pointers and unsafe contexts, lifetime basics,
 > and why compile-time safety proofs are stronger than C#'s runtime checks (bounds checking, null guards).
 >
-> **Difficulty:** 🟡 Intermediate
+> **你将学到什么：** Rust 的引用与 C# 的指针及 `unsafe` 上下文之间的区别、生命周期基础，
+> 以及为什么 Rust 在编译期做出的安全性证明，比 C# 在运行期依赖的检查机制（边界检查、空值保护）更强。
+>
+> **Difficulty:** Intermediate
+>
+> **难度：** 中级
 
-### C# Pointers (Unsafe Context)
+### C# Pointers (Unsafe Context) | C# 指针（`unsafe` 上下文）
 ```csharp
 // C# unsafe pointers (rarely used)
 unsafe void UnsafeExample()
@@ -17,7 +22,7 @@ unsafe void UnsafeExample()
 }
 ```
 
-### Rust References (Safe by Default)
+### Rust References (Safe by Default) | Rust 引用（默认安全）
 ```rust
 // Rust references (always safe)
 fn safe_example() {
@@ -30,7 +35,11 @@ fn safe_example() {
 // No "unsafe" keyword needed - borrow checker ensures safety
 ```
 
-### Lifetime Basics for C# Developers
+```text
+在 Rust 里，引用的语法看起来和指针很像，也能解引用，但默认情况下它们受借用检查器保护，不会随意变成悬垂指针。
+```
+
+### Lifetime Basics for C# Developers | 面向 C# 开发者的生命周期基础
 ```csharp
 // C# - Can return references that might become invalid
 public class LifetimeIssues
@@ -44,7 +53,7 @@ public class LifetimeIssues
     {
         // This would be dangerous - returning pointer to managed memory
         fixed (char* ptr = input)
-            return ptr;  // ❌ Bad: ptr becomes invalid after method ends
+            return ptr;  // Bad: ptr becomes invalid after method ends
     }
 }
 ```
@@ -53,26 +62,30 @@ public class LifetimeIssues
 // Rust - Lifetime checking prevents dangling references
 fn get_first_word(input: &str) -> &str {
     input.split_whitespace().next().unwrap_or("")
-    // ✅ Safe: returned reference has same lifetime as input
+    // Safe: returned reference has same lifetime as input
 }
 
 fn invalid_reference() -> &str {
     let temp = String::from("hello");
-    &temp  // ❌ Compile error: temp doesn't live long enough
+    &temp  // Compile error: temp doesn't live long enough
     // temp would be dropped at end of function
 }
 
 fn valid_reference() -> String {
     let temp = String::from("hello");
-    temp  // ✅ Works: ownership is transferred to caller
+    temp  // Works: ownership is transferred to caller
 }
+```
+
+```text
+生命周期不是“延长对象寿命”的机制，而是 Rust 用来描述“一个引用最久能活多久”的规则系统。
 ```
 
 ***
 
-## Memory Safety: Runtime Checks vs Compile-Time Proofs
+## Memory Safety: Runtime Checks vs Compile-Time Proofs | 内存安全：运行时检查 vs 编译期证明
 
-### C# - Runtime Safety Net
+### C# - Runtime Safety Net | C#：运行时安全网
 ```csharp
 // C# relies on runtime checks and GC
 public class Buffer
@@ -118,7 +131,7 @@ public class Buffer
 }
 ```
 
-### Rust - Compile-Time Guarantees
+### Rust - Compile-Time Guarantees | Rust：编译期保证
 ```rust
 struct Buffer {
     data: Vec<u8>,
@@ -188,6 +201,10 @@ fn borrowing_example(data: &mut Vec<i32>) {
 }
 ```
 
+```text
+核心差异不只是“Rust 更安全”，而是 Rust 会把一整类本来只能在运行时暴露的问题，直接提前到编译阶段拒绝掉。
+```
+
 ```mermaid
 graph TD
     subgraph "C# Runtime Safety"
@@ -230,12 +247,14 @@ graph TD
 
 ---
 
-## Exercises
+## Exercises | 练习
 
 <details>
-<summary><strong>🏋️ Exercise: Spot the Safety Bug</strong> (click to expand)</summary>
+<summary><strong>Exercise: Spot the Safety Bug | 练习：找出安全问题</strong> (click to expand / 点击展开)</summary>
 
 This C# code has a subtle safety bug. Identify it, then write the Rust equivalent and explain why the Rust version **won't compile**:
+
+下面这段 C# 代码包含一个不太明显的安全问题。请先指出问题，再写出对应的 Rust 版本，并解释为什么 Rust 版本**根本无法通过编译**：
 
 ```csharp
 public List<int> GetEvenNumbers(List<int> numbers)
@@ -254,9 +273,11 @@ public List<int> GetEvenNumbers(List<int> numbers)
 ```
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution | 参考答案</summary>
 
 **C# bug**: Modifying `numbers` while iterating throws `InvalidOperationException` at *runtime*. Easy to miss in code review.
+
+**C# 中的问题：** 在迭代 `numbers` 的同时修改它，会在*运行时*抛出 `InvalidOperationException`。这种问题在代码审查中很容易漏掉。
 
 ```rust
 fn get_even_numbers(numbers: &mut Vec<i32>) -> Vec<i32> {
@@ -265,8 +286,8 @@ fn get_even_numbers(numbers: &mut Vec<i32>) -> Vec<i32> {
         if n % 2 == 0 {
             result.push(n);
             // numbers.retain(|&x| x != n);
-            // ❌ ERROR: cannot borrow `*numbers` as mutable because
-            //    it is also borrowed as immutable (by the iterator)
+            // ERROR: cannot borrow `*numbers` as mutable because
+            // it is also borrowed as immutable (by the iterator)
         }
     }
     result
@@ -289,10 +310,9 @@ fn main() {
 
 **Key insight**: Rust's borrow checker prevents the entire *category* of "mutate while iterating" bugs at compile time. C# catches this at runtime; many languages don't catch it at all.
 
+**关键理解：** Rust 的借用检查器会在编译期直接阻止整类“边遍历边修改”的错误。C# 通常只能在运行时发现它，而很多语言甚至不会帮你发现。
+
 </details>
 </details>
 
 ***
-
-
-

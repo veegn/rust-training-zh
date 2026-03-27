@@ -1,11 +1,12 @@
-## Exercises
-
-### Exercise 1: Type-Safe State Machine ★★ (~30 min)
+## Exercises / 练习
+### Exercise 1: Type-Safe State Machine ★★ (~30 min) / 练习 1：类型安全的状态机
 
 Build a traffic light state machine using the type-state pattern. The light must transition `Red → Green → Yellow → Red` and no other order should be possible.
 
+使用类型状态（type-state）模式构建一个红绿灯状态机。该灯必须遵循 `红 → 绿 → 黄 → 红` 的切换顺序，且不应允许任何其他顺序。
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案</summary>
 
 ```rust
 use std::marker::PhantomData;
@@ -20,57 +21,62 @@ struct TrafficLight<State> {
 
 impl TrafficLight<Red> {
     fn new() -> Self {
-        println!("🔴 Red — STOP");
+        println!("🔴 Red — STOP / 红灯 —— 停止");
         TrafficLight { _state: PhantomData }
     }
 
     fn go(self) -> TrafficLight<Green> {
-        println!("🟢 Green — GO");
+        println!("🟢 Green — GO / 绿灯 —— 行进");
         TrafficLight { _state: PhantomData }
     }
 }
 
 impl TrafficLight<Green> {
     fn caution(self) -> TrafficLight<Yellow> {
-        println!("🟡 Yellow — CAUTION");
+        println!("🟡 Yellow — CAUTION / 黄灯 —— 注意");
         TrafficLight { _state: PhantomData }
     }
 }
 
 impl TrafficLight<Yellow> {
     fn stop(self) -> TrafficLight<Red> {
-        println!("🔴 Red — STOP");
+        println!("🔴 Red — STOP / 红灯 —— 停止");
         TrafficLight { _state: PhantomData }
     }
 }
 
 fn main() {
-    let light = TrafficLight::new(); // Red
-    let light = light.go();          // Green
-    let light = light.caution();     // Yellow
-    let light = light.stop();        // Red
+    let light = TrafficLight::new(); // Red / 红灯
+    let light = light.go();          // Green / 绿灯
+    let light = light.caution();     // Yellow / 黄灯
+    let light = light.stop();        // Red / 红灯
 
     // light.caution(); // ❌ Compile error: no method `caution` on Red
+                        // ❌ 编译错误：Red 类型没有 `caution` 方法
     // TrafficLight::new().stop(); // ❌ Compile error: no method `stop` on Red
+                                   // ❌ 编译错误：Red 类型没有 `stop` 方法
 }
 ```
 
-**Key takeaway**: Invalid transitions are compile errors, not runtime panics.
+**Key takeaway / 关键要点**：Invalid transitions are compile errors, not runtime panics. / 无效的转换会导致编译错误，而不是运行时 panic。
 
 </details>
 
 ---
 
-### Exercise 2: Unit-of-Measure with PhantomData ★★ (~30 min)
+### Exercise 2: Unit-of-Measure with PhantomData ★★ (~30 min) / 练习 2：结合 PhantomData 的计量单位
 
 Extend the unit-of-measure pattern from Ch4 to support:
-- `Meters`, `Seconds`, `Kilograms`
-- Addition of same units
-- Multiplication: `Meters * Meters = SquareMeters`
-- Division: `Meters / Seconds = MetersPerSecond`
+
+扩展第五章（原书中为 Ch4）中的计量单位模式，以支持：
+
+- `Meters`, `Seconds`, `Kilograms` / 米、秒、千克
+- Addition of same units / 相同单位的加法
+- Multiplication: `Meters * Meters = SquareMeters` / 乘法：`米 * 米 = 平方米`
+- Division: `Meters / Seconds = MetersPerSecond` / 除法：`米 / 秒 = 米/秒`
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案</summary>
 
 ```rust
 use std::marker::PhantomData;
@@ -119,34 +125,36 @@ impl Div<Qty<Seconds>> for Qty<Meters> {
 fn main() {
     let width = Qty::<Meters>::new(5.0);
     let height = Qty::<Meters>::new(3.0);
-    let area = width * height; // Qty<SquareMeters>
+    let area = width * height; // Qty<SquareMeters> / 平方米
     println!("Area: {:.1} m²", area.value);
 
     let dist = Qty::<Meters>::new(100.0);
     let time = Qty::<Seconds>::new(9.58);
-    let speed = dist / time;
+    let speed = dist / time; // MetersPerSecond / 米每秒
     println!("Speed: {:.2} m/s", speed.value);
 
-    let sum = width + height; // Same unit ✅
+    let sum = width + height; // Same unit ✅ / 相同单位 ✅
     println!("Sum: {:.1} m", sum.value);
 
     // let bad = width + time; // ❌ Compile error: can't add Meters + Seconds
-}
+                               // ❌ 编译错误：无法将“米”与“秒”相加
 ```
-
 </details>
 
 ---
 
-### Exercise 3: Channel-Based Worker Pool ★★★ (~45 min)
+### Exercise 3: Channel-Based Worker Pool ★★★ (~45 min) / 练习 3：基于通道的线程池（Worker Pool）
 
 Build a worker pool using channels where:
-- A dispatcher sends `Job` structs through a channel
-- N workers consume jobs and send results back
-- Use `crossbeam-channel` (or `std::sync::mpsc` if crossbeam is unavailable)
+
+使用通道构建一个工作线程池，要求：
+
+- A dispatcher sends `Job` structs through a channel / 调度器（Dispatcher）通过通道发送 `Job` 结构体
+- N workers consume jobs and send results back / N 个工作线程（Worker）消费任务并将结果发回
+- Use `crossbeam-channel` (or `std::sync::mpsc` if crossbeam is unavailable) / 使用 `crossbeam-channel`（如果不可用，请使用 `std::sync::mpsc`）
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案 (Ex 3)</summary>
 
 ```rust
 use std::sync::mpsc;
@@ -178,9 +186,10 @@ fn worker_pool(jobs: Vec<Job>, num_workers: usize) -> Vec<JobResult> {
         handles.push(thread::spawn(move || {
             loop {
                 // Lock, receive, unlock — short critical section
+                // 加锁，接收，解锁 —— 极短的临界区
                 let job = {
                     let rx = job_rx.lock().unwrap();
-                    rx.recv() // Blocks until a job or channel closes
+                    rx.recv() // Blocks until a job or channel closes / 阻塞直至获取任务或通道关闭
                 };
                 match job {
                     Ok(job) => {
@@ -191,21 +200,23 @@ fn worker_pool(jobs: Vec<Job>, num_workers: usize) -> Vec<JobResult> {
                             worker_id,
                         }).unwrap();
                     }
-                    Err(_) => break, // Channel closed — exit
+                    Err(_) => break, // Channel closed — exit / 通道已关闭 —— 退出
                 }
             }
         }));
     }
     drop(result_tx); // Drop our copy so result channel closes when workers finish
+                     // 丢弃我们手中的副本，以便在所有工作线程完成时关闭结果通道
 
-    // Dispatch jobs
+    // Dispatch jobs / 调度任务
     let num_jobs = jobs.len();
     for job in jobs {
         job_tx.send(job).unwrap();
     }
     drop(job_tx); // Close the job channel — workers will exit after draining
+                  // 关闭任务通道 —— 工作线程在处理完剩余任务后将退出
 
-    // Collect results
+    // Collect results / 收集结果
     let mut results = Vec::new();
     for result in result_rx {
         results.push(result);
@@ -225,6 +236,7 @@ fn main() {
     let results = worker_pool(jobs, 4);
     for r in &results {
         println!("[worker {}] job {}: {}", r.worker_id, r.job_id, r.output);
+        println!("[工作线程 {}] 任务 {}: {}", r.worker_id, r.job_id, r.output);
     }
 }
 ```
@@ -233,12 +245,14 @@ fn main() {
 
 ---
 
-### Exercise 4: Higher-Order Combinator Pipeline ★★ (~25 min)
+### Exercise 4: Higher-Order Combinator Pipeline ★★ (~25 min) / 练习 4：高阶组合器流水线
 
 Create a `Pipeline` struct that chains transformations. It should support `.pipe(f)` to add a transformation and `.execute(input)` to run the full chain.
 
+创建一个 `Pipeline` 结构体用于串联各种转换操作（transformations）。它应该支持 `.pipe(f)` 方法来添加转换步骤，以及 `.execute(input)` 方法来运行完整的流水线链。
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案 (Ex 4)</summary>
 
 ```rust
 struct Pipeline<T> {
@@ -280,18 +294,22 @@ fn main() {
 }
 ```
 
-**Bonus**: Generic pipeline that changes type between stages would use a different design — each `.pipe()` returns a `Pipeline` with a different output type (this requires more advanced generic plumbing).
+**Bonus / 加分项**：Generic pipeline that changes type between stages would use a different design — each `.pipe()` returns a `Pipeline` with a different output type (this requires more advanced generic plumbing).
+
+能够在各个阶段改变类型的泛型流水线需要不同的设计 —— 每一个 `.pipe()` 都返回一个具有不同输出类型的 `Pipeline`（这需要更高级的泛型技巧）。
 
 </details>
 
 ---
 
-### Exercise 5: Error Hierarchy with thiserror ★★ (~30 min)
+### Exercise 5: Error Hierarchy with thiserror ★★ (~30 min) / 练习 5：使用 thiserror 构建错误层级
 
 Design an error type hierarchy for a file-processing application that can fail during I/O, parsing (JSON and CSV), and validation. Use `thiserror` and demonstrate `?` propagation.
 
+为一个文件处理应用程序设计一个错误类型层级。该程序可能会在 I/O、解析（JSON 和 CSV）以及校验阶段失败。请使用 `thiserror` 库并展示 `?` 操作符的传播。
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案 (Ex 5)</summary>
 
 ```rust,ignore
 use thiserror::Error;
@@ -356,12 +374,14 @@ fn main() {
 
 ---
 
-### Exercise 6: Generic Trait with Associated Types ★★★ (~40 min)
+### Exercise 6: Generic Trait with Associated Types ★★★ (~40 min) / 练习 6：带有关联类型的泛型 Trait
 
 Design a `Repository<T>` trait with associated `Error` and `Id` types. Implement it for an in-memory store and demonstrate compile-time type safety.
 
+设计一个 `Repository<T>` trait，包含关联类型 `Error` 和 `Id`。为一个内存存储（in-memory store）实现该 trait，并展示编译时类型安全性。
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案 (Ex 6)</summary>
 
 ```rust
 use std::collections::HashMap;
@@ -394,6 +414,7 @@ impl InMemoryUserRepo {
 }
 
 // Error type is Infallible — in-memory ops never fail
+// 错误类型为 Infallible —— 内存操作永远不会失败
 impl Repository for InMemoryUserRepo {
     type Item = User;
     type Id = u64;
@@ -416,6 +437,7 @@ impl Repository for InMemoryUserRepo {
 }
 
 // Generic function works with ANY repository:
+// 泛型函数适用于任何 Repository：
 fn create_and_fetch<R: Repository>(repo: &mut R, item: R::Item) -> Result<(), R::Error>
 where
     R::Item: std::fmt::Debug,
@@ -441,20 +463,22 @@ fn main() {
 
 ---
 
-### Exercise 7: Safe Wrapper around Unsafe (Ch11) ★★★ (~45 min)
+### Exercise 7: Safe Wrapper around Unsafe (Ch11) ★★★ (~45 min) / 练习 7：Unsafe 的安全封装（第 11 章）
 
-Write a `FixedVec<T, const N: usize>` — a fixed-capacity, stack-allocated vector.
-Requirements:
-- `push(&mut self, value: T) -> Result<(), T>` returns `Err(value)` when full
-- `pop(&mut self) -> Option<T>` returns and removes the last element
-- `as_slice(&self) -> &[T]` borrows initialized elements
-- All public methods must be safe; all unsafe must be encapsulated with `SAFETY:` comments
-- `Drop` must clean up initialized elements
+Write a `FixedVec<T, const N: usize>` — a fixed-capacity, stack-allocated vector. Requirements:
 
-**Hint**: Use `MaybeUninit<T>` and `[const { MaybeUninit::uninit() }; N]`.
+编写一个 `FixedVec<T, const N: usize>` —— 一个固定容量且分配在栈上的向量。要求如下：
+
+- `push(&mut self, value: T) -> Result<(), T>` returns `Err(value)` when full / 满时返回 `Err(value)`
+- `pop(&mut self) -> Option<T>` returns and removes the last element / 返回并移除最后一个元素
+- `as_slice(&self) -> &[T]` borrows initialized elements / 借用已初始化的元素
+- All public methods must be safe; all unsafe must be encapsulated with `SAFETY:` comments / 所有公共方法必须安全；所有 unsafe 必须带有 `SAFETY:` 注释封装
+- `Drop` must clean up initialized elements / `Drop` 必须清理已初始化的元素
+
+**Hint / 提示**：Use `MaybeUninit<T>` and `[const { MaybeUninit::uninit() }; N]`.
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案 (Ex 7)</summary>
 
 ```rust
 use std::mem::MaybeUninit;
@@ -521,9 +545,11 @@ fn main() {
 
 ---
 
-### Exercise 8: Declarative Macro — `map!` (Ch12) ★ (~15 min)
+### Exercise 8: Declarative Macro — `map!` (Ch12) ★ (~15 min) / 练习 8：声明式宏 —— `map!`（第 12 章）
 
 Write a `map!` macro that creates a `HashMap` from key-value pairs, similar to `vec![]`:
+
+编写一个 `map!` 宏，用于从键值对创建 `HashMap`，类似于 `vec![]`：
 
 ```rust
 let m = map! {
@@ -534,13 +560,13 @@ assert_eq!(m.get("host"), Some(&"localhost"));
 assert_eq!(m.len(), 2);
 ```
 
-Requirements:
-- Support trailing comma
-- Support empty invocation `map!{}`
-- Work with any types that implement `Into<K>` and `Into<V>` for maximum flexibility
+Requirements / 要求：
+- Support trailing comma / 支持尾随逗号
+- Support empty invocation `map!{}` / 支持空调用 `map!{}`
+- Work with any types that implement `Into<K>` and `Into<V>` for maximum flexibility / 为了最大灵活性，使其支持实现了 `Into<K>` 和 `Into<V>` 的任何类型
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案 (Ex 8)</summary>
 
 ```rust
 macro_rules! map {
@@ -583,12 +609,14 @@ fn main() {
 
 ---
 
-### Exercise 9: Custom serde Deserialization (Ch10) ★★★ (~45 min)
+### Exercise 9: Custom serde Deserialization (Ch10) ★★★ (~45 min) / 练习 9：自定义 serde 反序列化（第 10 章）
 
 Design a `Duration` wrapper that deserializes from human-readable strings like `"30s"`, `"5m"`, `"2h"` using a custom serde deserializer. The struct should also serialize back to the same format.
 
+设计一个 `Duration` 包装器，使用自定义 serde 反序列化器从人类可读的字符串（如 `"30s"`、`"5m"`、`"2h"`）中进行反序列化。该结构体还应当能序列化回相同的格式。
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>🔑 Solution / 参考答案 (Ex 9)</summary>
 
 ```rust,ignore
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -670,28 +698,25 @@ fn main() {
 
 </details>
 
-### Exercise 10 — Concurrent Fetcher with Timeout ★★ (~25 min)
+### Exercise 10 — Concurrent Fetcher with Timeout ★★ (~25 min) / 练习 10 —— 带有超时的并发获取器
 
-Write an async function `fetch_all` that spawns three `tokio::spawn` tasks, each
-simulating a network call with `tokio::time::sleep`. Join all three with
-`tokio::try_join!` wrapped in `tokio::time::timeout(Duration::from_secs(5), ...)`.
-Return `Result<Vec<String>, ...>` or an error if any task fails or the deadline
-expires.
+Write an async function `fetch_all` that spawns three `tokio::spawn` tasks, each simulating a network call with `tokio::time::sleep`. Join all three with `tokio::try_join!` wrapped in `tokio::time::timeout(Duration::from_secs(5), ...)`. Return `Result<Vec<String>, ...>` or an error if any task fails or the deadline expires.
 
-**Learning goals**: `tokio::spawn`, `try_join!`, `timeout`, error propagation
-across task boundaries.
+编写一个异步函数 `fetch_all`，生成三个 `tokio::spawn` 任务，每个任务使用 `tokio::time::sleep` 模拟网络调用。使用 `tokio::try_join!` 将三者结合，并包装在 `tokio::time::timeout(Duration::from_secs(5), ...)` 中。如果任何任务失败或截止时间到期，则返回错误，否则返回 `Result<Vec<String>, ...>`。
+
+**Learning goals / 学习目标**：`tokio::spawn`, `try_join!`, `timeout`, error propagation across task boundaries. / `tokio::spawn`、`try_join!`、`timeout` 以及跨任务边界的错误传播。
 
 <details>
-<summary>Hint</summary>
+<summary>Hint / 提示</summary>
 
-Each spawned task returns `Result<String, _>`. `try_join!` unwraps all three.
-Wrap the whole `try_join!` in `timeout()` — the `Elapsed` error means you hit the
-deadline.
+Each spawned task returns `Result<String, _>`. `try_join!` unwraps all three. Wrap the whole `try_join!` in `timeout()` — the `Elapsed` error means you hit the deadline.
+
+每个生成的任务都返回 `Result<String, _>`。`try_join!` 会解包这三个任务。将整个 `try_join!` 包装在 `timeout()` 中 —— `Elapsed` 错误意味着你触发了截止时间。
 
 </details>
 
 <details>
-<summary>Solution</summary>
+<summary>Solution / 参考答案 (Ex 10)</summary>
 
 ```rust,ignore
 use tokio::time::{sleep, timeout, Duration};
@@ -726,22 +751,24 @@ async fn main() {
 
 </details>
 
-### Exercise 11 — Async Channel Pipeline ★★★ (~40 min)
+### Exercise 11 — Async Channel Pipeline ★★★ (~40 min) / 练习 11 —— 异步通道流水线
 
 Build a producer → transformer → consumer pipeline using `tokio::sync::mpsc`:
 
-1. **Producer**: sends integers 1..=20 into channel A (capacity 4).
-2. **Transformer**: reads from channel A, squares each value, sends into channel B.
-3. **Consumer**: reads from channel B, collects into a `Vec<u64>`, returns it.
+使用 `tokio::sync::mpsc` 构建一个“生产者 → 转换器 → 消费者”流水线：
 
-All three stages run as concurrent `tokio::spawn` tasks. Use bounded channels to
-demonstrate back-pressure. Assert the final vec equals `[1, 4, 9, ..., 400]`.
+1. **Producer / 生产者**：sends integers 1..=20 into channel A (capacity 4). / 将整数 1..=20 发送到通道 A（容量为 4）。
+2. **Transformer / 转换器**：reads from channel A, squares each value, sends into channel B. / 从通道 A 读取，计算各值的平方，然后发送到通道 B。
+3. **Consumer / 消费者**：reads from channel B, collects into a `Vec<u64>`, returns it. / 从通道 B 读取，收集到 `Vec<u64>` 中并返回。
 
-**Learning goals**: `mpsc::channel`, bounded back-pressure, `tokio::spawn` with
-move closures, graceful shutdown via channel close.
+All three stages run as concurrent `tokio::spawn` tasks. Use bounded channels to demonstrate back-pressure. Assert the final vec equals `[1, 4, 9, ..., 400]`.
+
+这三个阶段都作为并发的 `tokio::spawn` 任务运行。使用有界通道来演示背压（back-pressure）。断言最后的向量等于 `[1, 4, 9, ..., 400]`。
+
+**Learning goals / 学习目标**：`mpsc::channel`, bounded back-pressure, `tokio::spawn` with move closures, graceful shutdown via channel close. / `mpsc::channel`、有界背压、带 move 闭包的 `tokio::spawn`、通过通道关闭实现优雅停机。
 
 <details>
-<summary>Solution</summary>
+<summary>Solution / 参考答案 (Ex 11)</summary>
 
 ```rust,ignore
 use tokio::sync::mpsc;

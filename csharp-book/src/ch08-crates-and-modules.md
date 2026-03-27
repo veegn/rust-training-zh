@@ -1,15 +1,22 @@
-## Modules and Crates: Code Organization
+## Modules and Crates: Code Organization | 模块与 Crate：代码组织方式
 
 > **What you'll learn:** Rust's module system vs C# namespaces and assemblies, `pub`/`pub(crate)`/`pub(super)` visibility,
 > file-based module organization, and how crates map to .NET assemblies.
 >
-> **Difficulty:** 🟢 Beginner
+> **你将学到什么：** Rust 的模块系统如何对应 C# 的命名空间与程序集，`pub`/`pub(crate)`/`pub(super)` 的可见性差异，
+> 基于文件的模块组织方式，以及 crate 与 .NET 程序集之间的映射关系。
+>
+> **Difficulty:** Beginner
+>
+> **难度：** 初级
 
 Understanding Rust's module system is essential for organizing code and managing dependencies. For C# developers, this is analogous to understanding namespaces, assemblies, and NuGet packages.
 
-### Rust Modules vs C# Namespaces
+理解 Rust 的模块系统，是组织代码和管理依赖的基础。对于 C# 开发者来说，这可以类比为理解命名空间、程序集和 NuGet 包的关系。
 
-#### C# Namespace Organization
+### Rust Modules vs C# Namespaces | Rust 模块 vs C# 命名空间
+
+#### C# Namespace Organization | C# 命名空间组织
 ```csharp
 // File: Models/User.cs
 namespace MyApp.Models
@@ -52,7 +59,7 @@ namespace MyApp
 }
 ```
 
-#### Rust Module Organization
+#### Rust Module Organization | Rust 模块组织
 ```rust
 // File: src/models.rs
 pub struct User {
@@ -90,7 +97,7 @@ fn main() {
 }
 ```
 
-### Module Hierarchy and Visibility
+### Module Hierarchy and Visibility | 模块层级与可见性
 
 ```mermaid
 graph TD
@@ -109,9 +116,11 @@ graph TD
     style SubB3 fill:#fff9c4,color:#000
 ```
 
-> 🟢 Green = public everywhere &nbsp;|&nbsp; 🟡 Yellow = restricted visibility &nbsp;|&nbsp; 🔴 Red = private
+> Green = public everywhere | Yellow = restricted visibility | Red = private
+>
+> 绿色 = 全局公开 | 黄色 = 受限可见 | 红色 = 私有
 
-#### C# Visibility Modifiers
+#### C# Visibility Modifiers | C# 可见性修饰符
 ```csharp
 namespace MyApp.Data
 {
@@ -133,7 +142,7 @@ namespace MyApp.Data
 }
 ```
 
-#### Rust Visibility Rules
+#### Rust Visibility Rules | Rust 可见性规则
 ```rust
 // Everything is private by default in Rust
 mod data {
@@ -171,43 +180,43 @@ mod data {
 pub use data::PublicRepository;  // Re-export for external use
 ```
 
-### Module File Organization
+### Module File Organization | 模块文件组织
 
-#### C# Project Structure
+#### C# Project Structure | C# 项目结构
 ```text
 MyApp/
-├── MyApp.csproj
-├── Models/
-│   ├── User.cs
-│   └── Product.cs
-├── Services/
-│   ├── UserService.cs
-│   └── ProductService.cs
-├── Controllers/
-│   └── ApiController.cs
-└── Program.cs
+|- MyApp.csproj
+|- Models/
+|  |- User.cs
+|  |- Product.cs
+|- Services/
+|  |- UserService.cs
+|  |- ProductService.cs
+|- Controllers/
+|  |- ApiController.cs
+|- Program.cs
 ```
 
-#### Rust Module File Structure
+#### Rust Module File Structure | Rust 模块文件结构
 ```text
 my_app/
-├── Cargo.toml
-└── src/
-    ├── main.rs (or lib.rs)
-    ├── models/
-    │   ├── mod.rs        // Module declaration
-    │   ├── user.rs
-    │   └── product.rs
-    ├── services/
-    │   ├── mod.rs        // Module declaration
-    │   ├── user_service.rs
-    │   └── product_service.rs
-    └── controllers/
-        ├── mod.rs
-        └── api_controller.rs
+|- Cargo.toml
+|- src/
+    |- main.rs (or lib.rs)
+    |- models/
+    |  |- mod.rs        // Module declaration
+    |  |- user.rs
+    |  |- product.rs
+    |- services/
+    |  |- mod.rs        // Module declaration
+    |  |- user_service.rs
+    |  |- product_service.rs
+    |- controllers/
+        |- mod.rs
+        |- api_controller.rs
 ```
 
-#### Module Declaration Patterns
+#### Module Declaration Patterns | 模块声明模式
 ```rust
 // src/models/mod.rs
 pub mod user;      // Declares user.rs as a submodule
@@ -231,12 +240,14 @@ use models::user::*;  // Import all public items from user module
 
 ***
 
-## Crates vs .NET Assemblies
+## Crates vs .NET Assemblies | Crate 与 .NET 程序集
 
-### Understanding Crates
+### Understanding Crates | 理解 Crate
 In Rust, a **crate** is the fundamental unit of compilation and code distribution, similar to how an **assembly** works in .NET.
 
-#### C# Assembly Model
+在 Rust 中，**crate** 是编译与分发代码的基本单位，作用上很接近 .NET 中的**程序集**。
+
+#### C# Assembly Model | C# 程序集模型
 ```csharp
 // MyLibrary.dll - Compiled assembly
 namespace MyLibrary
@@ -260,7 +271,7 @@ class Program
 }
 ```
 
-#### Rust Crate Model
+#### Rust Crate Model | Rust Crate 模型
 ```toml
 # Cargo.toml for library crate
 [package]
@@ -304,19 +315,24 @@ fn main() {
 }
 ```
 
-### Crate Types Comparison
+### Crate Types Comparison | Crate 类型对比
 
 | C# Concept | Rust Equivalent | Purpose |
 |------------|----------------|---------|
 | Class Library (.dll) | Library crate | Reusable code |
+| 类库（.dll） | Library crate | 可复用代码 |
 | Console App (.exe) | Binary crate | Executable program |
+| 控制台程序（.exe） | Binary crate | 可执行程序 |
 | NuGet Package | Published crate | Distribution unit |
+| NuGet 包 | Published crate | 分发单位 |
 | Assembly (.dll/.exe) | Compiled crate | Compilation unit |
+| 程序集（.dll/.exe） | Compiled crate | 编译单位 |
 | Solution (.sln) | Workspace | Multi-project organization |
+| 解决方案（.sln） | Workspace | 多项目组织方式 |
 
-### Workspace vs Solution
+### Workspace vs Solution | Workspace 与 Solution
 
-#### C# Solution Structure
+#### C# Solution Structure | C# 解决方案结构
 ```xml
 <!-- MySolution.sln structure -->
 <Solution>
@@ -327,7 +343,7 @@ fn main() {
 </Solution>
 ```
 
-#### Rust Workspace Structure
+#### Rust Workspace Structure | Rust Workspace 结构
 ```toml
 # Cargo.toml at workspace root
 [workspace]
@@ -358,12 +374,14 @@ tokio = { workspace = true }
 
 ---
 
-## Exercises
+## Exercises | 练习
 
 <details>
-<summary><strong>🏋️ Exercise: Design a Module Tree</strong> (click to expand)</summary>
+<summary><strong>Exercise: Design a Module Tree | 练习：设计模块树</strong> (click to expand / 点击展开)</summary>
 
 Given this C# project layout, design the equivalent Rust module tree:
+
+给定下面这组 C# 项目布局，请设计对应的 Rust 模块树：
 
 ```csharp
 // C#
@@ -378,21 +396,29 @@ Requirements:
 2. `TokenStore` must be private to the `services` module
 3. Provide the file layout **and** the `mod` / `pub` declarations in `lib.rs`
 
+要求：
+1. `AuthService` 和两个 model 都必须是公开的
+2. `TokenStore` 必须仅对 `services` 模块私有
+3. 同时给出文件布局，以及 `lib.rs` 中的 `mod` / `pub` 声明
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution | 参考答案</summary>
 
 File layout:
-```
+
+文件布局：
+
+```text
 src/
-├── lib.rs
-├── services/
-│   ├── mod.rs
-│   ├── auth_service.rs
-│   └── token_store.rs
-└── models/
-    ├── mod.rs
-    ├── user.rs
-    └── session.rs
+|- lib.rs
+|- services/
+|  |- mod.rs
+|  |- auth_service.rs
+|  |- token_store.rs
+|- models/
+    |- mod.rs
+    |- user.rs
+    |- session.rs
 ```
 
 ```rust,ignore
@@ -401,7 +427,7 @@ pub mod services;
 pub mod models;
 
 // src/services/mod.rs
-mod token_store;          // private — like C# internal
+mod token_store;          // private - like C# internal
 pub mod auth_service;     // public
 
 // src/services/auth_service.rs
@@ -435,5 +461,3 @@ pub struct Session {
 </details>
 
 ***
-
-

@@ -1,11 +1,12 @@
-## Exhaustive Pattern Matching: Compiler Guarantees vs Runtime Errors
+## Exhaustive Pattern Matching: Compiler Guarantees vs Runtime Errors / 穷尽模式匹配：编译器保证 vs 运行时错误
 
-> **What you'll learn:** Why C# `switch` expressions silently miss cases while Rust's `match` catches them at compile time,
-> `Option<T>` vs `Nullable<T>` for null safety, and custom error types with `Result<T, E>`.
+> **What you'll learn / 你将学到：** Why C# `switch` expressions silently miss cases while Rust's `match` catches them at compile time, `Option<T>` vs `Nullable<T>` for null safety, and custom error types with `Result<T, E>`.
 >
-> **Difficulty:** 🟡 Intermediate
+> 为什么 C# 的 `switch` 表达式可能悄悄漏掉分支，而 Rust 的 `match` 会在编译期抓出来；`Option<T>` 与 `Nullable<T>` 在空值安全上的区别；以及如何用 `Result<T, E>` 表达自定义错误类型。
+>
+> **Difficulty / 难度：** 🟡 Intermediate / 中级
 
-### C# Switch Expressions - Still Incomplete
+### C# Switch Expressions - Still Incomplete / C# Switch 表达式：仍然不彻底
 ```csharp
 // C# switch expressions look exhaustive but aren't guaranteed
 public enum HttpStatus { Ok, NotFound, ServerError, Unauthorized }
@@ -15,7 +16,7 @@ public string HandleResponse(HttpStatus status) => status switch
     HttpStatus.Ok => "Success",
     HttpStatus.NotFound => "Resource not found",
     HttpStatus.ServerError => "Internal error",
-    // Missing Unauthorized case — compiles with warning CS8524, but NOT an error!
+    // Missing Unauthorized case - compiles with warning CS8524, but NOT an error!
     // Runtime: SwitchExpressionException if status is Unauthorized
 };
 
@@ -30,7 +31,7 @@ public string ProcessUser(User? user) => user switch
 {
     { IsActive: true } => $"Active: {user.Name}",
     { IsActive: false } => $"Inactive: {user.Name}",
-    // Missing null case — compiler warning CS8655, but NOT an error!
+    // Missing null case - compiler warning CS8655, but NOT an error!
     // Runtime: SwitchExpressionException when user is null
 };
 ```
@@ -47,7 +48,7 @@ public enum HttpStatus
 }
 ```
 
-### Rust Pattern Matching - True Exhaustiveness
+### Rust Pattern Matching - True Exhaustiveness / Rust 模式匹配：真正的穷尽性
 ```rust
 #[derive(Debug)]
 enum HttpStatus {
@@ -93,11 +94,11 @@ fn process_optional_value(value: Option<i32>) -> String {
 graph TD
     subgraph "C# Pattern Matching Limitations"
         CS_SWITCH["switch expression"]
-        CS_WARNING["⚠️ Compiler warnings only"]
-        CS_COMPILE["✅ Compiles successfully"]
-        CS_RUNTIME["💥 Runtime exceptions"]
-        CS_DEPLOY["❌ Bugs reach production"]
-        CS_SILENT["😰 Silent failures on enum changes"]
+        CS_WARNING["Warnings only"]
+        CS_COMPILE["Compiles successfully"]
+        CS_RUNTIME["Runtime exceptions"]
+        CS_DEPLOY["Bugs reach production"]
+        CS_SILENT["Silent failures on enum changes"]
         
         CS_SWITCH --> CS_WARNING
         CS_WARNING --> CS_COMPILE
@@ -108,11 +109,11 @@ graph TD
     
     subgraph "Rust Exhaustive Matching"
         RUST_MATCH["match expression"]
-        RUST_ERROR["🛑 Compilation fails"]
-        RUST_FIX["✅ Must handle all cases"]
-        RUST_SAFE["✅ Zero runtime surprises"]
-        RUST_EVOLUTION["🔄 Enum changes break compilation"]
-        RUST_REFACTOR["🛠️ Forced refactoring"]
+        RUST_ERROR["Compilation fails"]
+        RUST_FIX["Must handle all cases"]
+        RUST_SAFE["Zero runtime surprises"]
+        RUST_EVOLUTION["Enum changes break compilation"]
+        RUST_REFACTOR["Forced refactoring"]
         
         RUST_MATCH --> RUST_ERROR
         RUST_ERROR --> RUST_FIX
@@ -130,9 +131,9 @@ graph TD
 
 ***
 
-## Null Safety: `Nullable<T>` vs `Option<T>`
+## Null Safety: `Nullable<T>` vs `Option<T>` / 空值安全：`Nullable<T>` 与 `Option<T>`
 
-### C# Null Handling Evolution
+### C# Null Handling Evolution / C# 空值处理的演进
 ```csharp
 // C# - Traditional null handling (error-prone)
 public class User
@@ -167,7 +168,7 @@ if (maybeNumber.HasValue)
 }
 ```
 
-### Rust `Option<T>` System
+### Rust `Option<T>` System / Rust 的 `Option<T>` 体系
 ```rust
 // Rust - Explicit null handling with Option<T>
 #[derive(Debug)]
@@ -202,11 +203,11 @@ fn handle_optional_user(user: Option<User>) {
 ```mermaid
 graph TD
     subgraph "C# Null Handling Evolution"
-        CS_NULL["Traditional: string name<br/>[ERROR] Can be null"]
-        CS_NULLABLE["Nullable<T>: int? value<br/>[OK] Explicit for value types"]
-        CS_NRT["Nullable Reference Types<br/>string? name<br/>[WARNING] Compile-time warnings only"]
+        CS_NULL["Traditional: string name<br/>Can be null"]
+        CS_NULLABLE["Nullable<T>: int? value<br/>Explicit for value types"]
+        CS_NRT["Nullable Reference Types<br/>string? name<br/>Warnings only"]
         
-        CS_RUNTIME["Runtime NullReferenceException<br/>[ERROR] Can still crash"]
+        CS_RUNTIME["Runtime NullReferenceException<br/>Can still crash"]
         CS_NULL --> CS_RUNTIME
         CS_NRT -.-> CS_RUNTIME
         
@@ -215,7 +216,7 @@ graph TD
     
     subgraph "Rust Option<T> System"
         RUST_OPTION["Option<T><br/>Some(value) | None"]
-        RUST_FORCE["Compiler forces handling<br/>[OK] Cannot ignore None"]
+        RUST_FORCE["Compiler forces handling<br/>Cannot ignore None"]
         RUST_MATCH["Pattern matching<br/>match option { ... }"]
         RUST_METHODS["Rich API<br/>.map(), .unwrap_or(), .and_then()"]
         
@@ -223,7 +224,7 @@ graph TD
         RUST_FORCE --> RUST_MATCH
         RUST_FORCE --> RUST_METHODS
         
-        RUST_SAFE["Compile-time null safety<br/>[OK] No null pointer exceptions"]
+        RUST_SAFE["Compile-time null safety<br/>No null pointer exceptions"]
         RUST_MATCH --> RUST_SAFE
         RUST_METHODS --> RUST_SAFE
     end
@@ -254,7 +255,7 @@ fn describe_point(point: Point) -> String {
 }
 ```
 
-### Option and Result Types
+### Option and Result Types / Option 与 Result 类型
 ```csharp
 // C# nullable reference types (C# 8+)
 public class PersonService
@@ -367,7 +368,7 @@ fn main() {
 }
 ```
 
-### Custom Error Types
+### Custom Error Types / 自定义错误类型
 ```rust
 // Define custom error enum
 #[derive(Debug)]
@@ -425,12 +426,14 @@ fn demo_error_handling() {
 
 ---
 
-## Exercises
+## Exercises / 练习
 
 <details>
-<summary><strong>🏋️ Exercise: Option Combinators</strong> (click to expand)</summary>
+<summary><strong>Exercise: Option Combinators / 练习：Option 组合器</strong> (click to expand / 点击展开)</summary>
 
 Rewrite this deeply nested C# null-checking code using Rust `Option` combinators (`and_then`, `map`, `unwrap_or`):
+
+请使用 Rust 的 `Option` 组合器（`and_then`、`map`、`unwrap_or`）重写下面这段层层嵌套的 C# 空值检查代码：
 
 ```csharp
 string GetCityName(User? user)
@@ -444,6 +447,8 @@ string GetCityName(User? user)
 ```
 
 Use these Rust types:
+
+使用下面这些 Rust 类型：
 ```rust
 struct User { address: Option<Address> }
 struct Address { city: Option<String> }
@@ -451,8 +456,10 @@ struct Address { city: Option<String> }
 
 Write it as a **single expression** with no `if let` or `match`.
 
+请把它写成**单个表达式**，不要使用 `if let` 或 `match`。
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution / 参考答案</summary>
 
 ```rust
 struct User { address: Option<Address> }
@@ -477,11 +484,11 @@ fn main() {
 }
 ```
 
-**Key insight**: `and_then` is Rust's `?.` operator for `Option`. Each step returns `Option`, and the chain short-circuits on `None` — exactly like C#'s null-conditional operator `?.`, but explicit and type-safe.
+**Key insight / 核心洞见：** `and_then` is Rust's `?.` operator for `Option`. Each step returns `Option`, and the chain short-circuits on `None` - exactly like C#'s null-conditional operator `?.`, but explicit and type-safe.
+
+`and_then` 可以看作 Rust 在 `Option` 上对应于 `?.` 的链式工具。每一步都返回 `Option`，一旦遇到 `None`，整条链就会短路，这与 C# 的空条件运算符 `?.` 很像，但更显式，也更类型安全。
 
 </details>
 </details>
 
 ***
-
-

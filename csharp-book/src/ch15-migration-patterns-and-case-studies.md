@@ -1,9 +1,14 @@
-## Common C# Patterns in Rust
+## Common C# Patterns in Rust | Rust 中常见的 C# 模式映射
 
 > **What you'll learn:** How to translate the Repository pattern, Builder pattern, dependency injection,
 > LINQ chains, Entity Framework queries, and configuration patterns from C# to idiomatic Rust.
 >
-> **Difficulty:** 🟡 Intermediate
+> **你将学到什么：** 如何把 Repository 模式、Builder 模式、依赖注入、LINQ 链式操作、
+> Entity Framework 查询以及配置模式，从 C# 迁移到惯用的 Rust 写法。
+>
+> **Difficulty:** Intermediate
+>
+> **难度：** 中级
 
 ```mermaid
 graph LR
@@ -26,7 +31,7 @@ graph LR
     style ITER fill:#c8e6c9,color:#000
 ```
 
-### Repository Pattern
+### Repository Pattern | Repository 模式
 ```csharp
 // C# Repository Pattern
 public interface IRepository<T> where T : IEntity
@@ -144,7 +149,7 @@ impl Repository<User, RepositoryError> for UserRepository {
 }
 ```
 
-### Builder Pattern
+### Builder Pattern | Builder 模式
 ```csharp
 // C# Builder Pattern (fluent interface)
 public class HttpClientBuilder
@@ -262,9 +267,9 @@ impl Default for HttpClientBuilder {
 
 ***
 
-## C# to Rust Concept Mapping
+## C# to Rust Concept Mapping | C# 到 Rust 的概念映射
 
-### Dependency Injection → Constructor Injection + Traits
+### Dependency Injection -> Constructor Injection + Traits | 依赖注入 -> 构造函数注入 + Trait
 ```csharp
 // C# with DI container
 services.AddScoped<IUserRepository, UserRepository>();
@@ -313,7 +318,7 @@ let repository = PostgresUserRepository::new(pool);
 let service = UserService::new(repository);
 ```
 
-### LINQ → Iterator Chains
+### LINQ -> Iterator Chains | LINQ -> 迭代器链
 ```csharp
 // C# LINQ
 var result = users
@@ -348,7 +353,7 @@ let result: Vec<String> = users
     .collect();
 ```
 
-### Entity Framework → SQLx + Migrations
+### Entity Framework -> SQLx + Migrations | Entity Framework -> SQLx + Migration
 ```csharp
 // C# Entity Framework
 public class ApplicationDbContext : DbContext
@@ -390,7 +395,7 @@ let user = sqlx::query_as::<_, User>(
 .await?;
 ```
 
-### Configuration → Config Crates
+### Configuration -> Config Crates | 配置 -> Config Crate
 ```csharp
 // C# Configuration
 public class AppSettings
@@ -430,35 +435,56 @@ let settings = AppSettings::new()?;
 
 ---
 
-## Case Studies
+## Case Studies | 案例研究
 
-### Case Study 1: CLI Tool Migration (csvtool)
+### Case Study 1: CLI Tool Migration (csvtool) | 案例 1：CLI 工具迁移（csvtool）
 
 **Background**: A team maintained a C# console app (`CsvProcessor`) that read large CSV files, applied transformations, and wrote output. At 500 MB files, memory usage spiked to 4 GB and GC pauses caused 30-second stalls.
 
+**背景：** 某团队维护着一个 C# 控制台程序 `CsvProcessor`，用于读取大体积 CSV、执行转换并写出结果。处理 500 MB 文件时，内存会飙到 4 GB，GC 暂停甚至会造成 30 秒卡顿。
+
 **Migration approach**: Rewrote in Rust over 2 weeks, one module at a time.
 
-| Step | What Changed | C# → Rust |
+**迁移方式：** 用 2 周时间逐模块改写为 Rust。
+
+| Step | What Changed | C# -> Rust |
 |------|-------------|-----------|
-| 1 | CSV parsing | `CsvHelper` → `csv` crate (streaming `Reader`) |
-| 2 | Data model | `class Record` → `struct Record` (stack-allocated, `#[derive(Deserialize)]`) |
-| 3 | Transformations | LINQ `.Select().Where()` → `.iter().map().filter()` |
-| 4 | File I/O | `StreamReader` → `BufReader<File>` with `?` error propagation |
-| 5 | CLI args | `System.CommandLine` → `clap` with derive macros |
-| 6 | Parallel processing | `Parallel.ForEach` → `rayon`'s `.par_iter()` |
+| 1 | CSV parsing | `CsvHelper` -> `csv` crate (streaming `Reader`) |
+| 1 | CSV 解析 | `CsvHelper` -> `csv` crate（流式 `Reader`） |
+| 2 | Data model | `class Record` -> `struct Record` (stack-allocated, `#[derive(Deserialize)]`) |
+| 2 | 数据模型 | `class Record` -> `struct Record`（栈上值，`#[derive(Deserialize)]`） |
+| 3 | Transformations | LINQ `.Select().Where()` -> `.iter().map().filter()` |
+| 3 | 转换逻辑 | LINQ `.Select().Where()` -> `.iter().map().filter()` |
+| 4 | File I/O | `StreamReader` -> `BufReader<File>` with `?` error propagation |
+| 4 | 文件 I/O | `StreamReader` -> `BufReader<File>`，并使用 `?` 传播错误 |
+| 5 | CLI args | `System.CommandLine` -> `clap` with derive macros |
+| 5 | 命令行参数 | `System.CommandLine` -> 带 derive 宏的 `clap` |
+| 6 | Parallel processing | `Parallel.ForEach` -> `rayon`'s `.par_iter()` |
+| 6 | 并行处理 | `Parallel.ForEach` -> `rayon` 的 `.par_iter()` |
 
 **Results**:
-- Memory: 4 GB → 12 MB (streaming instead of loading entire file)
-- Speed: 45s → 3s for 500 MB file
+- Memory: 4 GB -> 12 MB (streaming instead of loading entire file)
+- Speed: 45s -> 3s for 500 MB file
 - Binary size: single 2 MB executable, no runtime dependency
 
-**Key lesson**: The biggest win wasn't Rust itself — it was that Rust's ownership model *forced* a streaming design. In C#, it was easy to `.ToList()` everything into memory. In Rust, the borrow checker naturally steered toward `Iterator`-based processing.
+**结果：**
+- 内存：4 GB -> 12 MB（因为改成了流式处理，而不是一次性读入整个文件）
+- 速度：处理 500 MB 文件从 45 秒降到 3 秒
+- 二进制体积：单文件 2 MB，可执行文件无额外运行时依赖
 
-### Case Study 2: Microservice Replacement (auth-gateway)
+**Key lesson**: The biggest win wasn't Rust itself - it was that Rust's ownership model *forced* a streaming design. In C#, it was easy to `.ToList()` everything into memory. In Rust, the borrow checker naturally steered toward `Iterator`-based processing.
+
+**关键启发：** 最大收益不只是“换成 Rust”，而是 Rust 的所有权模型*逼迫*设计走向流式处理。在 C# 中，把所有东西 `.ToList()` 进内存太容易了；而在 Rust 里，借用检查器会自然把你推向基于 `Iterator` 的处理方式。
+
+### Case Study 2: Microservice Replacement (auth-gateway) | 案例 2：微服务替换（auth-gateway）
 
 **Background**: A C# ASP.NET Core authentication gateway handled JWT validation and rate limiting for 50+ backend services. At 10K req/s, p99 latency hit 200ms with GC spikes.
 
+**背景：** 一个基于 C# ASP.NET Core 的认证网关负责为 50 多个后端服务做 JWT 校验和限流。在 10K req/s 下，p99 延迟会因为 GC 抖动飙到 200ms。
+
 **Migration approach**: Replaced with a Rust service using `axum` + `tower`, keeping the API contract identical.
+
+**迁移方式：** 使用 `axum` + `tower` 重写为 Rust 服务，同时保持 API 协议完全一致。
 
 ```rust
 // Before (C#):  services.AddAuthentication().AddJwtBearer(...)
@@ -479,25 +505,38 @@ let app = Router::new()
 | Metric | C# (ASP.NET Core) | Rust (axum) |
 |--------|-------------------|-------------|
 | p50 latency | 5ms | 0.8ms |
+| p50 延迟 | 5ms | 0.8ms |
 | p99 latency | 200ms (GC spikes) | 4ms |
+| p99 延迟 | 200ms（有 GC 抖动） | 4ms |
 | Memory | 300 MB | 8 MB |
+| 内存 | 300 MB | 8 MB |
 | Docker image | 210 MB (.NET runtime) | 12 MB (static binary) |
+| Docker 镜像 | 210 MB（含 .NET runtime） | 12 MB（静态二进制） |
 | Cold start | 2.1s | 0.05s |
+| 冷启动 | 2.1s | 0.05s |
 
 **Key lessons**:
-1. **Keep the same API contract** — no client changes needed. Rust service was a drop-in replacement.
-2. **Start with the hot path** — JWT validation was the bottleneck. Migrating just that one middleware would have captured 80% of the win.
-3. **Use `tower` middleware** — it mirrors ASP.NET Core's middleware pipeline pattern, so C# developers found the Rust architecture familiar.
-4. **p99 latency improvement** came from eliminating GC pauses, not from faster code — Rust's steady-state throughput was only 2x faster, but the absence of GC made the tail latency predictable.
+1. **Keep the same API contract** - no client changes needed. Rust service was a drop-in replacement.
+2. **Start with the hot path** - JWT validation was the bottleneck. Migrating just that one middleware would have captured 80% of the win.
+3. **Use `tower` middleware** - it mirrors ASP.NET Core's middleware pipeline pattern, so C# developers found the Rust architecture familiar.
+4. **p99 latency improvement** came from eliminating GC pauses, not from faster code - Rust's steady-state throughput was only 2x faster, but the absence of GC made the tail latency predictable.
+
+**关键经验：**
+1. **保持 API 协议不变**。这样无需改客户端，Rust 服务可以直接替换原实现。
+2. **优先迁移热点路径**。JWT 校验是瓶颈，哪怕只迁这一个中间件，也可能先拿到 80% 的收益。
+3. **使用 `tower` 中间件**。它和 ASP.NET Core 的中间件流水线很像，C# 团队更容易理解和接受。
+4. **p99 延迟改善主要来自消除 GC 暂停**，而不是单纯代码“更快”。Rust 的稳态吞吐可能只提升 2 倍，但没有 GC 抖动后，尾延迟会稳定得多。
 
 ---
 
-## Exercises
+## Exercises | 练习
 
 <details>
-<summary><strong>🏋️ Exercise: Migrate a C# Service</strong> (click to expand)</summary>
+<summary><strong>Exercise: Migrate a C# Service | 练习：迁移一个 C# 服务</strong> (click to expand / 点击展开)</summary>
 
 Translate this C# service to idiomatic Rust:
+
+把下面这个 C# 服务翻译成惯用的 Rust 写法：
 
 ```csharp
 public interface IUserService
@@ -526,8 +565,10 @@ public class UserService : IUserService
 
 **Hints**: Use a trait, `Option<User>` instead of null, `Result` instead of try/catch, and fix the SQL injection vulnerability.
 
+**提示：** 使用 trait，用 `Option<User>` 替代 null，用 `Result` 替代 try/catch，并修复 SQL 注入漏洞。
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution | 参考答案</summary>
 
 ```rust
 use async_trait::async_trait;
@@ -548,7 +589,7 @@ trait UserService: Send + Sync {
 }
 
 struct UserServiceImpl<D: Database> {
-    db: D,  // No Arc needed — Rust's ownership handles it
+    db: D,  // No Arc needed - Rust's ownership handles it
 }
 
 #[async_trait]
@@ -559,7 +600,7 @@ impl<D: Database> UserService for UserServiceImpl<D> {
     }
 
     async fn search(&self, query: &str) -> Result<Vec<User>, AppError> {
-        // Parameterized query — NO SQL injection!
+        // Parameterized query - NO SQL injection!
         // (sqlx uses $1 placeholders, not string interpolation)
         self.db.search_users(query).await.map_err(Into::into)
     }
@@ -567,14 +608,18 @@ impl<D: Database> UserService for UserServiceImpl<D> {
 ```
 
 **Key changes from C#**:
-- `null` → `Option<User>` (compile-time null safety)
-- `try/catch` → `Result` + `?` (explicit error propagation)
+- `null` -> `Option<User>` (compile-time null safety)
+- `try/catch` -> `Result` + `?` (explicit error propagation)
 - SQL injection fixed: parameterized queries, not string interpolation
-- `IDatabase _db` → generic `D: Database` (static dispatch, no boxing)
+- `IDatabase _db` -> generic `D: Database` (static dispatch, no boxing)
+
+**与 C# 相比的关键变化：**
+- `null` -> `Option<User>`（编译期空值安全）
+- `try/catch` -> `Result` + `?`（显式错误传播）
+- SQL 注入问题修复：改用参数化查询，不再拼接字符串
+- `IDatabase _db` -> 泛型 `D: Database`（静态分发，无需装箱）
 
 </details>
 </details>
 
 ***
-
-

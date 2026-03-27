@@ -1,26 +1,40 @@
-## Performance Comparison: Managed vs Native
+## Performance Comparison: Managed vs Native | 性能对比：托管运行时 vs 原生执行
 
-> **What you'll learn:** Real-world performance differences between C# and Rust — startup time,
+> **What you'll learn:** Real-world performance differences between C# and Rust - startup time,
 > memory usage, throughput benchmarks, CPU-intensive workloads, and a decision tree
 > for when to migrate vs when to stay in C#.
 >
-> **Difficulty:** 🟡 Intermediate
+> **你将学到什么：** C# 与 Rust 在真实场景中的性能差异，包括启动时间、
+> 内存占用、吞吐基准、CPU 密集型工作负载，以及什么时候该迁移、什么时候继续留在 C# 的决策思路。
+>
+> **Difficulty:** Intermediate
+>
+> **难度：** 中级
 
-### Real-World Performance Characteristics
+### Real-World Performance Characteristics | 真实世界中的性能特征
 
 | **Aspect** | **C# (.NET)** | **Rust** | **Performance Impact** |
 |------------|---------------|----------|------------------------|
-| **Startup Time** | 100-500ms (JIT); 5-30ms (.NET 8 AOT) | 1-10ms (native binary) | 🚀 **10-50x faster** (vs JIT) |
-| **Memory Usage** | +30-100% (GC overhead + metadata) | Baseline (minimal runtime) | 💾 **30-50% less RAM** |
-| **GC Pauses** | 1-100ms periodic pauses | Never (no GC) | ⚡ **Consistent latency** |
-| **CPU Usage** | +10-20% (GC + JIT overhead) | Baseline (direct execution) | 🔋 **10-20% better efficiency** |
-| **Binary Size** | 30-200MB (with runtime); 10-30MB (AOT trimmed) | 1-20MB (static binary) | 📦 **Smaller deployments** |
-| **Memory Safety** | Runtime checks | Compile-time proofs | 🛡️ **Zero overhead safety** |
-| **Concurrent Performance** | Good (with careful synchronization) | Excellent (fearless concurrency) | 🏃 **Superior scalability** |
+| **Startup Time** | 100-500ms (JIT); 5-30ms (.NET 8 AOT) | 1-10ms (native binary) | **10-50x faster** (vs JIT) |
+| **启动时间** | 100-500ms（JIT）；5-30ms（.NET 8 AOT） | 1-10ms（原生二进制） | **相对 JIT 可快 10-50 倍** |
+| **Memory Usage** | +30-100% (GC overhead + metadata) | Baseline (minimal runtime) | **30-50% less RAM** |
+| **内存占用** | 额外增加 30-100%（GC 开销 + 元数据） | 接近基线（运行时极小） | **通常少 30-50% 内存** |
+| **GC Pauses** | 1-100ms periodic pauses | Never (no GC) | **Consistent latency** |
+| **GC 暂停** | 周期性暂停 1-100ms | 不存在（无 GC） | **延迟更稳定** |
+| **CPU Usage** | +10-20% (GC + JIT overhead) | Baseline (direct execution) | **10-20% better efficiency** |
+| **CPU 占用** | 额外增加 10-20%（GC + JIT 开销） | 接近基线（直接执行） | **通常提升 10-20% 效率** |
+| **Binary Size** | 30-200MB (with runtime); 10-30MB (AOT trimmed) | 1-20MB (static binary) | **Smaller deployments** |
+| **二进制大小** | 30-200MB（含运行时）；10-30MB（AOT 裁剪后） | 1-20MB（静态二进制） | **部署体积更小** |
+| **Memory Safety** | Runtime checks | Compile-time proofs | **Zero overhead safety** |
+| **内存安全** | 运行时检查 | 编译期证明 | **零额外运行时成本的安全性** |
+| **Concurrent Performance** | Good (with careful synchronization) | Excellent (fearless concurrency) | **Superior scalability** |
+| **并发表现** | 不错（前提是仔细同步） | 很强（fearless concurrency） | **扩展性通常更强** |
 
-> **Note on .NET 8+ AOT**: Native AOT compilation closes the startup gap significantly (5-30ms). For throughput and memory, GC overhead and pauses remain. When evaluating a migration, benchmark your *specific workload* — headline numbers can be misleading.
+> **Note on .NET 8+ AOT**: Native AOT compilation closes the startup gap significantly (5-30ms). For throughput and memory, GC overhead and pauses remain. When evaluating a migration, benchmark your *specific workload* - headline numbers can be misleading.
+>
+> **关于 .NET 8+ AOT 的说明：** Native AOT 已经显著缩小了启动时间差距（约 5-30ms）。但在吞吐和内存方面，GC 开销与暂停仍然存在。评估是否迁移时，一定要基于你自己的*真实工作负载*做基准，不能只看宣传数字。
 
-### Benchmark Examples
+### Benchmark Examples | 基准示例
 
 ```csharp
 // C# - JSON processing benchmark
@@ -70,7 +84,7 @@ pub async fn process_json_file(path: &str) -> Result<Vec<User>, Box<dyn std::err
 // Binary size: ~8MB (static binary)
 ```
 
-### CPU-Intensive Workloads
+### CPU-Intensive Workloads | CPU 密集型工作负载
 
 ```csharp
 // C# - Mathematical computation
@@ -122,12 +136,12 @@ pub fn generate_mandelbrot(width: usize, height: usize, max_iterations: u32) -> 
         .collect()
 }
 
-// Performance: ~1.1 seconds (same 8-core machine)  
+// Performance: ~1.1 seconds (same 8-core machine)
 // Memory: ~200MB
 // 2x faster with 60% less memory usage
 ```
 
-### When to Choose Each Language
+### When to Choose Each Language | 什么时候该选哪种语言
 
 **Choose C# when:**
 - **Rapid development is crucial** - Rich tooling ecosystem
@@ -137,6 +151,14 @@ pub fn generate_mandelbrot(width: usize, height: usize, max_iterations: u32) -> 
 - **Rich UI applications** - WPF, WinUI, Blazor applications
 - **Prototyping and MVPs** - Fast time to market
 
+**选择 C# 的场景：**
+- **开发速度是第一优先级**，因为工具链与生态成熟
+- **团队已经深度掌握 .NET**
+- **强依赖微软生态的企业集成**
+- **性能需求中等，当前性能已经够用**
+- **富客户端 UI 应用**，如 WPF、WinUI、Blazor
+- **原型和 MVP 阶段**，希望尽快上线
+
 **Choose Rust when:**
 - **Performance is critical** - CPU/memory-intensive applications
 - **Resource constraints matter** - Embedded, edge computing, serverless
@@ -145,7 +167,15 @@ pub fn generate_mandelbrot(width: usize, height: usize, max_iterations: u32) -> 
 - **High reliability requirements** - Financial systems, safety-critical applications
 - **Concurrent/parallel workloads** - High-throughput data processing
 
-### Migration Strategy Decision Tree
+**选择 Rust 的场景：**
+- **性能是核心指标**，尤其是 CPU / 内存密集型应用
+- **资源受限明显**，如嵌入式、边缘计算、serverless
+- **长时间运行的服务**，如 Web 服务、数据库、系统服务
+- **系统级编程**，如驱动、网络工具、操作系统组件
+- **可靠性要求极高**，如金融系统、安全关键系统
+- **并发/并行负载很重**，如高吞吐数据处理
+
+### Migration Strategy Decision Tree | 迁移策略决策树
 
 ```mermaid
 graph TD
@@ -155,11 +185,11 @@ graph TD
     EXISTING["Large existing C# codebase?"]
     NEW_PROJECT["New project or component?"]
     
-    INCREMENTAL["Incremental adoption:<br/>• CLI tools first<br/>• Performance-critical components<br/>• New microservices"]
+    INCREMENTAL["Incremental adoption:<br/>- CLI tools first<br/>- Performance-critical components<br/>- New microservices"]
     
-    FULL_RUST["Full Rust adoption:<br/>• Greenfield projects<br/>• System-level services<br/>• High-performance APIs"]
+    FULL_RUST["Full Rust adoption:<br/>- Greenfield projects<br/>- System-level services<br/>- High-performance APIs"]
     
-    STAY_CSHARP["Stay with C#:<br/>• Optimize existing code<br/>• Use .NET AOT / performance features<br/>• Consider .NET Native"]
+    STAY_CSHARP["Stay with C#:<br/>- Optimize existing code<br/>- Use .NET AOT / performance features<br/>- Consider .NET Native"]
     
     START --> PERFORMANCE
     PERFORMANCE -->|Yes| TEAM
@@ -180,5 +210,3 @@ graph TD
 ```
 
 ***
-
-

@@ -1,11 +1,16 @@
-## Generic Constraints: where vs trait bounds
+## Generic Constraints: where vs trait bounds | 泛型约束：`where` 与 trait bound
 
 > **What you'll learn:** Rust's trait bounds vs C#'s `where` constraints, the `where` clause syntax,
 > conditional trait implementations, associated types, and higher-ranked trait bounds (HRTBs).
 >
-> **Difficulty:** 🔴 Advanced
+> **你将学到什么：** Rust 的 trait bound 与 C# `where` 约束的区别，`where` 子句语法，
+> 条件 trait 实现、关联类型，以及高阶生命周期约束（HRTB）。
+>
+> **Difficulty:** Advanced
+>
+> **难度：** 高级
 
-### C# Generic Constraints
+### C# Generic Constraints | C# 泛型约束
 ```csharp
 // C# Generic constraints with where clause
 public class Repository<T> where T : class, IEntity, new()
@@ -50,7 +55,7 @@ public interface IWriter<in T> where T : IEntity
 }
 ```
 
-### Rust Generic Constraints with Trait Bounds
+### Rust Generic Constraints with Trait Bounds | Rust 中基于 Trait Bound 的泛型约束
 ```rust
 use std::fmt::{Debug, Display};
 use std::clone::Clone;
@@ -169,14 +174,20 @@ graph TD
     style RUST_FLEX fill:#c8e6c9,color:#000
 ```
 
+```text
+Rust 的泛型约束核心思想是：把“某个类型必须具备哪些能力”写成 trait bound，而不是写成运行时反射或继承层级判断。
+```
+
 ---
 
-## Exercises
+## Exercises | 练习
 
 <details>
-<summary><strong>🏋️ Exercise: Generic Repository</strong> (click to expand)</summary>
+<summary><strong>Exercise: Generic Repository | 练习：泛型仓储</strong> (click to expand / 点击展开)</summary>
 
 Translate this C# generic repository interface to Rust traits:
+
+把下面这个 C# 泛型仓储接口翻译成 Rust trait：
 
 ```csharp
 public interface IRepository<T> where T : IEntity, new()
@@ -193,8 +204,14 @@ Requirements:
 3. Implement a `InMemoryRepository<T>` that stores items in a `Vec<T>`
 4. The `find` method should accept `impl Fn(&T) -> bool`
 
+要求：
+1. 定义一个 `Entity` trait，包含 `fn id(&self) -> u64`
+2. 定义 `Repository<T>` trait，其中 `T: Entity + Clone`
+3. 实现一个 `InMemoryRepository<T>`，内部用 `Vec<T>` 存储数据
+4. `find` 方法应接收 `impl Fn(&T) -> bool`
+
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution | 参考答案</summary>
 
 ```rust
 trait Entity: Clone {
@@ -250,9 +267,9 @@ fn main() {
 
 **Key differences from C#**: No `new()` constraint (use `Default` trait instead). `Fn(&T) -> bool` replaces `Func<T, bool>`. Return `Option` instead of throwing.
 
+**与 C# 的关键差异：** Rust 没有直接对应的 `new()` 约束，通常改用 `Default` trait。`Fn(&T) -> bool` 对应 `Func<T, bool>`。查找失败时更常返回 `Option`，而不是抛异常。
+
 </details>
 </details>
 
 ***
-
-

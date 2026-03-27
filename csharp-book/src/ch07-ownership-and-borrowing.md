@@ -1,14 +1,22 @@
-## Understanding Ownership
+## Understanding Ownership | 理解所有权
 
-> **What you'll learn:** Rust's ownership system — why `let s2 = s1` invalidates `s1` (unlike C# reference copying),
+> **What you'll learn:** Rust's ownership system - why `let s2 = s1` invalidates `s1` (unlike C# reference copying),
 > the three ownership rules, `Copy` vs `Move` types, borrowing with `&` and `&mut`,
 > and how the borrow checker replaces garbage collection.
 >
-> **Difficulty:** 🟡 Intermediate
+> **你将学到什么：** Rust 的所有权系统，以及为什么 `let s2 = s1` 会让 `s1` 失效（这不同于 C# 的引用复制）；
+> 三条所有权规则、`Copy` 与 `Move` 类型的区别、使用 `&` 和 `&mut` 的借用方式，
+> 以及借用检查器如何替代垃圾回收机制。
+>
+> **Difficulty:** Intermediate
+>
+> **难度：** 中级
 
 Ownership is Rust's most unique feature and the biggest conceptual shift for C# developers. Let's approach it step by step.
 
-### C# Memory Model (Review)
+所有权是 Rust 最独特的特性，也是 C# 开发者在思维方式上需要完成的最大转变。我们一步一步来看。
+
+### C# Memory Model (Review) | C# 内存模型（回顾）
 ```csharp
 // C# - Automatic memory management
 public void ProcessData()
@@ -27,17 +35,20 @@ public void ProcessList(List<int> list)
 }
 ```
 
-### Rust Ownership Rules
-1. **Each value has exactly one owner** (unless you opt into shared ownership with `Rc<T>`/`Arc<T>` — see [Smart Pointers](ch07-3-smart-pointers-beyond-single-ownership.md))
-2. **When the owner goes out of scope, the value is dropped** (deterministic cleanup — see [Drop](ch07-3-smart-pointers-beyond-single-ownership.md#drop-rusts-idisposable))
+### Rust Ownership Rules | Rust 所有权规则
+1. **Each value has exactly one owner** (unless you opt into shared ownership with `Rc<T>`/`Arc<T>` - see [Smart Pointers](ch07-3-smart-pointers-beyond-single-ownership.md))
+1. **每个值都恰好有一个所有者**（除非你显式使用 `Rc<T>`/`Arc<T>` 进行共享所有权，参见 [智能指针](ch07-3-smart-pointers-beyond-single-ownership.md)）
+2. **When the owner goes out of scope, the value is dropped** (deterministic cleanup - see [Drop](ch07-3-smart-pointers-beyond-single-ownership.md#drop-rusts-idisposable))
+2. **当所有者离开作用域时，值会被释放**（这是确定性的清理机制，参见 [Drop](ch07-3-smart-pointers-beyond-single-ownership.md#drop-rusts-idisposable)）
 3. **Ownership can be transferred (moved)**
+3. **所有权可以被转移（move）**
 
 ```rust
 // Rust - Explicit ownership management
 fn process_data() {
     let data = vec![1, 2, 3, 4, 5];  // data owns the vector
     process_list(data);              // Ownership moved to function
-    // println!("{:?}", data);       // ❌ Error: data no longer owned here
+    // println!("{:?}", data);       // Error: data no longer owned here
 }
 
 fn process_list(mut list: Vec<i32>) {  // list now owns the vector
@@ -46,10 +57,10 @@ fn process_list(mut list: Vec<i32>) {  // list now owns the vector
 }
 ```
 
-### Understanding "Move" for C# Developers
+### Understanding "Move" for C# Developers | 面向 C# 开发者理解 “Move”
 ```csharp
 // C# - References are copied, objects stay in place
-// (Only reference types — classes — work this way;
+// (Only reference types - classes - work this way;
 //  C# value types like struct behave differently)
 var original = new List<int> { 1, 2, 3 };
 var reference = original;  // Both variables point to same object
@@ -61,24 +72,29 @@ Console.WriteLine(reference.Count);  // 4 - same object
 // Rust - Ownership is transferred
 let original = vec![1, 2, 3];
 let moved = original;       // Ownership transferred
-// println!("{:?}", original);  // ❌ Error: original no longer owns the data
-println!("{:?}", moved);    // ✅ Works: moved now owns the data
+// println!("{:?}", original);  // Error: original no longer owns the data
+println!("{:?}", moved);    // Works: moved now owns the data
 ```
 
-### Copy Types vs Move Types
+### Copy Types vs Move Types | Copy 类型与 Move 类型
 ```rust
 // Copy types (like C# value types) - copied, not moved
-let x = 5;        // i32 implements Copy
-let y = x;        // x is copied to y
-println!("{}", x); // ✅ Works: x is still valid
+let x = 5;         // i32 implements Copy
+let y = x;         // x is copied to y
+println!("{}", x); // Works: x is still valid
 
-// Move types (like C# reference types) - moved, not copied  
+// Move types (like C# reference types) - moved, not copied
 let s1 = String::from("hello");  // String doesn't implement Copy
 let s2 = s1;                     // s1 is moved to s2
-// println!("{}", s1);           // ❌ Error: s1 is no longer valid
+// println!("{}", s1);           // Error: s1 is no longer valid
 ```
 
-### Practical Example: Swapping Values
+```text
+Copy 类型（类似 C# 的值类型）会被复制，而不是移动。
+Move 类型（类似很多 C# 的引用类型使用场景）默认会转移所有权，而不是自动复制。
+```
+
+### Practical Example: Swapping Values | 实用示例：交换值
 ```csharp
 // C# - Simple reference swapping
 public void SwapLists(ref List<int> a, ref List<int> b)
@@ -108,13 +124,19 @@ fn manual_swap() {
 }
 ```
 
+```text
+在 Rust 中，交换不只是“引用换一下”这么简单，而是要明确考虑值的所有权由谁持有。
+```
+
 ***
 
-## Borrowing Basics
+## Borrowing Basics | 借用基础
 
 Borrowing is like getting a reference in C#, but with compile-time safety guarantees.
 
-### C# Reference Parameters
+借用有点像在 C# 中拿到一个引用，但 Rust 会在编译期提供更严格的安全保证。
+
+### C# Reference Parameters | C# 引用参数
 ```csharp
 // C# - ref and out parameters
 public void ModifyValue(ref int value)
@@ -133,7 +155,7 @@ public bool TryParse(string input, out int result)
 }
 ```
 
-### Rust Borrowing
+### Rust Borrowing | Rust 借用
 ```rust
 // Rust - borrowing with & and &mut
 fn modify_value(value: &mut i32) {  // Mutable borrow
@@ -147,14 +169,14 @@ fn read_value(value: &i32) {        // Immutable borrow
 fn main() {
     let mut x = 5;
     
-    read_value(&x);      // Borrow immutably
+    read_value(&x);       // Borrow immutably
     modify_value(&mut x); // Borrow mutably
     
-    println!("{}", x);   // x is still owned here
+    println!("{}", x);    // x is still owned here
 }
 ```
 
-### Borrowing Rules (Enforced at Compile Time!)
+### Borrowing Rules (Enforced at Compile Time!) | 借用规则（在编译期强制执行）
 ```rust
 fn borrowing_rules() {
     let mut data = vec![1, 2, 3];
@@ -162,23 +184,31 @@ fn borrowing_rules() {
     // Rule 1: Multiple immutable borrows are OK
     let r1 = &data;
     let r2 = &data;
-    println!("{:?} {:?}", r1, r2);  // ✅ Works
+    println!("{:?} {:?}", r1, r2);  // Works
     
     // Rule 2: Only one mutable borrow at a time
     let r3 = &mut data;
-    // let r4 = &mut data;  // ❌ Error: cannot borrow mutably twice
-    // let r5 = &data;      // ❌ Error: cannot borrow immutably while borrowed mutably
+    // let r4 = &mut data;  // Error: cannot borrow mutably twice
+    // let r5 = &data;      // Error: cannot borrow immutably while borrowed mutably
     
     r3.push(4);  // Use the mutable borrow
     // r3 goes out of scope here
     
     // Rule 3: Can borrow again after previous borrows end
-    let r6 = &data;  // ✅ Works now
+    let r6 = &data;  // Works now
     println!("{:?}", r6);
 }
 ```
 
-### C# vs Rust: Reference Safety
+```text
+规则总结：
+1. 可以同时存在多个不可变借用。
+2. 同一时刻只能有一个可变借用。
+3. 可变借用存在时，不能再有不可变借用。
+4. 之前的借用结束后，才能重新借用。
+```
+
+### C# vs Rust: Reference Safety | C# 与 Rust：引用安全性对比
 ```csharp
 // C# - Potential runtime errors
 public class ReferenceSafety
@@ -208,7 +238,7 @@ pub struct SafeContainer {
 
 impl SafeContainer {
     // Return immutable borrow - caller can't modify
-    // Prefer &[i32] over &Vec<i32> — accept the broadest type
+    // Prefer &[i32] over &Vec<i32> - accept the broadest type
     pub fn get_data(&self) -> &[i32] {
         &self.data
     }
@@ -223,21 +253,25 @@ fn safe_example() {
     let mut container = SafeContainer { data: vec![1, 2, 3] };
     
     let reference = container.get_data();
-    // container.get_data_mut();  // ❌ Error: can't borrow mutably while immutably borrowed
+    // container.get_data_mut();  // Error: can't borrow mutably while immutably borrowed
     
     println!("{:?}", reference);  // Use immutable reference
     // reference goes out of scope here
     
-    let mut_reference = container.get_data_mut();  // ✅ Now OK
+    let mut_reference = container.get_data_mut();  // Now OK
     mut_reference.push(4);
 }
 ```
 
+```text
+Rust 的借用规则把很多 C# 中可能在运行时才暴露的问题，提前到了编译阶段。
+```
+
 ***
 
-## Move Semantics
+## Move Semantics | 移动语义
 
-### C# Value Types vs Reference Types
+### C# Value Types vs Reference Types | C# 值类型与引用类型
 ```csharp
 // C# - Value types are copied
 struct Point
@@ -258,7 +292,7 @@ list2.Add(4);
 Console.WriteLine(list1.Count);  // 4 - same object
 ```
 
-### Rust Move Semantics
+### Rust Move Semantics | Rust 的移动语义
 ```rust
 // Rust - Move by default for non-Copy types
 #[derive(Debug)]
@@ -270,8 +304,8 @@ struct Point {
 fn move_example() {
     let p1 = Point { x: 1, y: 2 };
     let p2 = p1;  // Move (not copy)
-    // println!("{:?}", p1);  // ❌ Error: p1 was moved
-    println!("{:?}", p2);    // ✅ Works
+    // println!("{:?}", p1);  // Error: p1 was moved
+    println!("{:?}", p2);    // Works
 }
 
 // To enable copying, implement Copy trait
@@ -284,12 +318,12 @@ struct CopyablePoint {
 fn copy_example() {
     let p1 = CopyablePoint { x: 1, y: 2 };
     let p2 = p1;  // Copy (because it implements Copy)
-    println!("{:?}", p1);  // ✅ Works
-    println!("{:?}", p2);  // ✅ Works
+    println!("{:?}", p1);  // Works
+    println!("{:?}", p2);  // Works
 }
 ```
 
-### When Values Are Moved
+### When Values Are Moved | 值会在什么时候发生移动
 ```rust
 fn demonstrate_moves() {
     let s = String::from("hello");
@@ -316,7 +350,7 @@ fn give_ownership() -> String {
 }
 ```
 
-### Avoiding Moves with Borrowing
+### Avoiding Moves with Borrowing | 用借用避免移动
 ```rust
 fn demonstrate_borrowing() {
     let s = String::from("hello");
@@ -331,11 +365,15 @@ fn calculate_length(s: &String) -> usize {
 }
 ```
 
+```text
+只要函数只需要“使用”一个值，而不需要“接管”它，就优先考虑借用而不是移动。
+```
+
 ***
 
-## Memory Management: GC vs RAII
+## Memory Management: GC vs RAII | 内存管理：GC 与 RAII
 
-### C# Garbage Collection
+### C# Garbage Collection | C# 垃圾回收
 ```csharp
 // C# - Automatic memory management
 public class Person
@@ -356,7 +394,7 @@ using var file = new FileStream("data.txt", FileMode.Open);
 // 'using' ensures Dispose() is called
 ```
 
-### Rust Ownership and RAII
+### Rust Ownership and RAII | Rust 的所有权与 RAII
 ```rust
 // Rust - Compile-time memory management
 pub struct Person {
@@ -369,10 +407,10 @@ impl Person {
         self.hobbies.push(hobby);  // Memory management tracked at compile time
     }
     
-        // Drop trait automatically implemented - cleanup is guaranteed
+    // Drop trait automatically implemented - cleanup is guaranteed
     // Compare to C#'s IDisposable:
     //   C#:   using var file = new FileStream(...)    // Dispose() called at end of using block
-    //   Rust: let file = File::open(...)?             // drop() called at end of scope — no 'using' needed
+    //   Rust: let file = File::open(...)?             // drop() called at end of scope - no 'using' needed
 }
 
 // RAII - Resource Acquisition Is Initialization
@@ -381,6 +419,11 @@ impl Person {
     // File automatically closed when 'file' goes out of scope
     // No 'using' statement needed - handled by type system
 }
+```
+
+```text
+GC 的核心特点是“自动回收，但时间不确定”。
+RAII 的核心特点是“离开作用域就立即清理，而且无需运行时扫描堆”。
 ```
 
 ```mermaid
@@ -425,11 +468,12 @@ graph TD
 
 ***
 
-
 <details>
-<summary><strong>🏋️ Exercise: Fix the Borrow Checker Errors</strong> (click to expand)</summary>
+<summary><strong>Exercise: Fix the Borrow Checker Errors | 练习：修复借用检查器错误</strong> (click to expand / 点击展开)</summary>
 
 **Challenge**: Each snippet below has a borrow checker error. Fix them without changing the output.
+
+**挑战：** 下面每个代码片段都包含一个借用检查器错误。请在不改变输出结果的前提下修复它们。
 
 ```rust
 // 1. Move after use
@@ -437,7 +481,7 @@ fn problem_1() {
     let name = String::from("Alice");
     let greeting = format!("Hello, {name}!");
     let upper = name.to_uppercase();  // hint: borrow instead of move
-    println!("{greeting} — {upper}");
+    println!("{greeting} - {upper}");
 }
 
 // 2. Mutable + immutable borrow overlap
@@ -456,17 +500,17 @@ fn problem_3() -> String {
 ```
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution | 参考答案</summary>
 
 ```rust
-// 1. format! already borrows — the fix is that format! takes a reference.
+// 1. format! already borrows - the fix is that format! takes a reference.
 //    The original code actually compiles! But if we had `let greeting = name;`
 //    then fix by using &name:
 fn solution_1() {
     let name = String::from("Alice");
     let greeting = format!("Hello, {}!", &name); // borrow
     let upper = name.to_uppercase();             // name still valid
-    println!("{greeting} — {upper}");
+    println!("{greeting} - {upper}");
 }
 
 // 2. Use the immutable borrow before the mutable operation:
@@ -477,19 +521,22 @@ fn solution_2() {
     println!("first = {first}");
 }
 
-// 3. Return the owned String (already correct — common beginner confusion):
+// 3. Return the owned String (already correct - common beginner confusion):
 fn solution_3() -> String {
     let s = String::from("hello");
-    s // ownership transferred to caller — this is the correct pattern
+    s // ownership transferred to caller - this is the correct pattern
 }
 ```
 
 **Key takeaways**:
-- `format!()` borrows its arguments — it doesn't move them
+- `format!()` borrows its arguments - it doesn't move them
 - Primitive types like `i32` implement `Copy`, so indexing copies the value
-- Returning an owned value transfers ownership to the caller — no lifetime issues
+- Returning an owned value transfers ownership to the caller - no lifetime issues
+
+**关键要点：**
+- `format!()` 会借用参数，而不是移动参数
+- `i32` 这样的基本类型实现了 `Copy`，因此索引取得的是复制后的值
+- 返回拥有所有权的值时，所有权会转移给调用者，不会引发生命周期问题
 
 </details>
 </details>
-
-

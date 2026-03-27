@@ -1,9 +1,14 @@
-## Inheritance vs Composition
+## Inheritance vs Composition | 继承 vs 组合
 
 > **What you'll learn:** Why Rust has no class inheritance, how traits + structs replace deep
 > class hierarchies, and practical patterns for achieving polymorphism through composition.
 >
-> **Difficulty:** 🟡 Intermediate
+> **你将学到什么：** 为什么 Rust 没有类继承，trait + struct 如何取代深层类层次结构，
+> 以及如何通过组合实现多态的实用模式。
+>
+> **Difficulty:** Intermediate
+>
+> **难度：** 中级
 
 ```csharp
 // C# - Class-based inheritance
@@ -55,7 +60,7 @@ public class Bird : Animal, IFlyable
 }
 ```
 
-### Rust Composition Model
+### Rust Composition Model | Rust 的组合模型
 ```rust
 // Rust - Composition over inheritance with traits
 pub trait Animal {
@@ -177,14 +182,20 @@ graph TD
     style RUST_STATIC fill:#c8e6c9,color:#000
 ```
 
+```text
+Rust 并不是“不能做面向对象”，而是把复用和多态从“继承层次”转成了“能力组合”。
+```
+
 ---
 
-## Exercises
+## Exercises | 练习
 
 <details>
-<summary><strong>🏋️ Exercise: Replace Inheritance with Traits</strong> (click to expand)</summary>
+<summary><strong>Exercise: Replace Inheritance with Traits | 练习：用 Trait 替代继承</strong> (click to expand / 点击展开)</summary>
 
 This C# code uses inheritance. Rewrite it in Rust using trait composition:
+
+下面这段 C# 代码使用了继承。请用 Rust 的 trait 组合方式重写它：
 
 ```csharp
 public abstract class Shape { public abstract double Area(); }
@@ -203,10 +214,17 @@ Requirements:
 1. `HasArea` trait with `fn area(&self) -> f64`
 2. `HasVolume` trait with `fn volume(&self) -> f64`
 3. `Cylinder` struct implementing both
-4. A function `fn print_shape_info(shape: &(impl HasArea + HasVolume))` — note the trait bound composition (no inheritance needed)
+4. A function `fn print_shape_info(shape: &(impl HasArea + HasVolume))` - note the trait bound composition (no inheritance needed)
+
+要求：
+1. 定义 `HasArea` trait，包含 `fn area(&self) -> f64`
+2. 定义 `HasVolume` trait，包含 `fn volume(&self) -> f64`
+3. 创建同时实现两者的 `Cylinder` 结构体
+4. 编写函数 `fn print_shape_info(shape: &(impl HasArea + HasVolume))`
+   注意这里是 trait bound 的组合，不需要继承
 
 <details>
-<summary>🔑 Solution</summary>
+<summary>Solution | 参考答案</summary>
 
 ```rust
 use std::f64::consts::PI;
@@ -247,11 +265,11 @@ fn main() {
 }
 ```
 
-**Key insight**: C# needs a 3-level hierarchy (Shape → Shape3D → Cylinder). Rust uses flat trait composition — `impl HasArea + HasVolume` combines capabilities without inheritance depth.
+**Key insight**: C# needs a 3-level hierarchy (Shape -> Shape3D -> Cylinder). Rust uses flat trait composition - `impl HasArea + HasVolume` combines capabilities without inheritance depth.
+
+**关键理解：** C# 需要三层继承结构（`Shape -> Shape3D -> Cylinder`），而 Rust 用平铺的 trait 组合即可：`impl HasArea + HasVolume` 直接把能力组合起来，不需要继承深度。
 
 </details>
 </details>
 
 ***
-
-

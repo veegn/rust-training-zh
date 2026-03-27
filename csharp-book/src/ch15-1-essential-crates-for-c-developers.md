@@ -1,12 +1,18 @@
-## Essential Crates for C# Developers
+## Essential Crates for C# Developers | 面向 C# 开发者的常用 Crate
 
-> **What you'll learn:** The Rust crate equivalents for common .NET libraries — serde (JSON.NET),
+> **What you'll learn:** The Rust crate equivalents for common .NET libraries - serde (JSON.NET),
 > reqwest (HttpClient), tokio (Task/async), sqlx (Entity Framework), and a deep dive on serde's
 > attribute system compared to `System.Text.Json`.
 >
-> **Difficulty:** 🟡 Intermediate
+> **你将学到什么：** 常见 .NET 库在 Rust 生态里的对应 crate，包括 serde（对应 JSON.NET）、
+> reqwest（对应 HttpClient）、tokio（对应 Task/async）、sqlx（对应 Entity Framework），
+> 以及 serde 属性系统与 `System.Text.Json` 的深入对比。
+>
+> **Difficulty:** Intermediate
+>
+> **难度：** 中级
 
-### Core Functionality Equivalents
+### Core Functionality Equivalents | 核心功能对应关系
 
 ```rust
 // Cargo.toml dependencies for C# developers
@@ -56,7 +62,7 @@ mockall = "0.11"
 rayon = "1.7"
 ```
 
-### Example Usage Patterns
+### Example Usage Patterns | 常见使用模式示例
 
 ```rust
 use serde::{Deserialize, Serialize};
@@ -207,13 +213,13 @@ mod tests {
 
 ***
 
+## Serde Deep Dive: JSON Serialization for C# Developers | Serde 深入讲解：面向 C# 开发者的 JSON 序列化
 
-<!-- ch15.1a: Serde Deep Dive for C# Developers -->
-## Serde Deep Dive: JSON Serialization for C# Developers
+C# developers rely heavily on `System.Text.Json` or `Newtonsoft.Json`. In Rust, **serde** (serialize/deserialize) is the universal framework - understanding its attribute system unlocks most data-handling scenarios.
 
-C# developers rely heavily on `System.Text.Json` or `Newtonsoft.Json`. In Rust, **serde** (serialize/deserialize) is the universal framework — understanding its attribute system unlocks most data-handling scenarios.
+C# 开发者通常会大量依赖 `System.Text.Json` 或 `Newtonsoft.Json`。而在 Rust 里，**serde**（serialize/deserialize）是最通用的序列化框架。理解它的属性系统，基本就能覆盖绝大多数数据处理场景。
 
-### Basic Derive: The Starting Point
+### Basic Derive: The Starting Point | 基础起步：derive 自动派生
 ```rust
 use serde::{Deserialize, Serialize};
 
@@ -241,7 +247,7 @@ var json = JsonSerializer.Serialize(user, new JsonSerializerOptions { WriteInden
 var parsed = JsonSerializer.Deserialize<User>(json);
 ```
 
-### Field-Level Attributes (Like `[JsonProperty]`)
+### Field-Level Attributes (Like `[JsonProperty]`) | 字段级属性（类似 `[JsonProperty]`）
 
 ```rust
 use serde::{Deserialize, Serialize};
@@ -305,14 +311,16 @@ public class ApiResponse
 }
 ```
 
-### Enum Representations (Critical Difference from C#)
+### Enum Representations (Critical Difference from C#) | 枚举表示方式（和 C# 的关键差异）
 
-Rust serde supports **four different JSON representations** for enums — a concept that has no direct C# equivalent because C# enums are always integers or strings.
+Rust serde supports **four different JSON representations** for enums - a concept that has no direct C# equivalent because C# enums are always integers or strings.
+
+Rust 的 serde 为枚举提供了**四种不同的 JSON 表示方式**。这在 C# 里没有直接对应物，因为 C# 的 enum 本质上总是整数或字符串的映射。
 
 ```rust
 use serde::{Deserialize, Serialize};
 
-// 1. Externally tagged (DEFAULT) — most common
+// 1. Externally tagged (DEFAULT) - most common
 #[derive(Serialize, Deserialize)]
 enum Message {
     Text(String),
@@ -323,7 +331,7 @@ enum Message {
 // Image variant: {"Image": {"url": "...", "width": 100}}
 // Ping variant:  "Ping"
 
-// 2. Internally tagged — like discriminated unions in other languages
+// 2. Internally tagged - like discriminated unions in other languages
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type")]
 enum Event {
@@ -334,7 +342,7 @@ enum Event {
 // {"type": "Created", "id": 1, "name": "Alice"}
 // {"type": "Deleted", "id": 1}
 
-// 3. Adjacently tagged — tag and content in separate fields
+// 3. Adjacently tagged - tag and content in separate fields
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "t", content = "c")]
 enum ApiResult {
@@ -344,7 +352,7 @@ enum ApiResult {
 // {"t": "Success", "c": {"name": "Alice"}}
 // {"t": "Error", "c": "not found"}
 
-// 4. Untagged — serde tries each variant in order
+// 4. Untagged - serde tries each variant in order
 #[derive(Serialize, Deserialize)]
 #[serde(untagged)]
 enum FlexibleValue {
@@ -353,10 +361,10 @@ enum FlexibleValue {
     Text(String),
     Bool(bool),
 }
-// 42, 3.14, "hello", true — serde auto-detects the variant
+// 42, 3.14, "hello", true - serde auto-detects the variant
 ```
 
-### Custom Serialization (Like `JsonConverter`)
+### Custom Serialization (Like `JsonConverter`) | 自定义序列化（类似 `JsonConverter`）
 ```rust
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -375,18 +383,18 @@ fn deserialize_duration<'de, D: Deserializer<'de>>(d: D) -> Result<std::time::Du
     let ms = u64::deserialize(d)?;
     Ok(std::time::Duration::from_millis(ms))
 }
-// JSON: {"timeout": 5000}  ↔  Config { timeout: Duration::from_millis(5000) }
+// JSON: {"timeout": 5000}  ->  Config { timeout: Duration::from_millis(5000) }
 ```
 
-### Container-Level Attributes
+### Container-Level Attributes | 容器级属性
 
 ```rust
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]  // All fields become camelCase in JSON
 struct UserProfile {
-    first_name: String,      // → "firstName"
-    last_name: String,       // → "lastName"
-    email_address: String,   // → "emailAddress"
+    first_name: String,      // -> "firstName"
+    last_name: String,       // -> "lastName"
+    email_address: String,   // -> "emailAddress"
 }
 
 #[derive(Serialize, Deserialize)]
@@ -396,27 +404,37 @@ struct StrictConfig {
     host: String,
 }
 // serde_json::from_str::<StrictConfig>(r#"{"port":8080,"host":"localhost","extra":true}"#)
-// → Error: unknown field `extra`
+// -> Error: unknown field `extra`
 ```
 
-### Quick Reference: Serde Attributes
+### Quick Reference: Serde Attributes | Serde 属性速查表
 
 | Attribute | Level | C# Equivalent | Purpose |
 |-----------|-------|---------------|---------|
 | `#[serde(rename = "...")]` | Field | `[JsonPropertyName]` | Rename in JSON |
+| `#[serde(rename = "...")]` | 字段 | `[JsonPropertyName]` | 修改 JSON 字段名 |
 | `#[serde(skip)]` | Field | `[JsonIgnore]` | Omit entirely |
+| `#[serde(skip)]` | 字段 | `[JsonIgnore]` | 完全忽略该字段 |
 | `#[serde(default)]` | Field | Default value | Use `Default::default()` if missing |
+| `#[serde(default)]` | 字段 | 默认值 | 字段缺失时使用 `Default::default()` |
 | `#[serde(flatten)]` | Field | `[JsonExtensionData]` | Merge nested struct into parent |
+| `#[serde(flatten)]` | 字段 | `[JsonExtensionData]` | 把嵌套结构体展平到父对象 |
 | `#[serde(skip_serializing_if = "...")]` | Field | `JsonIgnoreCondition` | Conditional skip |
+| `#[serde(skip_serializing_if = "...")]` | 字段 | `JsonIgnoreCondition` | 按条件跳过序列化 |
 | `#[serde(rename_all = "camelCase")]` | Container | `JsonSerializerOptions.PropertyNamingPolicy` | Naming convention |
-| `#[serde(deny_unknown_fields)]` | Container | — | Strict deserialization |
+| `#[serde(rename_all = "camelCase")]` | 容器 | `JsonSerializerOptions.PropertyNamingPolicy` | 批量命名风格转换 |
+| `#[serde(deny_unknown_fields)]` | Container | - | Strict deserialization |
+| `#[serde(deny_unknown_fields)]` | 容器 | - | 严格反序列化，拒绝未知字段 |
 | `#[serde(tag = "type")]` | Enum | Discriminator pattern | Internal tagging |
-| `#[serde(untagged)]` | Enum | — | Try variants in order |
+| `#[serde(tag = "type")]` | 枚举 | 判别字段模式 | 内部标签 |
+| `#[serde(untagged)]` | Enum | - | Try variants in order |
+| `#[serde(untagged)]` | 枚举 | - | 按顺序尝试各个变体 |
 | `#[serde(with = "...")]` | Field | `[JsonConverter]` | Custom ser/de |
+| `#[serde(with = "...")]` | 字段 | `[JsonConverter]` | 自定义序列化/反序列化 |
 
-### Beyond JSON: serde Works Everywhere
+### Beyond JSON: serde Works Everywhere | 不止 JSON：serde 在很多格式里都能用
 ```rust
-// The SAME derive works for ALL formats — just change the crate
+// The SAME derive works for ALL formats - just change the crate
 let user = User { name: "Alice".into(), age: 30, email: "a@b.com".into() };
 
 let json  = serde_json::to_string(&user)?;        // JSON
@@ -425,9 +443,11 @@ let yaml  = serde_yaml::to_string(&user)?;          // YAML
 let cbor  = serde_cbor::to_vec(&user)?;             // CBOR (binary, compact)
 let msgpk = rmp_serde::to_vec(&user)?;              // MessagePack (binary)
 
-// One #[derive(Serialize, Deserialize)] — every format for free
+// One #[derive(Serialize, Deserialize)] - every format for free
+```
+
+```text
+serde 的真正价值，不只是“能转 JSON”，而是同一套数据模型和属性系统可以复用到多种格式，这点比许多 C# 序列化库更统一。
 ```
 
 ***
-
-

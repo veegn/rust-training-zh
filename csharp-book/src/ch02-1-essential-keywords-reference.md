@@ -1,11 +1,18 @@
-## Essential Rust Keywords for C# Developers
+## Essential Rust Keywords for C# Developers / 面向 C# 开发者的 Rust 核心关键字速查
 
 > **What you'll learn:** A quick-reference mapping of Rust keywords to their C# equivalents —
 > visibility modifiers, ownership keywords, control flow, type definitions, and pattern matching syntax.
 >
+> **你将学到什么：** 通过一份速查表理解 Rust 关键字与 C# 对应概念之间的映射，
+> 包括可见性修饰符、所有权相关关键字、控制流、类型定义和模式匹配语法。
+>
 > **Difficulty:** 🟢 Beginner
+>
+> **难度：** 初级
 
 Understanding Rust's keywords and their purposes helps C# developers navigate the language more effectively.
+
+理解 Rust 的关键字及其用途，可以帮助 C# 开发者更快建立语言直觉，并在阅读代码时迅速定位语义。
 
 ### Visibility and Access Control Keywords
 

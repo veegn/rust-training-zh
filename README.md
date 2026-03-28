@@ -122,8 +122,8 @@ cd c-cpp-book && mdbook serve --open    # http://localhost:3000
 
 ### Deployment / 部署
 
-The site auto-deploys to GitHub Pages on push to `master` via `.github/workflows/pages.yml`. No manual steps needed.
+The site auto-deploys to GitHub Pages on push to `main` via `.github/workflows/pages.yml`. No manual steps needed.
 
-站点会在代码推送到 `master` 后通过 `.github/workflows/pages.yml` 自动部署到 GitHub Pages，无需手动操作。
+站点会在代码推送到 `main` 后通过 `.github/workflows/pages.yml` 自动部署到 GitHub Pages，无需手动操作。
 
 </details>

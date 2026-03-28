@@ -186,37 +186,78 @@ fn write_landing_page(site: &Path) {
   <title>Rust Training Books / Rust 训练书籍</title>
   <style>
     :root {{
-      --bg: #1a1a2e;
-      --card-bg: #16213e;
-      --accent: #e94560;
-      --text: #eee;
-      --muted: #a8a8b3;
-      --clr-bridge: #4ade80;
-      --clr-deep-dive: #22d3ee;
-      --clr-advanced: #fbbf24;
-      --clr-expert: #c084fc;
-      --clr-practices: #2dd4bf;
+      --bg: #f5efe4;
+      --bg-strong: #efe3cf;
+      --card-bg: rgba(255, 251, 245, 0.88);
+      --card-border: rgba(91, 58, 20, 0.12);
+      --accent: #9a3412;
+      --accent-2: #b45309;
+      --text: #22170b;
+      --muted: #65584b;
+      --clr-bridge: #0f9d58;
+      --clr-deep-dive: #0284c7;
+      --clr-advanced: #c2410c;
+      --clr-expert: #7c3aed;
+      --clr-practices: #0f766e;
     }}
     * {{ margin: 0; padding: 0; box-sizing: border-box; }}
     body {{
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
-      background: var(--bg);
+      font-family: "Segoe UI Variable Display", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(180, 83, 9, 0.12), transparent 34%),
+        linear-gradient(180deg, #fbf7ef 0%, var(--bg) 42%, var(--bg-strong) 100%);
       color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 3rem 1rem;
+      padding: 2rem 1rem 3rem;
     }}
-    h1 {{ font-size: 2.5rem; margin-bottom: 0.5rem; }}
+    .shell {{
+      width: min(1120px, 100%);
+    }}
+    .hero {{
+      padding: 2.2rem 2rem 1.4rem;
+      margin-bottom: 1.5rem;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.72), rgba(251, 245, 235, 0.92));
+      border: 1px solid rgba(154, 52, 18, 0.12);
+      box-shadow: 0 18px 48px rgba(91, 58, 20, 0.08);
+      backdrop-filter: blur(8px);
+    }}
+    .eyebrow {{
+      display: inline-block;
+      margin-bottom: 0.9rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(180, 83, 9, 0.12);
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }}
+    h1 {{
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.5rem, 5vw, 4.6rem);
+      line-height: 0.98;
+      margin-bottom: 0.7rem;
+      max-width: 12ch;
+    }}
     h1 span {{ color: var(--accent); }}
-    .subtitle {{ color: var(--muted); font-size: 1.1rem; margin-bottom: 1.2rem; }}
+    .subtitle {{
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.7;
+      max-width: 64ch;
+      margin-bottom: 1.2rem;
+    }}
 
     /* Legend */
     .legend {{
       display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem;
-      justify-content: center; margin-bottom: 2.2rem;
-      font-size: 0.8rem; color: var(--muted);
+      margin-top: 1.25rem;
+      font-size: 0.84rem; color: var(--muted);
     }}
     .legend-item {{ display: flex; align-items: center; gap: 0.35rem; }}
     .legend-dot {{
@@ -226,29 +267,37 @@ fn write_landing_page(site: &Path) {
     /* Grid & Cards */
     .grid {{
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
       gap: 1.5rem;
-      max-width: 1000px;
       width: 100%;
     }}
     .card {{
       background: var(--card-bg);
-      border-radius: 12px;
-      padding: 1.5rem 1.5rem 1.5rem 1.25rem;
+      border-radius: 18px;
+      padding: 1.5rem 1.5rem 1.55rem 1.25rem;
       text-decoration: none;
       color: var(--text);
-      transition: transform 0.15s, box-shadow 0.15s;
-      border: 1px solid rgba(255,255,255,0.05);
-      border-left: 4px solid var(--stripe);
+      transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+      border: 1px solid var(--card-border);
+      border-left: 5px solid var(--stripe);
+      box-shadow: 0 10px 28px rgba(91, 58, 20, 0.06);
     }}
     .card:hover {{
-      transform: translateY(-4px);
-      box-shadow: 0 8px 25px color-mix(in srgb, var(--stripe) 30%, transparent);
-      border-color: rgba(255,255,255,0.08);
+      transform: translateY(-5px);
+      box-shadow: 0 16px 34px color-mix(in srgb, var(--stripe) 16%, rgba(91, 58, 20, 0.12));
+      border-color: color-mix(in srgb, var(--stripe) 28%, white);
       border-left-color: var(--stripe);
     }}
-    .card h2 {{ font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }}
-    .card p  {{ color: var(--muted); font-size: 0.9rem; line-height: 1.4; }}
+    .card h2 {{
+      font-size: 1.26rem;
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      line-height: 1.25;
+    }}
+    .card p  {{ color: var(--muted); font-size: 0.95rem; line-height: 1.6; }}
 
     /* Category colours */
     .cat-bridge     {{ --stripe: var(--clr-bridge); }}
@@ -262,28 +311,46 @@ fn write_landing_page(site: &Path) {
       font-size: 0.55rem; font-weight: 700; letter-spacing: 0.08em;
       text-transform: uppercase; padding: 0.15em 0.55em;
       border-radius: 4px; white-space: nowrap; flex-shrink: 0;
-      color: var(--bg); background: var(--stripe);
+      color: #fff7ed; background: var(--stripe);
     }}
 
-    footer {{ margin-top: 3rem; color: var(--muted); font-size: 0.85rem; }}
+    footer {{
+      margin-top: 2.5rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+      text-align: center;
+    }}
+    footer a {{ color: var(--accent); }}
+
+    @media (max-width: 700px) {{
+      body {{ padding: 1rem 0.9rem 2rem; }}
+      .hero {{ padding: 1.4rem 1.1rem 1.15rem; border-radius: 18px; }}
+      .grid {{ grid-template-columns: 1fr; gap: 1rem; }}
+      .legend {{ gap: 0.55rem 0.9rem; }}
+    }}
   </style>
 </head>
 <body>
-  <h1>🦀 <span>Rust</span> Training Books / Rust 训练书籍</h1>
-  <p class="subtitle">Pick the guide that matches your background / 选择最适合你背景的指南</p>
+  <div class="shell">
+    <section class="hero">
+      <p class="eyebrow">Rust Curriculum</p>
+      <h1>🦀 <span>Rust</span> Training Books / Rust 训练书籍</h1>
+      <p class="subtitle">Pick the guide that matches your background, then move from language bridge books into deeper systems, async, and engineering tracks. / 选择与你背景匹配的书籍，再逐步进入更深入的系统、异步与工程实践主题。</p>
 
-  <div class="legend">
-    <span class="legend-item"><span class="legend-dot" style="background:var(--clr-bridge)"></span> Bridge &mdash; learn Rust from another language / 桥接：从其他语言迁移到 Rust</span>
-    <span class="legend-item"><span class="legend-dot" style="background:var(--clr-deep-dive)"></span> Deep Dive / 深入</span>
-    <span class="legend-item"><span class="legend-dot" style="background:var(--clr-advanced)"></span> Advanced / 高级</span>
-    <span class="legend-item"><span class="legend-dot" style="background:var(--clr-expert)"></span> Expert / 专家</span>
-    <span class="legend-item"><span class="legend-dot" style="background:var(--clr-practices)"></span> Practices / 实践</span>
-  </div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:var(--clr-bridge)"></span> Bridge &mdash; learn Rust from another language / 桥接：从其他语言迁移到 Rust</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--clr-deep-dive)"></span> Deep Dive / 深入</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--clr-advanced)"></span> Advanced / 高级</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--clr-expert)"></span> Expert / 专家</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--clr-practices)"></span> Practices / 实践</span>
+      </div>
+    </section>
 
-  <div class="grid">
+    <div class="grid">
 {cards}
+    </div>
+    <footer>Built with <a href="https://rust-lang.github.io/mdBook/">mdBook</a> / 基于 mdBook 构建</footer>
   </div>
-  <footer>Built with <a href="https://rust-lang.github.io/mdBook/" style="color:var(--accent)">mdBook</a> / 基于 mdBook 构建</footer>
 </body>
 </html>
 "##

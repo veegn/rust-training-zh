@@ -1,7 +1,7 @@
-[book]
-title = "Rust Engineering Practices — Beyond cargo build"
+﻿[book]
+title = "Rust Engineering Practices 鈥?Beyond cargo build"
 authors = ["Rust Training Team"]
-language = "en"
+language = "zh-CN"
 description = "Rust engineering guidance covering build scripts, cross-compilation, coverage, CI/CD, and production tooling."
 src = "src"
 
@@ -9,12 +9,12 @@ src = "src"
 build-dir = "book"
 
 [output.html]
-theme = "theme"
+theme = "../theme"
 git-repository-url = "https://github.com/microsoft/RustTraining"
 default-theme = "light"
 preferred-dark-theme = "ayu"
-additional-js = ["mermaid.min.js", "mermaid-init.js", "theme/language-toggle.js"]
-additional-css = ["theme/custom.css"]
+additional-js = ["../theme/mermaid.min.js", "../theme/mermaid-init.js", "../theme/language-toggle.js"]
+additional-css = ["../theme/custom.css"]
 site-url = "/RustTraining/engineering-book/"
 
 [preprocessor.mermaid]
@@ -23,3 +23,6 @@ command = "mdbook-mermaid"
 [output.html.playground]
 editable = true
 line-numbers = true
+
+
+

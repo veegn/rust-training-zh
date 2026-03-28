@@ -1,3 +1,5 @@
+[English Original](../en/ch01-introduction-and-motivation.md)
+
 # 1. 引言与动机 🟢
 
 ### 课程方法

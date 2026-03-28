@@ -1,3 +1,5 @@
+[English Original](../en/ch10-traits-and-generics.md)
+
 # Trait：Rust 的接口机制
 
 > **你将学到什么：** Trait 与 C# 接口的对应关系、默认方法实现、trait object (`dyn Trait`) 与泛型约束 (`impl Trait`) 的区别，以及标准库中的常见 trait。

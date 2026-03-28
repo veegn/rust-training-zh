@@ -1,3 +1,5 @@
+[English Original](../en/ch06-1-exhaustive-matching-and-null-safety.md)
+
 # 空值安全与穷尽匹配
 
 > **你将学到什么：** 为什么 C# 的 `switch` 表达式可能悄悄漏掉分支，而 Rust 的 `match` 会在编译期抓出所有遗漏的分支；`Option<T>` 与 `Nullable<T>` 在空值安全上的区别；以及如何用 `Result<T, E>` 表达自定义错误。

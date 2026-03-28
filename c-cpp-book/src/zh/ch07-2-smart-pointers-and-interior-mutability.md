@@ -1,3 +1,5 @@
+[English Original](../en/ch07-2-smart-pointers-and-interior-mutability.md)
+
 # 7.2 智能指针与内部可变性 🟢
 
 智能指针是某种数据结构，其行为类似于指针，但同时具有额外的原数据和功能（例如引用计数）。

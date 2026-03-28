@@ -1,3 +1,5 @@
+[English Original](../en/ch06-dependency-management-and-supply-chain-s.md)
+
 # 依赖管理与供应链安全 🟢
 
 > **你将学到：**

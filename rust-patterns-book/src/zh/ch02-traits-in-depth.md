@@ -1,3 +1,5 @@
+[English Original](../en/ch02-traits-in-depth.md)
+
 # 2. Trait 深入解析 🟡
 
 > **你将学到：**

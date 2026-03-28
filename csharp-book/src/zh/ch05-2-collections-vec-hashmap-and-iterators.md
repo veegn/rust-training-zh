@@ -1,3 +1,5 @@
+[English Original](../en/ch05-2-collections-vec-hashmap-and-iterators.md)
+
 # 向量、映射与迭代器
 
 > **你将学到什么：** `Vec<T>` 与 `List<T>`、`HashMap` 与 `Dictionary` 的对应关系、安全访问模式（为什么 Rust 返回 `Option` 而不是抛出异常），以及集合操作与所有权之间的微妙关系。

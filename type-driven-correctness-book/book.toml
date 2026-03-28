@@ -1,7 +1,7 @@
-[book]
+﻿[book]
 title = "Type-Driven Correctness in Rust"
 authors = ["Rust Training Team"]
-language = "en"
+language = "zh-CN"
 description = "Expert Rust material covering type-state, phantom types, capability tokens, and correctness-driven API design."
 src = "src"
 
@@ -9,12 +9,12 @@ src = "src"
 build-dir = "book"
 
 [output.html]
-theme = "theme"
+theme = "../theme"
 git-repository-url = "https://github.com/microsoft/RustTraining"
 default-theme = "light"
 preferred-dark-theme = "ayu"
-additional-js = ["mermaid.min.js", "mermaid-init.js", "theme/language-toggle.js"]
-additional-css = ["theme/custom.css"]
+additional-js = ["../theme/mermaid.min.js", "../theme/mermaid-init.js", "../theme/language-toggle.js"]
+additional-css = ["../theme/custom.css"]
 site-url = "/RustTraining/type-driven-correctness-book/"
 
 [preprocessor.mermaid]
@@ -23,3 +23,6 @@ command = "mdbook-mermaid"
 [output.html.playground]
 editable = true
 line-numbers = true
+
+
+

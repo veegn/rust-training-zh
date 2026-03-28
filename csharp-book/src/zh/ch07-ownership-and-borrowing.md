@@ -1,3 +1,5 @@
+[English Original](../en/ch07-ownership-and-borrowing.md)
+
 # 理解所有权
 
 > **你将学到什么：** Rust 的所有权系统，以及为什么 `let s2 = s1` 会让 `s1` 失效（这不同于 C# 的引用复制）；三条所有权规则、`Copy` 与 `Move` 类型的区别、使用 `&` 和 `&mut` 的借用方式，以及借用检查器如何替代垃圾回收机制。

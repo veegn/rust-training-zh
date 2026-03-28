@@ -1,3 +1,5 @@
+[English Original](../en/ch18-cpp-rust-semantic-deep-dives.md)
+
 # 18. C++ 到 Rust 语义深度对比 🟢
 
 从 C++ 转向 Rust 不仅仅是学习新语法，还需要在思考内存、类型和程序结构的方式上发生转变。本章将深入探讨 C++ 与 Rust 之间的语义差异和映射。

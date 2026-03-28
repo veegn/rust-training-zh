@@ -1,3 +1,5 @@
+[English Original](../en/ch16-3-rust-tooling-ecosystem.md)
+
 # Rust 工具链生态
 
 > **你将学到什么：** Rust 生态系统中的核心工具，以及它们如何与你熟悉的 C# 开发环境进行映射。

@@ -1,3 +1,5 @@
+[English Original](../en/ch14-unsafe-rust-and-ffi.md)
+
 # 14. 非安全 Rust 与 FFI 🔴
 
 > **你将学到：**

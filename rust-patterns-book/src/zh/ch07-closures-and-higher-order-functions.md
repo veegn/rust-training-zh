@@ -1,3 +1,5 @@
+[English Original](../en/ch07-closures-and-higher-order-functions.md)
+
 # 7. 闭包与高阶函数 🟢
 
 > **你将学到：**

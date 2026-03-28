@@ -1,3 +1,5 @@
+[English Original](../en/ch12-1-iterator-power-tools.md)
+
 # 12.1 迭代器进阶工具 🟢
 
 Rust 的迭代器库既丰富又强大，允许你以函数式且极具表现力的方式链式处理数据。

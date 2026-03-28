@@ -1,3 +1,5 @@
+[English Original](../en/ch16-2-learning-path-and-resources.md)
+
 # 学习路径与资源建议
 
 > **你将学到什么：** 为前 90 天制定的结构化学习路线图、推荐书籍，以及如何避免被“借用检查器（Borrow Checker）”劝退。

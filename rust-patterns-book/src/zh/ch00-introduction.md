@@ -1,3 +1,5 @@
+[English Original](../en/ch00-introduction.md)
+
 # 简介 🟢
 
 欢迎阅读 **《Rust 模式与工程实践手册》**。

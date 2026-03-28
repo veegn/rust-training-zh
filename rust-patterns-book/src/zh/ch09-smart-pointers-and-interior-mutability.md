@@ -1,3 +1,5 @@
+[English Original](../en/ch09-smart-pointers-and-interior-mutability.md)
+
 # 9. 智能指针与内部可变性 🟡
 
 > **你将学到：**

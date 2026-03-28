@@ -1,3 +1,5 @@
+[English Original](../en/ch07-ownership-and-borrowing.md)
+
 # 7. 所有权与借用 🟢
 
 所有权 (Ownership) 是 Rust 最独特的特性，它使得 Rust 在不需要垃圾回收器的情况下就能提供内存安全保证。

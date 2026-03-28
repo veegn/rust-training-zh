@@ -1,3 +1,5 @@
+[English Original](../en/ch10-2-inheritance-vs-composition.md)
+
 # 继承 vs 组合
 
 > **你将学到什么：** 为什么 Rust 没有类继承，trait + struct 如何取代深层类层级结构，以及如何通过组合实现多态。

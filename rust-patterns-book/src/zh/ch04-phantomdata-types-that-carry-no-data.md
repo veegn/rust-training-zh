@@ -1,3 +1,5 @@
+[English Original](../en/ch04-phantomdata-types-that-carry-no-data.md)
+
 # 4. PhantomData —— 不携带数据的类型 🔶
 
 > **你将学到：**

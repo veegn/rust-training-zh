@@ -1,3 +1,5 @@
+[English Original](../en/ch08-compile-time-and-developer-tools.md)
+
 # 编译期与开发者工具 🟡
 
 > **你将学到：**

@@ -1,3 +1,5 @@
+[English Original](../en/ch05-1-constructor-patterns.md)
+
 # 构造器模式
 
 > **你将学到什么：** 如何在没有传统构造函数语法的情况下创建 Rust 结构体，包括 `new()` 约定、`Default` trait、工厂方法，以及用于复杂初始化的 builder 模式。

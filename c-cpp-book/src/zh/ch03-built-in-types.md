@@ -1,3 +1,5 @@
+[English Original](../en/ch03-built-in-types.md)
+
 # 3. Rust 内建类型 🟢
 
 ### 基本类型

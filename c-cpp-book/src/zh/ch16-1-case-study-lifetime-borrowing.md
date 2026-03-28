@@ -1,3 +1,5 @@
+[English Original](../en/ch16-1-case-study-lifetime-borrowing.md)
+
 # 16.1 案例研究：生命周期与借用 🟢
 
 在这个案例研究中，我们将探讨 Rust 的生命周期和借用规则如何被用来防止在 C 和 C++ 中常见的内存错误。

@@ -1,3 +1,5 @@
+[English Original](../en/ch06-building-futures-by-hand.md)
+
 # 6. 手写 Future 🟡
 
 > **你将学到：**

@@ -1,3 +1,5 @@
+[English Original](../en/ch15-2-incremental-adoption-strategy.md)
+
 # 渐进式采用策略
 
 > **你将学到什么：** 如何在 C#/.NET 组织中分阶段引入 Rust，从内部小型工具到性能关键组件。

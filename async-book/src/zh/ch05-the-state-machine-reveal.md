@@ -1,3 +1,5 @@
+[English Original](../en/ch05-the-state-machine-reveal.md)
+
 # 5. 状态机真相 🟢
 
 > **你将学到：**

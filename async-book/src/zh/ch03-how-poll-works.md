@@ -1,3 +1,5 @@
+[English Original](../en/ch03-how-poll-works.md)
+
 # 3. poll 的工作机制 🟡
 
 > **你将学到：**

@@ -1,3 +1,5 @@
+[English Original](../en/ch02-getting-started.md)
+
 ## 快速开始
 
 > **你将学到：** 如何安装 Rust 及其工具链、Cargo 与 pip/Poetry 的区别、IDE 配置、你的第一个 `Hello, world!` 程序，以及若干对 Python 开发者特别重要的 Rust 关键字。

@@ -1,3 +1,5 @@
+[English Original](../en/ch02-getting-started.md)
+
 # 2. 少说多练：先看代码 🟢
 
 ### 你的第一个 Rust 程序

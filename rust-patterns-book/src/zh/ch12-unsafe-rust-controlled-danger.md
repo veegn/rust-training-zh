@@ -1,3 +1,5 @@
+[English Original](../en/ch12-unsafe-rust-controlled-danger.md)
+
 # 12. Unsafe Rust：受控的危险 🔶
 
 > **你将学到：**

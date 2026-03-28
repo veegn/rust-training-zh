@@ -1,3 +1,5 @@
+[English Original](../en/ch17-2-avoiding-unchecked-indexing.md)
+
 # 17.2 避免未检查的索引 🟢
 
 在 Rust 中，如果索引超出范围或键不存在，对 `Vec` 或 `HashMap` 等集合使用索引运算符 (`[]`) 将导致程序发生 Panic。这是 Rust 程序中常见的崩溃来源。

@@ -1,3 +1,5 @@
+[English Original](../en/ch05-data-structures-and-collections.md)
+
 # 元组与数据结构
 
 > **你将学到什么：** Rust 元组与 C# `ValueTuple` 的区别、数组与切片、结构体与类、如何用 newtype 模式为领域建模提供零成本类型安全，以及解构语法。

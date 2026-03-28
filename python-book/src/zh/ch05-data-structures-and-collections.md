@@ -1,3 +1,5 @@
+[English Original](../en/ch05-data-structures-and-collections.md)
+
 # 5. 数据结构与集合 🟢
 
 > **你将学到：**

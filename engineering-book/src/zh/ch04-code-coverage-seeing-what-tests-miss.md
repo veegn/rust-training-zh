@@ -1,3 +1,5 @@
+[English Original](../en/ch04-code-coverage-seeing-what-tests-miss.md)
+
 # 代码覆盖率：发现测试遗漏 🟢
 
 > **你将学到：**

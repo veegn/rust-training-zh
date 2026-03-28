@@ -1,3 +1,5 @@
+[English Original](../en/ch15-1-embedded-deep-dive.md)
+
 # 15.1 嵌入式 Rust 深度探索 🟢
 
 嵌入式 Rust 在 `no_std` 的基础上更进一步，提供了一套专门为微控制器和裸机硬件设计的工具和库。

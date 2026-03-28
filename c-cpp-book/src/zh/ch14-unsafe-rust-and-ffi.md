@@ -1,3 +1,5 @@
+[English Original](../en/ch14-unsafe-rust-and-ffi.md)
+
 # 14. Unsafe Rust 与 FFI 🟢
 
 Rust 有一个“安全”的核心，但也允许你通过使用 `unsafe` 关键字来停用某些安全保证。这对于底层系统编程、与其他语言交互或构建高性能数据结构是必要的。

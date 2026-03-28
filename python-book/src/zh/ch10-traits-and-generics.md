@@ -1,3 +1,5 @@
+[English Original](../en/ch10-traits-and-generics.md)
+
 # 10. 特征与泛型 🟡
 
 > **你将学到：**

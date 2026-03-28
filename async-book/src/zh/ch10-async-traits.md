@@ -1,3 +1,5 @@
+[English Original](../en/ch10-async-traits.md)
+
 # 10. 异步 Trait 🟡
 
 > **你将学到：**

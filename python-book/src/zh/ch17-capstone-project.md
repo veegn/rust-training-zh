@@ -1,3 +1,5 @@
+[English Original](../en/ch17-capstone-project.md)
+
 # 17. 结业项目：构建一个 CLI 任务管理器 🔴
 
 > **你将学到：**

@@ -1,3 +1,5 @@
+[English Original](../en/ch06-enums-and-pattern-matching.md)
+
 # 6. 枚举与模式匹配 🟢
 
 Rust 中的枚举 (Enums) 比 C 或 C++ 中的枚举强大得多。它们是 **和类型 (Sum Types)**（也称为标签联合或判别式联合），可以携带数据。

@@ -1,3 +1,5 @@
+[English Original](../en/ch17-1-avoiding-excessive-clone.md)
+
 # 17.1 避免过度使用 `clone()` 🟢
 
 在 Rust 中，调用 `.clone()` 会显式地克隆数据。虽然这有时是必要的，但过度使用克隆会导致性能问题，并通常暗示所有权设计上存在隐患。

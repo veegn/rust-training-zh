@@ -1,3 +1,5 @@
+[English Original](../en/ch10-error-handling-patterns.md)
+
 # 10. 错误处理模式 🟢
 
 > **你将学到：**

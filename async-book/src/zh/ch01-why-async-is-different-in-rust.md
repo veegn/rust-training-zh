@@ -1,3 +1,5 @@
+[English Original](../en/ch01-why-async-is-different-in-rust.md)
+
 # 1. 为什么 Rust 中的 Async 与众不同 🟢
 
 > **你将学到：**

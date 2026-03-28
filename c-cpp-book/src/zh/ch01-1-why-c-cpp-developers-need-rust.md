@@ -1,3 +1,5 @@
+[English Original](../en/ch01-1-why-c-cpp-developers-need-rust.md)
+
 # 1.1 为什么 C/C++ 开发者需要 Rust 🟢
 
 安全 Rust 在 **结构上预防了** 系统编程中最常见、最危险的错误。这不仅仅是建议，而是由编译器强制执行的。

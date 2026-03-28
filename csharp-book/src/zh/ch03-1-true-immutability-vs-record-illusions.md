@@ -1,3 +1,5 @@
+[English Original](../en/ch03-1-true-immutability-vs-record-illusions.md)
+
 # 真正的不可变性与 Record 的“不可变幻觉”
 
 > **你将学到什么：** 为什么 C# 的 `record` 类型并不是真正不可变的（可变字段、反射绕过等），Rust 如何在编译期强制实现真正的不可变性，以及何时才应该使用内部可变性模式。

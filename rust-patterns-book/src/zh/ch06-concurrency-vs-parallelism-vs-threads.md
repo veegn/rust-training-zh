@@ -1,3 +1,5 @@
+[English Original](../en/ch06-concurrency-vs-parallelism-vs-threads.md)
+
 # 6. 并发、并行与线程 🟡
 
 > **你将学到：**

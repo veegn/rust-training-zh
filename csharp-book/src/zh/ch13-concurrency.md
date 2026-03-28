@@ -1,3 +1,5 @@
+[English Original](../en/ch13-concurrency.md)
+
 # 并发：安全的并行计算
 
 > **你将学到什么：** Rust 如何在编译期强制保证线程安全，而 C# 更多依赖约定式做法；`Arc<Mutex<T>>` 与 `lock` 的对比，以及 `Send`/`Sync` trait。

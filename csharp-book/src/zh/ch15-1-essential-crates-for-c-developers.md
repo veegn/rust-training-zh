@@ -1,3 +1,5 @@
+[English Original](../en/ch15-1-essential-crates-for-c-developers.md)
+
 # 面向 C# 开发者的常用 Crate
 
 > **你将学到什么：** 常见的 .NET 库在 Rust 生态里的对应 Crate，例如 Serde (JSON.NET)、Reqwest (HttpClient) 以及 Tokio (Task/async)。

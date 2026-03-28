@@ -1,3 +1,5 @@
+[English Original](../en/ch14-1-testing.md)
+
 # 测试：内建的支持与进阶工具
 
 > **你将学到什么：** Rust 内置 `#[test]` 与 xUnit 的对比，如何用 `rstest` 编写参数化测试，以及用 `mockall` 做 mock。

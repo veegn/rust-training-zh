@@ -1,3 +1,5 @@
+[English Original](../en/ch08-crates-and-modules.md)
+
 # 8. Crate 与模块 🟢
 
 Rust 拥有一个强大的模块系统，它允许你组织代码并控制其内部项的可见性。

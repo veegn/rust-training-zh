@@ -1,3 +1,5 @@
+[English Original](../en/ch02-the-future-trait.md)
+
 # 2. Future Trait 🟡
 
 > **你将学到：**

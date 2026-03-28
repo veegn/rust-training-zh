@@ -1,3 +1,5 @@
+[English Original](../en/ch13-concurrency.md)
+
 # 13. 并发 (Concurrency) 🟢
 
 Rust 的 **并发** 处理方法深受“无畏并发 (Fearless Concurrency)”哲学的引导。Rust 的所有权和类型系统提供了一套工具，可帮助你编写无微妙 Bug 且易于重构的代码。

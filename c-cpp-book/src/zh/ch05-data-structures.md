@@ -1,3 +1,5 @@
+[English Original](../en/ch05-data-structures.md)
+
 # 5. 数据结构 🟢
 
 本章涵盖了 Rust 的基础数据结构。我们将探索 Rust 如何管理集合和复合类型，这些类型中的许多都能直接映射到 C/C++ 概念，但增加了额外的安全性保证。

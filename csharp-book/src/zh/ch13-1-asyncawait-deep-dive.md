@@ -1,3 +1,5 @@
+[English Original](../en/ch13-1-asyncawait-deep-dive.md)
+
 # 异步编程：C# Task vs Rust Future
 
 > **你将学到什么：** Rust 惰性的 `Future` 与 C# 立即启动的 `Task` 有什么区别，执行器模型（Tokio）是什么，以及 `Drop` 取消机制。

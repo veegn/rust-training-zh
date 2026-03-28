@@ -1,3 +1,5 @@
+[English Original](../en/ch12-closures-and-iterators.md)
+
 # 12. 闭包与迭代器 🟡
 
 > **你将学到：**

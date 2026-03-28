@@ -1,3 +1,5 @@
+[English Original](../en/ch07-1-memory-safety-deep-dive.md)
+
 # 内存安全：编译期 vs 运行期
 
 > **你将学到什么：** Rust 的引用与 C# 的指针及 `unsafe` 上下文之间的区别、生命周期基础，以及为什么 Rust 在编译期做出的安全性证明，比 C# 在运行期依赖的检查机制（边界检查、空值保护）更强。

@@ -1,3 +1,5 @@
+[English Original](../en/ch17-capstone-project.md)
+
 ## 综合项目：构建一个命令行天气工具
 
 > **你将学到什么：** 如何把 struct、trait、错误处理、async、模块、serde 和命令行参数解析组合起来，做成一个真正可运行的 Rust 应用。这基本对应于 C# 开发者会用 `HttpClient`、`System.Text.Json` 和 `System.CommandLine` 构建的那类工具。

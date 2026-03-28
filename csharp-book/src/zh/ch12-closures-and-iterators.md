@@ -1,3 +1,5 @@
+[English Original](../en/ch12-closures-and-iterators.md)
+
 # 闭包与迭代器
 
 > **你将学到什么：** Rust 闭包与 C# lambda 的区别（基于所有权的捕获）、Rust 迭代器如何以零成本替代 LINQ，以及惰性求值。

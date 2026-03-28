@@ -1,3 +1,5 @@
+[English Original](../en/ch04-pin-and-unpin.md)
+
 # 4. Pin 与 Unpin 🔴
 
 > **你将学到：**

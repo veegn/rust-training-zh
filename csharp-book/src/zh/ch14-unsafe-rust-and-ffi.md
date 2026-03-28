@@ -1,3 +1,5 @@
+[English Original](../en/ch14-unsafe-rust-and-ffi.md)
+
 # Unsafe Rust 与 FFI：超越安全的边界
 
 > **你将学到什么：** `unsafe` 允许做哪些事（原始指针、FFI、非检查转换），如何为不安全代码包一层安全封装，以及 C# 的 P/Invoke 与 Rust FFI 调用原生代码的方式。

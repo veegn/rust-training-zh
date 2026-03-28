@@ -1,3 +1,5 @@
+[English Original](../en/ch02-getting-started.md)
+
 # 安装与环境配置
 
 > **你将学到：** 如何安装 Rust 及其工具链、如何配置 IDE、Cargo 与 MSBuild/NuGet 的差异、你的第一个 Rust 程序与 C# 的对比，以及如何读取命令行输入。

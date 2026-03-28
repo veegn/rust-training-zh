@@ -1,3 +1,5 @@
+[English Original](../en/ch00-introduction.md)
+
 # 面向 Python 程序员的 Rust 完整培训指南 🟢
 
 这是一本面向 Python 开发者的 Rust 学习指南，涵盖从基础语法到高级模式的内容，重点讲解从动态类型、垃圾回收语言迁移到具备编译期内存安全保证的静态类型系统语言时所需要的思维转变。

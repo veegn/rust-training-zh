@@ -1,3 +1,5 @@
+[English Original](../en/ch07-1-lifetimes-and-borrowing-deep-dive.md)
+
 # 7.1 生命周期与借用深钻 🟢
 
 生命周期 (Lifetimes) 是 Rust 编译器确保所有借用均为有效引用的方式。在 Rust 中，每个引用都有一个 **生命周期**，即该引用有效的范围。

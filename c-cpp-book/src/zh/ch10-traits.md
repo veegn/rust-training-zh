@@ -1,3 +1,5 @@
+[English Original](../en/ch10-traits.md)
+
 # 10. Trait (特征) 🟢
 
 **Trait** 定义了特定类型所拥有并可以与其他类型共享的功能。我们可以使用 Trait 以抽象的方式定义共同的行为。

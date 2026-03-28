@@ -1,3 +1,5 @@
+[English Original](../en/ch01-build-scripts-buildrs-in-depth.md)
+
 # 构建脚本：深入理解 `build.rs` 🟢
 
 > **你将学到：**

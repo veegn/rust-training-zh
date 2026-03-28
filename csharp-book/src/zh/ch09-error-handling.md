@@ -1,3 +1,5 @@
+[English Original](../en/ch09-error-handling.md)
+
 # 错误处理：Result vs 异常
 
 > **你将学到什么：** 为什么 Rust 用 `Result<T, E>` 替代异常，如何使用 `?` 操作符进行简洁的错误传播，以及显式错误处理如何消除隐藏的控制流。

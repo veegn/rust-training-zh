@@ -1,3 +1,5 @@
+[English Original](../en/ch05-channels-and-message-passing.md)
+
 # 5. 通道与消息传递 🟢
 
 > **你将学到：**

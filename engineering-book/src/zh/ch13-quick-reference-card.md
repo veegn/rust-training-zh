@@ -1,3 +1,5 @@
+[English Original](../en/ch13-quick-reference-card.md)
+
 # 快速参考卡片
 
 ### 速查表：常用命令一览

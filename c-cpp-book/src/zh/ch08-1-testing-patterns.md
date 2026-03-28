@@ -1,3 +1,5 @@
+[English Original](../en/ch08-1-testing-patterns.md)
+
 # 8.1 测试模式 🟢
 
 Rust 内置了测试工具，使其无需第三方库即可轻松地编写和运行测试。

@@ -1,3 +1,5 @@
+[English Original](../en/ch12-tricks-from-the-trenches.md)
+
 # 实战技巧 🟡
 
 > **你将学到：**

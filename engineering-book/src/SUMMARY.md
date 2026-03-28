@@ -1,26 +1,5 @@
 # Summary
 
-# English
-
-[Introduction](en/ch00-introduction.md)
-
-- [Chapter 01: Build Scripts — build.rs in Depth](en/ch01-build-scripts-buildrs-in-depth.md)
-- [Chapter 02: Cross-Compilation — One Source, Many Targets](en/ch02-cross-compilation-one-source-many-target.md)
-- [Chapter 03: Benchmarking — Measuring What Matters](en/ch03-benchmarking-measuring-what-matters.md)
-- [Chapter 04: Code Coverage — Seeing What Tests Miss](en/ch04-code-coverage-seeing-what-tests-miss.md)
-- [Chapter 05: Miri, Valgrind, and Sanitizers — Verifying Unsafe Code](en/ch05-miri-valgrind-and-sanitizers-verifying-u.md)
-- [Chapter 06: Dependency Management and Supply Chain Security](en/ch06-dependency-management-and-supply-chain-s.md)
-- [Chapter 07: Release Profiles and Binary Size](en/ch07-release-profiles-and-binary-size.md)
-- [Chapter 08: Compile-Time and Developer Tools](en/ch08-compile-time-and-developer-tools.md)
-- [Chapter 09: no_std and Feature Verification](en/ch09-no-std-and-feature-verification.md)
-- [Chapter 10: Windows and Conditional Compilation](en/ch10-windows-and-conditional-compilation.md)
-- [Chapter 11: Putting It All Together — A Production CI/CD Pipeline](en/ch11-putting-it-all-together-a-production-cic.md)
-- [Chapter 12: Tricks from the Trenches](en/ch12-tricks-from-the-trenches.md)
-- [Chapter 13: Quick Reference Card](en/ch13-quick-reference-card.md)
-
----
-
-# 中文
 
 [简介](zh/ch00-introduction.md)
 

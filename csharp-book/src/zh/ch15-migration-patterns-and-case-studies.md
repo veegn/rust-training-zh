@@ -1,3 +1,5 @@
+[English Original](../en/ch15-migration-patterns-and-case-studies.md)
+
 # 迁移模式与案例研究
 
 > **你将学到什么：** 如何将常见的 C# 模式（Repository、Builder、DI）翻译成惯用的 Rust 写法，以及那些已经完成转化的公司在实际应用中所取得的成果。

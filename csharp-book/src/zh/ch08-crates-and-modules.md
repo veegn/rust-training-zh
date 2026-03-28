@@ -1,3 +1,5 @@
+[English Original](../en/ch08-crates-and-modules.md)
+
 # 模块与 Crate：代码组织方式
 
 > **你将学到什么：** Rust 的模块系统如何对应 C# 的命名空间与程序集，`pub` 可见性规则，基于文件的模块组织方式，以及 crate 与 .NET 程序集之间的映射关系。

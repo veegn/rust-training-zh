@@ -1,3 +1,5 @@
+[English Original](../en/ch13-production-patterns.md)
+
 # 13. 生产模式 🔴
 
 > **你将学到：**

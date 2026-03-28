@@ -1,3 +1,5 @@
+[English Original](../en/ch00-introduction.md)
+
 # 面向 C/C++ 程序员的 Rust 入门强化课程 🟢
 
 欢迎参加 **Rust 入门强化课程**。本课程专为具备 C/C++ 背景、希望利用其系统编程经验的高级开发者设计，旨在帮助你拥抱 Rust 的安全特性与现代功能。

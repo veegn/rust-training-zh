@@ -1,3 +1,5 @@
+[English Original](../en/ch14-testing-and-benchmarking-patterns.md)
+
 # 14. 测试与基准模式 🟢
 
 > **你将学到：**

@@ -1,3 +1,5 @@
+[English Original](../en/ch06-enums-and-pattern-matching.md)
+
 # 6. 枚举与模式匹配 🟡
 
 > **你将学到：**

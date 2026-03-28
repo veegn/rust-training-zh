@@ -1,3 +1,5 @@
+[English Original](../en/ch09-error-handling.md)
+
 # 9. 错误处理 🟢
 
 Rust 将错误分为两大类：**可恢复 (Recoverable)** 错误和 **不可恢复 (Unrecoverable)** 错误。

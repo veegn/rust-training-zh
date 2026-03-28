@@ -1,3 +1,5 @@
+[English Original](../en/ch19-macros.md)
+
 # 19. 宏 (Macros) 🟢
 
 Rust 中的宏是一项强大的特性，允许你编写“生成其他代码的代码”，也就是所谓的元编程 (Metaprogramming)。Rust 有两种主要的宏类型：**声明式宏**（由 `macro_rules!` 定义）和 **过程式宏**。

@@ -1,3 +1,5 @@
+[English Original](../en/ch09-no-std-and-feature-verification.md)
+
 # `no_std` 与特性验证 🔴
 
 > **你将学到：**

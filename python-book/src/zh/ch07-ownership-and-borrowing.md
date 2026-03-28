@@ -1,3 +1,5 @@
+[English Original](../en/ch07-ownership-and-borrowing.md)
+
 # 7. 所有权与借用 🟡
 
 > **你将学到：**

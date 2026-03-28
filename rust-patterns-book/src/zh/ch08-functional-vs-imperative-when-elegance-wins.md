@@ -1,3 +1,5 @@
+[English Original](../en/ch08-functional-vs-imperative-when-elegance-wins.md)
+
 # 8. 函数式与命令式：优雅何时胜出 🟡
 
 > **你将学到：**

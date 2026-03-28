@@ -1,3 +1,5 @@
+[English Original](../en/ch08-1-package-management-cargo-vs-nuget.md)
+
 # 包管理：Cargo 与 NuGet
 
 > **你将学到什么：** `Cargo.toml` 与 `.csproj` 的对应关系、版本说明符、`Cargo.lock` 的作用、用于条件编译的 feature flag，以及常用 Cargo 命令。

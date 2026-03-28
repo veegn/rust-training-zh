@@ -1,3 +1,5 @@
+[English Original](../en/ch16-asyncawait-essentials.md)
+
 # 16. Async/Await 核心要点 🔶
 
 > **你将学到：**

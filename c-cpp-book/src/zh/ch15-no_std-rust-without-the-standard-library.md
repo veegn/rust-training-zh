@@ -1,3 +1,5 @@
+[English Original](../en/ch15-no_std-rust-without-the-standard-library.md)
+
 # 15. `no_std` Rust 🟢
 
 默认情况下，Rust 程序会链接到标准库 (`std`)，它提供了像 `Vec`、`String` 和网络等高级抽象。然而，在嵌入式系统或 OS 内核中，你可能没有操作系统或堆分配器。Rust 允许你使用 `#![no_std]` 属性来停用标准库。

@@ -1,3 +1,5 @@
+[English Original](../en/ch09-1-error-handling-best-practices.md)
+
 # 9.1 错误处理最佳实践 🟢
 
 现代 Rust 开发依赖于几种模式和库，使错误处理既稳健又符合工程直觉。

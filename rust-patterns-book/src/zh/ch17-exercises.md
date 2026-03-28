@@ -1,3 +1,5 @@
+[English Original](../en/ch17-exercises.md)
+
 # 17. 练习 🟢
 
 通过以下动手挑战来巩固本书学到的各种模式。

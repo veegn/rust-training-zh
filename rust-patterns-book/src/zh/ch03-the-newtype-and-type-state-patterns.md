@@ -1,3 +1,5 @@
+[English Original](../en/ch03-the-newtype-and-type-state-patterns.md)
+
 # 3. Newtype 与类型状态 (Type-State) 模式 🟡
 
 > **你将学到：**

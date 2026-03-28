@@ -1,3 +1,5 @@
+[English Original](../en/ch06-enums-and-pattern-matching.md)
+
 # 枚举与模式匹配
 
 > **你将学到什么：** Rust 的代数数据类型（可携带数据的 enum）与 C# 中受限的判别联合的区别，带穷尽检查的 `match` 表达式、守卫条件，以及嵌套模式解构。

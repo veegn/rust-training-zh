@@ -1,48 +1,5 @@
 # Summary
 
-# English
-
-[Introduction](en/ch00-introduction.md)
-
----
-
-# Part I: How Async Works
-
-- [1. Why Async is Different in Rust](en/ch01-why-async-is-different-in-rust.md)
-- [2. The Future Trait](en/ch02-the-future-trait.md)
-- [3. How Poll Works](en/ch03-how-poll-works.md)
-- [4. Pin and Unpin](en/ch04-pin-and-unpin.md)
-- [5. The State Machine Reveal](en/ch05-the-state-machine-reveal.md)
-
----
-
-# Part II: The Ecosystem
-
-- [6. Building Futures by Hand](en/ch06-building-futures-by-hand.md)
-- [7. Executors and Runtimes](en/ch07-executors-and-runtimes.md)
-- [8. Tokio Deep Dive](en/ch08-tokio-deep-dive.md)
-- [9. When Tokio Isn't the Right Fit](en/ch09-when-tokio-isnt-the-right-fit.md)
-- [10. Async Traits](en/ch10-async-traits.md)
-
----
-
-# Part III: Production Async
-
-- [11. Streams and AsyncIterator](en/ch11-streams-and-asynciterator.md)
-- [12. Common Pitfalls](en/ch12-common-pitfalls.md)
-- [13. Production Patterns](en/ch13-production-patterns.md)
-- [14. Exercises](en/ch14-exercises.md)
-
----
-
-# Appendices
-
-- [Summary and Reference Card](en/ch15-summary-and-reference-card.md)
-- [Capstone Project: Async Chat Server](en/ch16-capstone-project.md)
-
----
-
-# 中文
 
 [简介](zh/ch00-introduction.md)
 

@@ -1,3 +1,5 @@
+[English Original](../en/ch11-from-and-into-traits.md)
+
 # 11. From 与 Into 特征 🟢
 
 > **你将学到：**

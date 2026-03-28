@@ -1,3 +1,5 @@
+[English Original](../en/ch00-introduction.md)
+
 # 面向 C# 程序员的 Rust 培训指南
 
 这是一本面向具有 C# 背景开发者的 Rust 学习指南，覆盖从基础语法到高级模式的完整内容，重点讲解两门语言在思维方式和实际用法上的差异。

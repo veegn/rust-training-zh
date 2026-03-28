@@ -1,3 +1,5 @@
+[English Original](../en/ch10-1-generic-constraints.md)
+
 # 泛型约束：where 与 trait bound
 
 > **你将学到什么：** Rust 的 trait bound 与 C# `where` 约束的区别，`where` 子句语法，以及条件 trait 实现。

@@ -1,3 +1,5 @@
+[English Original](../en/ch01-generics-the-full-picture.md)
+
 # 1. 泛型全景图 🟢
 
 > **你将学到：**

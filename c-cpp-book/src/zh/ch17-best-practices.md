@@ -1,3 +1,5 @@
+[English Original](../en/ch17-best-practices.md)
+
 # 17. Rust 最佳实践 🟢
 
 尽早采用最佳实践将帮助你编写出更地道、更易于维护且更高效的 Rust 代码。本章为从 C/C++ 转向 Rust 的开发人员总结了关键模式和准则。

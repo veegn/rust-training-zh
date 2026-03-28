@@ -1,3 +1,5 @@
+[English Original](../en/ch03-built-in-types-and-variables.md)
+
 # 3. 内建类型与变量 🟢
 
 > **你将学到：**

@@ -1,3 +1,5 @@
+[English Original](../en/ch11-from-and-into-traits.md)
+
 # Rust 中的类型转换：From 与 Into
 
 > **你将学到什么：** `From`/`Into` trait 与 C# 隐式/显式转换运算符的对比，`TryFrom`/`TryInto` 如何表示可能失败的转换，以及 `FromStr` 如何用于解析字符串。

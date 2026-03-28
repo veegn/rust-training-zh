@@ -1,3 +1,5 @@
+[English Original](../en/ch11-serialization-zero-copy-and-binary-data.md)
+
 # 11. 序列化、零拷贝与二进制数据 🟡
 
 > **你将学到：**

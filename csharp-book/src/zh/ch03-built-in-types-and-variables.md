@@ -1,3 +1,5 @@
+[English Original](../en/ch03-built-in-types-and-variables.md)
+
 # 变量与可变性
 
 > **你将学到什么：** Rust 的变量声明与可变性模型与 C# 的 `var`/`const` 有什么不同，常见基础类型如何映射，为什么 `String` 与 `&str` 的区别至关重要，以及 Rust 在类型推断、类型转换和强制转换上的思路为何不同于 C#。

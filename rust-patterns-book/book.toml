@@ -1,7 +1,7 @@
-[book]
+﻿[book]
 title = "Rust Patterns & Engineering How-Tos"
 authors = ["Rust Training Team"]
-language = "en"
+language = "zh-CN"
 description = "Advanced Rust patterns covering Pin, allocators, lock-free structures, unsafe code, and systems-level design."
 src = "src"
 
@@ -9,12 +9,12 @@ src = "src"
 build-dir = "book"
 
 [output.html]
-theme = "theme"
+theme = "../theme"
 git-repository-url = "https://github.com/microsoft/RustTraining"
 default-theme = "light"
 preferred-dark-theme = "ayu"
-additional-js = ["mermaid.min.js", "mermaid-init.js", "theme/language-toggle.js"]
-additional-css = ["theme/custom.css"]
+additional-js = ["../theme/mermaid.min.js", "../theme/mermaid-init.js", "../theme/language-toggle.js"]
+additional-css = ["../theme/custom.css"]
 site-url = "/RustTraining/rust-patterns-book/"
 
 [preprocessor.mermaid]
@@ -23,3 +23,6 @@ command = "mdbook-mermaid"
 [output.html.playground]
 editable = true
 line-numbers = true
+
+
+

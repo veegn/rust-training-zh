@@ -1,3 +1,5 @@
+[English Original](../en/ch18-summary-and-reference-card.md)
+
 # 18. 快速参考卡 🟢
 
 ### 模式选择指南

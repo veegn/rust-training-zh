@@ -1,3 +1,5 @@
+[English Original](../en/ch13-concurrency.md)
+
 # 13. 并发编程 🔴
 
 > **你将学到：**

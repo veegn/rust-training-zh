@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --content-max: 960px;
   --rt-accent: #d97706;
   --rt-accent-soft: rgba(217, 119, 6, 0.14);
@@ -157,4 +157,99 @@ body,
 
 .right-buttons .language-toggle {
   margin-left: 0.5rem;
+}
+
+
+/* Optimized Chinese Typography */
+:root {
+  --content-max: 900px;
+  --line-height-main: 1.85;
+}
+
+body, .content main {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.content main {
+  line-height: var(--line-height-main);
+  text-align: justify;
+  text-justify: inter-character;
+  word-break: break-word;
+}
+
+.content main h1, .content main h2, .content main h3, .content main h4 {
+  font-weight: 600;
+  color: #1a202c;
+  margin-top: 2.5rem;
+}
+
+/* Enhancing code readability */
+code {
+  font-family: "Fira Code", "Source Code Pro", Consolas, Monaco, monospace;
+  font-size: 0.92em;
+}
+
+/* Callouts / Blockquotes */
+.content main blockquote {
+  background: #f8fafc;
+  border-left: 5px solid #3b82f6;
+  color: #475569;
+  font-style: normal; /* Normal for Chinese quotes */
+}
+
+/* Emphasis Dot for Chinese */
+em {
+  font-style: normal;
+  text-emphasis: dot;
+  -webkit-text-emphasis: dot;
+  text-emphasis-position: under;
+}
+
+
+/* Optimized Chinese Typography */
+:root {
+  --content-max: 920px;
+}
+
+body, .content main {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.content main {
+  line-height: 1.8;
+  text-align: justify;
+  text-justify: inter-character;
+  word-break: break-word;
+  font-size: 18px;
+}
+
+.content main h1, .content main h2, .content main h3, .content main h4 {
+  font-weight: 600;
+  color: #1a202c;
+}
+
+/* Callouts / Blockquotes */
+.content main blockquote {
+  background: #f8fafc;
+  border-left: 5px solid #d97706; /* Link back to accent color if possible */
+  color: #444;
+  font-style: normal;
+  border-radius: 4px;
+}
+
+/* Emphasis for Chinese: Emphasis dots is standard but text-emphasis isn't well supported everywhere. 
+   Using slightly bold font for emphasis is safer. */
+em {
+  font-style: normal;
+  font-weight: 600;
+  color: #0366d6; /* Subtle blue for technical accent */
+}
+
+/* PAN Spacing Simulation */
+.content p {
+  letter-spacing: 0.01em;
 }

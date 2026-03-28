@@ -1,3 +1,5 @@
+[English Original](../en/ch01-introduction-and-motivation.md)
+
 # 引言与动机
 
 > **你将学到：** 为什么 Rust 值得 C# 开发者学习：托管代码与原生代码之间的性能差距，Rust 如何在编译期消除 null 引用异常和隐藏控制流，以及 Rust 适合作为 C# 补充或替代的核心场景。

@@ -1,3 +1,5 @@
+[English Original](../en/ch07-release-profiles-and-binary-size.md)
+
 # 发布配置与二进制体积 🟡
 
 > **你将学到：**

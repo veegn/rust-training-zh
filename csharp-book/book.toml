@@ -1,7 +1,7 @@
-[book]
+﻿[book]
 title = "Rust for C# Programmers"
 authors = ["Rust Training Team"]
-language = "en"
+language = "zh-CN"
 description = "Rust training materials for C# developers covering ownership, traits, async, migration strategy, and systems programming."
 src = "src"
 
@@ -9,12 +9,12 @@ src = "src"
 build-dir = "book"
 
 [output.html]
-theme = "theme"
+theme = "../theme"
 git-repository-url = "https://github.com/microsoft/RustTraining"
 default-theme = "light"
 preferred-dark-theme = "ayu"
-additional-js = ["mermaid.min.js", "mermaid-init.js", "theme/language-toggle.js"]
-additional-css = ["theme/custom.css"]
+additional-js = ["../theme/mermaid.min.js", "../theme/mermaid-init.js", "../theme/language-toggle.js"]
+additional-css = ["../theme/custom.css"]
 site-url = "/RustTraining/csharp-book/"
 
 [preprocessor.mermaid]
@@ -23,3 +23,6 @@ command = "mdbook-mermaid"
 [output.html.playground]
 editable = true
 line-numbers = true
+
+
+

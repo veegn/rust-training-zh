@@ -1,3 +1,5 @@
+[English Original](../en/ch16-1-performance-comparison-and-migration.md)
+
 # 性能对比：托管运行时 vs 原生执行
 
 > **你将学到什么：** C# 与 Rust 在真实场景中的性能差异，包括启动时间、内存占用以及 CPU 密集型工作负载。

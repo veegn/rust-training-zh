@@ -1,3 +1,5 @@
+[English Original](../en/ch11-from-and-into-traits.md)
+
 # 11. From 与 Into Trait 🟢
 
 `From` 和 `Into` trait 在 Rust 中被用于执行类型转换。它们被设计为互补的一对：如果你为一个类型实现了 `From`，你将免费获得对应的 `Into` 的实现。

@@ -1,3 +1,5 @@
+[English Original](../en/ch11-putting-it-all-together-a-production-cic.md)
+
 # 融会贯通：生产级 CI/CD 流水线 🟡
 
 > **你将学到：**

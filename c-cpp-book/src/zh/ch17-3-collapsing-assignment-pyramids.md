@@ -1,3 +1,5 @@
+[English Original](../en/ch17-3-collapsing-assignment-pyramids.md)
+
 # 17.3 精简层层嵌套的赋值结构 🟢
 
 在 C++ 等语言中，你经常会发现自己编写了深层嵌套的 `if-else` 或 `switch` 语句，以便根据多种条件为变量赋值。这种结构有时被称为“赋值金字塔 (Assignment Pyramid)”。Rust 基于表达式的语法允许你将这些金字塔精简为更加整洁且易读的代码。

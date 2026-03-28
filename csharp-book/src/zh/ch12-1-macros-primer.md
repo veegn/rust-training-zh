@@ -1,3 +1,5 @@
+[English Original](../en/ch12-1-macros-primer.md)
+
 # 宏：生成代码的代码
 
 > **你将学到什么：** 为什么 Rust 需要宏（没有重载、没有可变参数），`macro_rules!` 的基础写法，`!` 后缀约定，以及常见 derive 宏。

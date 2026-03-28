@@ -1,3 +1,5 @@
+[English Original](../en/ch02-cross-compilation-one-source-many-target.md)
+
 # 交叉编译：一份源码，多种目标 🟡
 
 > **你将学到：**

@@ -1,3 +1,5 @@
+[English Original](../en/ch13-macros-code-that-writes-code.md)
+
 # 13. 宏：生成代码的代码 🟡
 
 > **你将学到：**

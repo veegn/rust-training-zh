@@ -1,3 +1,5 @@
+[English Original](../en/ch16-case-studies.md)
+
 # 16. 案例研究 (Case Studies) 🟢
 
 在本节中，我们将查看一些在现实世界中如何使用 Rust 特性来解决常见编程问题的示例。

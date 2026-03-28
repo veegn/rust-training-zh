@@ -1,3 +1,5 @@
+[English Original](../en/ch12-common-pitfalls.md)
+
 # 12. 常见陷阱 🔴
 
 > **你将学到：**

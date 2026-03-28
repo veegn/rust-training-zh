@@ -1,3 +1,5 @@
+[English Original](../en/ch07-3-smart-pointers-beyond-single-ownership.md)
+
 # 智能指针：当单一所有权不够用时
 
 > **你将学到什么：** `Box<T>`、`Rc<T>`、`Arc<T>`、`RefCell<T>` 和 `Cow<'a, T>` 的使用场景，它们与 C# 中由 GC 管理的引用有什么区别，`Drop` 如何对应 Rust 版的 `IDisposable`，以及如何通过决策树选出合适的智能指针。

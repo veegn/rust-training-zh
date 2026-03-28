@@ -5,6 +5,11 @@ use std::net::TcpListener;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+const SITE_URL: &str = "https://microsoft.github.io/RustTraining";
+const SITE_NAME: &str = "Rust Training Books / Rust 训练书籍";
+const SITE_DESCRIPTION: &str =
+    "Bilingual Rust training books covering language migration, async, advanced patterns, and engineering practices. / 覆盖语言迁移、异步、进阶模式与工程实践的双语 Rust 培训书籍。";
+
 /// (slug, title, description, category)
 /// （slug、标题、描述、分类）
 const BOOKS: &[(&str, &str, &str, &str)] = &[
@@ -148,6 +153,8 @@ fn build_to(dir_name: &str) {
     println!("\n  {ok}/{} books built / 已构建", BOOKS.len());
 
     write_landing_page(&out);
+    write_robots_txt(&out);
+    write_sitemap(&out);
     println!("\nDone! Output in {dir_name}/ / 完成，输出位于 {dir_name}/");
 }
 
@@ -183,7 +190,19 @@ fn write_landing_page(site: &Path) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Rust Training Books / Rust 训练书籍</title>
+  <title>{SITE_NAME}</title>
+  <meta name="description" content="{SITE_DESCRIPTION}">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="theme-color" content="#9a3412">
+  <link rel="canonical" href="{SITE_URL}/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{SITE_NAME}">
+  <meta property="og:description" content="{SITE_DESCRIPTION}">
+  <meta property="og:url" content="{SITE_URL}/">
+  <meta property="og:site_name" content="Rust Training">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{SITE_NAME}">
+  <meta name="twitter:description" content="{SITE_DESCRIPTION}">
   <style>
     :root {{
       --bg: #f5efe4;
@@ -359,6 +378,72 @@ fn write_landing_page(site: &Path) {
     let path = site.join("index.html");
     fs::write(&path, html).expect("failed to write index.html / 写入 index.html 失败");
     println!("  ✓ index.html");
+}
+
+fn write_robots_txt(site: &Path) {
+    let content = format!("User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}/sitemap.xml\n");
+    fs::write(site.join("robots.txt"), content)
+        .expect("failed to write robots.txt / 写入 robots.txt 失败");
+    println!("  ✓ robots.txt");
+}
+
+fn write_sitemap(site: &Path) {
+    let mut urls = Vec::new();
+    collect_html_urls(site, site, &mut urls);
+    urls.sort();
+
+    let mut xml = String::from(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+"#,
+    );
+    for url in urls {
+        xml.push_str("  <url><loc>");
+        xml.push_str(&xml_escape(&url));
+        xml.push_str("</loc></url>\n");
+    }
+    xml.push_str("</urlset>\n");
+
+    fs::write(site.join("sitemap.xml"), xml)
+        .expect("failed to write sitemap.xml / 写入 sitemap.xml 失败");
+    println!("  ✓ sitemap.xml");
+}
+
+fn collect_html_urls(root: &Path, dir: &Path, urls: &mut Vec<String>) {
+    let entries = fs::read_dir(dir).expect("failed to read output directory / 读取输出目录失败");
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_html_urls(root, &path, urls);
+            continue;
+        }
+        if path.extension().and_then(|ext| ext.to_str()) != Some("html") {
+            continue;
+        }
+        if path.file_name().and_then(|name| name.to_str()) == Some("404.html") {
+            continue;
+        }
+
+        let rel = path
+            .strip_prefix(root)
+            .expect("output path should be under site root / 输出路径必须位于站点根目录下");
+        let rel = rel.to_string_lossy().replace('\\', "/");
+        let url = if rel == "index.html" {
+            format!("{SITE_URL}/")
+        } else {
+            format!("{SITE_URL}/{rel}")
+        };
+        urls.push(url);
+    }
+}
+
+fn xml_escape(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
 }
 
 /// Resolve `request_target` (HTTP request path, e.g. `/foo/bar?x=1`) to a file under `site_canon`.

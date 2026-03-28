@@ -2,17 +2,20 @@
 title = "Async Rust: From Futures to Production"
 authors = ["Rust Training Team"]
 language = "en"
+description = "Async Rust training materials covering futures, runtimes, Tokio, cancellation safety, and production patterns."
 src = "src"
 
 [build]
 build-dir = "book"
 
 [output.html]
+theme = "theme"
 git-repository-url = "https://github.com/microsoft/RustTraining"
 default-theme = "light"
 preferred-dark-theme = "ayu"
 additional-js = ["mermaid.min.js", "mermaid-init.js", "theme/language-toggle.js"]
 additional-css = ["theme/custom.css"]
+site-url = "/RustTraining/async-book/"
 
 [preprocessor.mermaid]
 command = "mdbook-mermaid"

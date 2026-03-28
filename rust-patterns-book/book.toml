@@ -2,17 +2,20 @@
 title = "Rust Patterns & Engineering How-Tos"
 authors = ["Rust Training Team"]
 language = "en"
+description = "Advanced Rust patterns covering Pin, allocators, lock-free structures, unsafe code, and systems-level design."
 src = "src"
 
 [build]
 build-dir = "book"
 
 [output.html]
+theme = "theme"
 git-repository-url = "https://github.com/microsoft/RustTraining"
 default-theme = "light"
 preferred-dark-theme = "ayu"
-additional-js = ["mermaid.min.js", "mermaid-init.js"]
+additional-js = ["mermaid.min.js", "mermaid-init.js", "theme/language-toggle.js"]
 additional-css = ["theme/custom.css"]
+site-url = "/RustTraining/rust-patterns-book/"
 
 [preprocessor.mermaid]
 command = "mdbook-mermaid"

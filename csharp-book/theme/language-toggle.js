@@ -1,9 +1,5 @@
 (function () {
   const STORAGE_KEY = "rust-training-language";
-  const labels = {
-    en: "EN",
-    zh: "中文",
-  };
 
   function normalizePath(path) {
     try {
@@ -44,8 +40,16 @@
   }
 
   function buildToggle() {
-    const main = document.querySelector(".content main");
-    if (!main) return;
+    let nav = document.querySelector(".language-toggle");
+    if (!nav) {
+      const main = document.querySelector(".content main");
+      if (!main) return;
+      nav = document.createElement("nav");
+      nav.className = "language-toggle";
+      nav.setAttribute("aria-label", "Language switcher / 语言切换");
+      main.prepend(nav);
+    }
+    if (!nav) return;
 
     const currentPath = window.location.pathname;
     const currentLang = detectCurrentLang(currentPath);
@@ -62,23 +66,23 @@
       return;
     }
 
-    const nav = document.createElement("nav");
-    nav.className = "language-toggle";
-    nav.setAttribute("aria-label", "Language switcher");
-
     ["en", "zh"].forEach((lang) => {
+      const anchor =
+        nav.querySelector(`[data-lang-switch="${lang}"]`) || document.createElement("a");
       const href = targets[lang];
       const hasPage = href && sidebarPaths.includes(normalizePath(href));
-      const anchor = document.createElement("a");
       anchor.className = "language-toggle__button";
-      anchor.textContent = labels[lang];
+      anchor.textContent = lang === "en" ? "EN" : "中文";
 
       if ((currentLang || fallbackLang) === lang) {
         anchor.classList.add("is-active");
+      } else {
+        anchor.classList.remove("is-active");
       }
 
       if (hasPage) {
         anchor.href = href + window.location.search + window.location.hash;
+        anchor.removeAttribute("aria-disabled");
         anchor.addEventListener("click", () => {
           localStorage.setItem(STORAGE_KEY, lang);
         });
@@ -87,10 +91,10 @@
         anchor.setAttribute("aria-disabled", "true");
       }
 
-      nav.appendChild(anchor);
+      if (!anchor.parentElement) {
+        nav.appendChild(anchor);
+      }
     });
-
-    main.prepend(nav);
   }
 
   document.addEventListener("DOMContentLoaded", buildToggle);

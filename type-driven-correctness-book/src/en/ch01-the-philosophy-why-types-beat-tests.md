@@ -1,6 +1,6 @@
-# The Philosophy ‚Äî Why Types Beat Tests üü¢
+# The Philosophy ‚Ä?Why Types Beat Tests üü¢
 
-> **What you'll learn:** The three levels of compile-time correctness (value, state, protocol), how generic function signatures act as compiler-checked guarantees, and when correct-by-construction patterns are ‚Äî and aren't ‚Äî worth the investment.
+> **What you'll learn:** The three levels of compile-time correctness (value, state, protocol), how generic function signatures act as compiler-checked guarantees, and when correct-by-construction patterns are ‚Ä?and aren't ‚Ä?worth the investment.
 >
 > **Cross-references:** [ch02](ch02-typed-command-interfaces-request-determi.md) (typed commands), [ch05](ch05-protocol-state-machines-type-state-for-r.md) (type-state), [ch13](ch13-reference-card.md) (reference card)
 
@@ -23,7 +23,7 @@ This function has **four failure modes** the compiler cannot catch: typos, wrong
 
 ## Three Levels of Correctness
 
-### Level 1 ‚Äî Value Correctness
+### Level 1 ‚Ä?Value Correctness
 **Make invalid values unrepresentable.**
 
 ```rust
@@ -37,7 +37,7 @@ impl TryFrom<u16> for Port {
 }
 ```
 
-### Level 2 ‚Äî State Correctness
+### Level 2 ‚Ä?State Correctness
 **Make invalid transitions unrepresentable.**
 
 ```rust
@@ -55,7 +55,7 @@ impl Socket<Connected> {
 }
 ```
 
-### Level 3 ‚Äî Protocol Correctness
+### Level 3 ‚Ä?Protocol Correctness
 **Make invalid interactions unrepresentable.**
 
 ```rust
@@ -69,17 +69,18 @@ trait IpmiCmd {
 
 | Situation | Recommendation |
 |-----------|---------------|
-| Safety-critical boundary | ‚úÖ Always |
-| Cross-module public API | ‚úÖ Usually |
-| State machine with 3+ states | ‚úÖ Usually |
-| Internal helper (50 lines) | ‚ùå Overkill |
-| Prototyping | ‚ùå Raw types first |
+| Safety-critical boundary | ‚ú?Always |
+| Cross-module public API | ‚ú?Usually |
+| State machine with 3+ states | ‚ú?Usually |
+| Internal helper (50 lines) | ‚ù?Overkill |
+| Prototyping | ‚ù?Raw types first |
 
 ## Key Takeaways
 
-1. **Three levels of correctness** ‚Äî value, state, protocol.
-2. **Types as guarantees** ‚Äî every generic signature is a compiler-checked contract.
-3. **The cost question** ‚Äî "if this bug ships, how bad is it?"
-4. **Types complement tests** ‚Äî they eliminate categories; tests cover values.
+1. **Three levels of correctness** ‚Ä?value, state, protocol.
+2. **Types as guarantees** ‚Ä?every generic signature is a compiler-checked contract.
+3. **The cost question** ‚Ä?"if this bug ships, how bad is it?"
+4. **Types complement tests** ‚Ä?they eliminate categories; tests cover values.
 
 ***
+

@@ -1,6 +1,6 @@
 # Phantom Types for Resource Tracking üü°
 
-> **What you'll learn:** How `PhantomData` markers encode register width, DMA direction, and file-descriptor state at the type level ‚Äî preventing an entire class of resource-mismatch bugs at zero runtime cost.
+> **What you'll learn:** How `PhantomData` markers encode register width, DMA direction, and file-descriptor state at the type level ‚Ä?preventing an entire class of resource-mismatch bugs at zero runtime cost.
 >
 > **Cross-references:** [ch05](ch05-protocol-state-machines-type-state-for-r.md) (type-state), [ch06](ch06-dimensional-analysis-making-the-compiler.md) (dimensional types), [ch08](ch08-capability-mixins-compile-time-hardware-.md) (mixins), [ch10](ch10-putting-it-all-together-a-complete-diagn.md) (integration)
 
@@ -57,17 +57,18 @@ Attempting to `write_data` to a `DmaBuffer<FromDevice>` is a **compile error**.
 
 | Scenario | Use phantom parameter? |
 |----------|:------:|
-| Register widths | ‚úÖ Always |
-| DMA direction | ‚úÖ Always |
-| File descriptor state | ‚úÖ Always |
-| Permissions (R/W/X) | ‚úÖ Always |
-| Runtime-variable state | ‚ùå Use enums |
+| Register widths | ‚ú?Always |
+| DMA direction | ‚ú?Always |
+| File descriptor state | ‚ú?Always |
+| Permissions (R/W/X) | ‚ú?Always |
+| Runtime-variable state | ‚ù?Use enums |
 
 ## Key Takeaways
 
-1. **`PhantomData` markers cost zero bytes** ‚Äî they are compile-time-only labels.
-2. **Structural prevention of mismatches** ‚Äî register width and DMA direction are enforced by the type system.
-3. **Synergy with other patterns** ‚Äî combine with dimensional types (ch06) for even stronger guarantees.
-4. **Compile-time only** ‚Äî they do not work for attributes that change at runtime.
+1. **`PhantomData` markers cost zero bytes** ‚Ä?they are compile-time-only labels.
+2. **Structural prevention of mismatches** ‚Ä?register width and DMA direction are enforced by the type system.
+3. **Synergy with other patterns** ‚Ä?combine with dimensional types (ch06) for even stronger guarantees.
+4. **Compile-time only** ‚Ä?they do not work for attributes that change at runtime.
 
 ***
+

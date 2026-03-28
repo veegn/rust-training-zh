@@ -1,6 +1,6 @@
 # Fourteen Tricks from the Trenches ðŸŸ¡
 
-> **What you'll learn:** Fourteen smaller correct-by-construction techniques â€” from sentinel elimination and sealed traits to session types, `Pin`, RAII, and `#[must_use]` â€” each eliminating a specific bug class for near-zero effort.
+> **What you'll learn:** Fourteen smaller correct-by-construction techniques â€?from sentinel elimination and sealed traits to session types, `Pin`, RAII, and `#[must_use]` â€?each eliminating a specific bug class for near-zero effort.
 >
 > **Cross-references:** [ch02](ch02-typed-command-interfaces-request-determi.md) (sealed traits), [ch05](ch05-protocol-state-machines-type-state-for-r.md) (typestate builder), [ch07](ch07-validated-boundaries-parse-dont-validate.md) (FromStr)
 
@@ -8,7 +8,7 @@
 
 While the eight core patterns cover major architectures, these fourteen smaller tricks are frequently used in production to eliminate specific bug categories.
 
-### 1. Sentinel â†’ `Option` at Boundary
+### 1. Sentinel â†?`Option` at Boundary
 Convert hardware-sentinel values (like `0xFF` for "not present") into `Option::None` at the very first parsing boundary. This forces all downstream consumers to handle the "missing" case.
 
 ### 2. Sealed Traits
@@ -47,8 +47,9 @@ Encode communication protocols (Request -> Response -> Done) in the channel type
 
 ## Key Takeaways
 
-1. **Small effort, high impact** â€” most of these tricks take only a few lines to implement.
-2. **Eliminate specific bug classes** â€” from "forgot to check sentinel" to "used closed session."
-3. **Incremental improvement** â€” apply these tricks to your existing codebase as you find them useful.
+1. **Small effort, high impact** â€?most of these tricks take only a few lines to implement.
+2. **Eliminate specific bug classes** â€?from "forgot to check sentinel" to "used closed session."
+3. **Incremental improvement** â€?apply these tricks to your existing codebase as you find them useful.
 
 ***
+

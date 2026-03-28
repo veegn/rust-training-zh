@@ -13,7 +13,7 @@
 - **案例研究**：将 C++ 代码迁移到 Rust 的真实架构设计模式。
 
 > [!NOTE]
-> 本课程 **不** 涉及 `async` Rust。如需深入学习 Future、执行器（Executors）以及 `tokio`，请参阅配套的 [Async Rust Training](../async-book/)。
+> 本课程 **不** 涉及 `async` Rust。如需深入学习 Future、执行器（Executors）以及 `tokio`，请参阅配套的 [Async Rust Training](../../async-book/)。
 
 ---
 

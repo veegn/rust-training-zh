@@ -1,4 +1,4 @@
-# Applied Walkthrough â€” Type-Safe Redfish Server ðŸŸ¡
+# Applied Walkthrough â€?Type-Safe Redfish Server ðŸŸ¡
 
 > **What you'll learn:** How to compose response builder type-state, source-availability tokens, dimensional serialization, and health rollup into a Redfish server that cannot produce a schema-non-compliant response.
 >
@@ -32,8 +32,9 @@ Redfish `Status.Health` must "roll up" the worst health status of all sub-compon
 
 ## Key Takeaways
 
-1. **Construct, Don't Serialize** â€” let the type system ensure your JSON matches the schema.
-2. **Availability as Proof** â€” proof tokens replace runtime "is initialized" checks.
-3. **The Server is the Source of Truth** â€” a single server-side bug affects every client. Type-level enforcement on the server is the highest-leverage correctness investment you can make.
+1. **Construct, Don't Serialize** â€?let the type system ensure your JSON matches the schema.
+2. **Availability as Proof** â€?proof tokens replace runtime "is initialized" checks.
+3. **The Server is the Source of Truth** â€?a single server-side bug affects every client. Type-level enforcement on the server is the highest-leverage correctness investment you can make.
 
 ***
+

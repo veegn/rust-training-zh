@@ -144,6 +144,7 @@ fn build_to(dir_name: &str) {
             .expect("failed to run mdbook - is it installed? / 运行 mdbook 失败，是否已安装？");
 
         if status.success() {
+            rewrite_root_index_links(&dest);
             println!("  ✓ {slug}");
             ok += 1;
         } else {
@@ -378,6 +379,19 @@ fn write_landing_page(site: &Path) {
     let path = site.join("index.html");
     fs::write(&path, html).expect("failed to write index.html / 写入 index.html 失败");
     println!("  ✓ index.html");
+}
+
+fn rewrite_root_index_links(book_dir: &Path) {
+    let index_path = book_dir.join("index.html");
+    let Ok(html) = fs::read_to_string(&index_path) else {
+        return;
+    };
+
+    let rewritten = html.replace("href=\"ch", "href=\"en/ch");
+    if rewritten != html {
+        fs::write(&index_path, rewritten)
+            .expect("failed to rewrite root index links / 重写根首页链接失败");
+    }
 }
 
 fn write_robots_txt(site: &Path) {

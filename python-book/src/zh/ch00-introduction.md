@@ -35,7 +35,7 @@
 - 仔细阅读编译器错误信息，Rust 的错误提示通常非常有帮助
 - 重读相关小节，像所有权这样的概念往往第二遍才真正理解
 - [Rust 标准库文档](https://doc.rust-lang.org/std/) 非常优秀，遇到类型或方法都值得去查
-- 如需更深入的异步内容，请参考配套的 [Async Rust Training](../async-book/)
+- 如需更深入的异步内容，请参考配套的 [Async Rust Training](../../async-book/)
 
 ---
 

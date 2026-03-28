@@ -1,6 +1,6 @@
-# Capability Tokens â€” Zero-Cost Proof of Authority ðŸŸ¡
+# Capability Tokens â€?Zero-Cost Proof of Authority ðŸŸ¡
 
-> **What you'll learn:** How zero-sized types (ZSTs) act as compile-time proof tokens, enforcing privilege hierarchies, power sequencing, and revocable authority â€” all at zero runtime cost.
+> **What you'll learn:** How zero-sized types (ZSTs) act as compile-time proof tokens, enforcing privilege hierarchies, power sequencing, and revocable authority â€?all at zero runtime cost.
 >
 > **Cross-references:** [ch03](ch03-single-use-types-cryptographic-guarantee.md) (single-use types), [ch05](ch05-protocol-state-machines-type-state-for-r.md) (type-state), [ch08](ch08-capability-mixins-compile-time-hardware-.md) (mixins), [ch10](ch10-putting-it-all-together-a-complete-diagn.md) (integration)
 
@@ -73,9 +73,10 @@ pub struct ScopedAdminToken<'session> {
 
 ## Key Takeaways
 
-1. **ZST tokens cost zero bytes** â€” they are compile-time-only proof objects.
-2. **Private constructors = unforgeable** â€” tokens can only be minted by authorized logic.
-3. **Trait hierarchies model RBAC** â€” clean, inherited permission sets.
-4. **Lifetime bounds = revocable** â€” privileges expire automatically when the session ends.
+1. **ZST tokens cost zero bytes** â€?they are compile-time-only proof objects.
+2. **Private constructors = unforgeable** â€?tokens can only be minted by authorized logic.
+3. **Trait hierarchies model RBAC** â€?clean, inherited permission sets.
+4. **Lifetime bounds = revocable** â€?privileges expire automatically when the session ends.
 
 ***
+

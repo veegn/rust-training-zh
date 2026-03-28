@@ -35,7 +35,7 @@ A comprehensive guide to learning Rust for developers with Python experience. Th
 - Read the compiler error message carefully - Rust's errors are exceptionally helpful
 - Re-read the relevant section; concepts like ownership (ch7) often click on the second pass
 - The [Rust standard library docs](https://doc.rust-lang.org/std/) are excellent - search for any type or method
-- For deeper async patterns, see the companion [Async Rust Training](../async-book/)
+- For deeper async patterns, see the companion [Async Rust Training](../../async-book/)
 
 ---
 

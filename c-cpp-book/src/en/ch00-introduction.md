@@ -13,7 +13,7 @@ Welcome to the **Rust Bootstrap Course**. This material is specifically designed
 - **Case Studies**: Real-world architectural patterns for translating C++ to Rust.
 
 > [!NOTE]
-> This course does **not** cover `async` Rust. For a deep dive into futures, executors, and `tokio`, see the companion [Async Rust Training](../async-book/).
+> This course does **not** cover `async` Rust. For a deep dive into futures, executors, and `tokio`, see the companion [Async Rust Training](../../async-book/).
 
 ---
 

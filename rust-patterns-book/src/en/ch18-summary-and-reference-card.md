@@ -2,12 +2,12 @@
 
 ### Pattern Selection Guide
 
-- **Type Safety**: Newtype Pattern ([Ch 03](ch03-newtype-and-type-state-patterns.md))
-- **Compile-time States**: Type-State Pattern ([Ch 03](ch03-newtype-and-type-state-patterns.md))
+- **Type Safety**: Newtype Pattern ([Ch 03](ch03-the-newtype-and-type-state-patterns.md))
+- **Compile-time States**: Type-State Pattern ([Ch 03](ch03-the-newtype-and-type-state-patterns.md))
 - **Unit Metadata**: PhantomData ([Ch 04](ch04-phantomdata-types-that-carry-no-data.md))
 - **Shared State**: Arc + Mutex/RwLock ([Ch 06](ch06-concurrency-vs-parallelism-vs-threads.md))
 - **Concurrent Messaging**: MPSC Channels ([Ch 05](ch05-channels-and-message-passing.md))
-- **Abstraction**: Traits vs dyn Trait ([Ch 02](ch02-traits-in-depth-the-soul-of-rust.md))
+- **Abstraction**: Traits vs dyn Trait ([Ch 02](ch02-traits-in-depth.md))
 - **Low-level Control**: Unsafe Rust & Pin ([Ch 09](ch09-smart-pointers-and-interior-mutability.md), [Ch 12](ch12-unsafe-rust-controlled-danger.md))
 - **Error Handling**: Library (thiserror) vs App (anyhow) ([Ch 10](ch10-error-handling-patterns.md))
 

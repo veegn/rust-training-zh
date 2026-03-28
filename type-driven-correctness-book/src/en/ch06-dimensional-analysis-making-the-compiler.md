@@ -1,4 +1,4 @@
-# Dimensional Analysis ‚Äî Making the Compiler Check Your Units üü¢
+# Dimensional Analysis ‚Ä?Making the Compiler Check Your Units üü¢
 
 > **What you'll learn:** How newtype wrappers and the `uom` crate turn the compiler into a unit-checking engine, preventing the class of bug that destroyed a $328M spacecraft.
 >
@@ -23,10 +23,10 @@ Now, comparing `Celsius` to `Volts` is a **compile error**:
 
 ```rust
 fn check_limit(temp: Celsius, limit: Celsius) -> bool {
-    temp > limit // ‚úÖ same units
+    temp > limit // ‚ú?same units
 }
 
-// temp > voltage // ‚ùå ERROR: mismatched types
+// temp > voltage // ‚ù?ERROR: mismatched types
 ```
 
 ## Macro-Generated Quantities
@@ -59,16 +59,17 @@ let power = voltage * current; // automatically type-checked
 
 | Scenario | Recommendation |
 |----------|---------------|
-| Sensor readings | ‚úÖ Always |
-| Thresholds | ‚úÖ Always |
-| API boundaries | ‚úÖ Always |
+| Sensor readings | ‚ú?Always |
+| Thresholds | ‚ú?Always |
+| API boundaries | ‚ú?Always |
 | Internal helpers | ‚ö†Ô∏è Optional |
 
 ## Key Takeaways
 
-1. **Newtypes prevent unit confusion** ‚Äî `Celsius` and `Rpm` are distinct types.
-2. **Zero runtime cost** ‚Äî newtypes compile down to their inner values (e.g., `f64`).
-3. **Macro automation** ‚Äî quickly stamp out units with standard operations.
-4. **`uom` for derived units** ‚Äî use it for complex physics calculations.
+1. **Newtypes prevent unit confusion** ‚Ä?`Celsius` and `Rpm` are distinct types.
+2. **Zero runtime cost** ‚Ä?newtypes compile down to their inner values (e.g., `f64`).
+3. **Macro automation** ‚Ä?quickly stamp out units with standard operations.
+4. **`uom` for derived units** ‚Ä?use it for complex physics calculations.
 
 ***
+

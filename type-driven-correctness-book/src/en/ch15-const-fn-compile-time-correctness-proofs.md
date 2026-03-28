@@ -1,6 +1,6 @@
-# Const Fn â€” Compile-Time Correctness Proofs ðŸŸ 
+# Const Fn â€?Compile-Time Correctness Proofs ðŸŸ 
 
-> **What you'll learn:** How `const fn` and `assert!` turn the compiler into a proof engine â€” verifying SRAM memory maps, register layouts, bitfield masks, and lookup tables at compile time with zero runtime cost.
+> **What you'll learn:** How `const fn` and `assert!` turn the compiler into a proof engine â€?verifying SRAM memory maps, register layouts, bitfield masks, and lookup tables at compile time with zero runtime cost.
 >
 > **Cross-references:** [ch04](ch04-capability-tokens-zero-cost-proof-of-aut.md) (tokens), [ch06](ch06-dimensional-analysis-making-the-compiler.md) (units), [ch09](ch09-phantom-types-for-resource-tracking.md) (phantom types)
 
@@ -56,8 +56,9 @@ If the regions overlap, the code **fails to compile**. The bug is caught instant
 ## Key Takeaways
 
 1. **`const fn` + `assert!` = Proof**. Each assertion is a theorem the compiler must prove true.
-2. **Zero runtime cost** â€” all checks result in constants or are erased during compilation.
-3. **Fail-fast** â€” hardware constraint violations become compile errors, not field failures.
-4. **Compile-time lookup tables** â€” precompute complex tables with zero startup overhead.
+2. **Zero runtime cost** â€?all checks result in constants or are erased during compilation.
+3. **Fail-fast** â€?hardware constraint violations become compile errors, not field failures.
+4. **Compile-time lookup tables** â€?precompute complex tables with zero startup overhead.
 
 ***
+

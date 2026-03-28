@@ -1,4 +1,4 @@
-# Capability Mixins ‚Äî Compile-Time Hardware Contracts üü°
+# Capability Mixins ‚Ä?Compile-Time Hardware Contracts üü°
 
 > **What you'll learn:** How ingredient traits combined with mixin traits and blanket impls eliminate diagnostic code duplication while guaranteeing every hardware dependency is satisfied at compile time.
 >
@@ -61,16 +61,17 @@ impl HasI2c for BaseBoardController { ... }
 
 | Scenario | Recommendation |
 |----------|:------:|
-| Common diagnostic behaviors | ‚úÖ Always |
-| Multi-bus controllers | ‚úÖ Always |
-| Platform-specific testing | ‚úÖ Always |
+| Common diagnostic behaviors | ‚ú?Always |
+| Multi-bus controllers | ‚ú?Always |
+| Platform-specific testing | ‚ú?Always |
 | Simple single-bus devices | ‚ö†Ô∏è Optional |
 
 ## Key Takeaways
 
-1. **Ingredient traits declare capabilities** ‚Äî e.g., `HasSpi`, `HasI2c`.
-2. **Mixins provide behavior via blanket impls** ‚Äî `impl<T: HasSpi + HasI2c> FanDiagMixin for T {}`.
-3. **Compile-time dependency check** ‚Äî if a bus is removed, the associated mixin methods vanish at compile time.
-4. **Platform-agnostic diagnostic logic** ‚Äî write the logic once; reuse it on every platform that provides the required buses.
+1. **Ingredient traits declare capabilities** ‚Ä?e.g., `HasSpi`, `HasI2c`.
+2. **Mixins provide behavior via blanket impls** ‚Ä?`impl<T: HasSpi + HasI2c> FanDiagMixin for T {}`.
+3. **Compile-time dependency check** ‚Ä?if a bus is removed, the associated mixin methods vanish at compile time.
+4. **Platform-agnostic diagnostic logic** ‚Ä?write the logic once; reuse it on every platform that provides the required buses.
 
 ***
+

@@ -2,12 +2,12 @@
 
 ### 模式选择指南
 
-- **类型安全**：新类型模式 (Newtype Pattern) ([第 3 章](ch03-newtype-and-type-state-patterns.md))
-- **编译时状态强加**：类型状态模式 (Type-State Pattern) ([第 3 章](ch03-newtype-and-type-state-patterns.md))
+- **类型安全**：新类型模式 (Newtype Pattern) ([第 3 章](ch03-the-newtype-and-type-state-patterns.md))
+- **编译时状态强加**：类型状态模式 (Type-State Pattern) ([第 3 章](ch03-the-newtype-and-type-state-patterns.md))
 - **单位元数据**：PhantomData ([第 4 章](ch04-phantomdata-types-that-carry-no-data.md))
 - **共享状态**：Arc + Mutex/RwLock ([第 6 章](ch06-concurrency-vs-parallelism-vs-threads.md))
 - **并发消息传递**：MPSC 通道 ([第 5 章](ch05-channels-and-message-passing.md))
-- **抽象策略**：泛型 (Generics) vs 动态分发 (dyn Trait) ([第 2 章](ch02-traits-in-depth-the-soul-of-rust.md))
+- **抽象策略**：泛型 (Generics) vs 动态分发 (dyn Trait) ([第 2 章](ch02-traits-in-depth.md))
 - **底层控制**：Unsafe Rust 与 Pin ([第 9 章](ch09-smart-pointers-and-interior-mutability.md), [第 12 章](ch12-unsafe-rust-controlled-danger.md))
 - **错误处理**：库 (thiserror) vs 应用 (anyhow) ([第 10 章](ch10-error-handling-patterns.md))
 

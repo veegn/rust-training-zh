@@ -1,6 +1,6 @@
-# Validated Boundaries â€” Parse, Don't Validate ðŸŸ¡
+# Validated Boundaries â€?Parse, Don't Validate ðŸŸ¡
 
-> **What you'll learn:** How to validate data exactly once at the system boundary, carry the proof of validity in a dedicated type, and never re-check â€” applied to IPMI FRU records, Redfish JSON, and IPMI SEL records.
+> **What you'll learn:** How to validate data exactly once at the system boundary, carry the proof of validity in a dedicated type, and never re-check â€?applied to IPMI FRU records, Redfish JSON, and IPMI SEL records.
 >
 > **Cross-references:** [ch02](ch02-typed-command-interfaces-request-determi.md) (typed commands), [ch06](ch06-dimensional-analysis-making-the-compiler.md) (dimensional types), [ch11](ch11-fourteen-tricks-from-the-trenches.md) (tricks 2, 3, 5), [ch14](ch14-testing-type-level-guarantees.md) (proptest)
 
@@ -74,15 +74,16 @@ pub enum TypedEvent {
 
 ## Advantages of Boundary Validation
 
-1. **Redundancy removal** â€” checks happen once.
-2. **Exhaustive handling** â€” enums force you to handle all possible variants (e.g., all 42 IPMI sensor types).
-3. **Internal safety** â€” functions taking validated types can use `unwrap()` or direct indexing safely.
+1. **Redundancy removal** â€?checks happen once.
+2. **Exhaustive handling** â€?enums force you to handle all possible variants (e.g., all 42 IPMI sensor types).
+3. **Internal safety** â€?functions taking validated types can use `unwrap()` or direct indexing safely.
 
 ## Key Takeaways
 
-1. **Boundary is the filter** â€” data entrance is the single point for validation.
-2. **Types as proofs** â€” witnessing a `ValidFru` is proof that it was checked for checksums and bounds.
-3. **Enums handle polymorphism** â€” mirror spec hierarchies in your type system to avoid silent logic errors.
-4. **Internal code is cleaner** â€” no more defensive `if` statements everywhere.
+1. **Boundary is the filter** â€?data entrance is the single point for validation.
+2. **Types as proofs** â€?witnessing a `ValidFru` is proof that it was checked for checksums and bounds.
+3. **Enums handle polymorphism** â€?mirror spec hierarchies in your type system to avoid silent logic errors.
+4. **Internal code is cleaner** â€?no more defensive `if` statements everywhere.
 
 ***
+

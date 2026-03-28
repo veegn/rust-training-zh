@@ -2,7 +2,7 @@
 
 > **Quick-reference for all 14+ correct-by-construction patterns** with selection flowchart, pattern catalogue, composition rules, crate mapping, and types-as-guarantees cheat sheet.
 >
-> **Cross-references:** Every chapter â€” this is the lookup table for the entire book.
+> **Cross-references:** Every chapter â€?this is the lookup table for the entire book.
 
 ## Quick Reference Table
 
@@ -16,7 +16,7 @@
 | 6 | Validated Boundaries | Unvalidated data use | ch07 |
 | 7 | Capability Mixins | Missing bus access | ch08 |
 | 8 | Phantom Types | Width/direction mismatch | ch09 |
-| 9 | Sentinel â†’ Option | Sentinel-as-value bugs | ch11 |
+| 9 | Sentinel â†?Option | Sentinel-as-value bugs | ch11 |
 | 10| Sealed Traits | Unsound external impls | ch11 |
 
 ## Composition Rules (Examples)
@@ -42,3 +42,4 @@
 - **"Either A or B"**: `enum { A, B }` or `Result<A, B>`.
 
 ***
+

@@ -34,9 +34,10 @@ To prove that newtypes and phantom types have zero runtime overhead, use `cargo-
 
 ## Key Takeaways
 
-1. **`trybuild` maintains invariants** â€” catches accidental `impl Clone` on single-use types.
-2. **`proptest` stresses boundaries** â€” ensures validation logic is robust against fuzzing.
-3. **Assembly doesn't lie** â€” `cargo-show-asm` confirms zero runtime cost for all type-level markers.
-4. **Test the impossible** â€” if a state is supposed to be impossible, write a test that tries to reach it and fails to compile.
+1. **`trybuild` maintains invariants** â€?catches accidental `impl Clone` on single-use types.
+2. **`proptest` stresses boundaries** â€?ensures validation logic is robust against fuzzing.
+3. **Assembly doesn't lie** â€?`cargo-show-asm` confirms zero runtime cost for all type-level markers.
+4. **Test the impossible** â€?if a state is supposed to be impossible, write a test that tries to reach it and fails to compile.
 
 ***
+

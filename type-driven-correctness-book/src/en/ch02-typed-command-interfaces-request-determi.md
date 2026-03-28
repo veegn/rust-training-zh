@@ -1,4 +1,4 @@
-# Typed Command Interfaces â€” Request Determines Response ðŸŸ¡
+# Typed Command Interfaces â€?Request Determines Response ðŸŸ¡
 
 > **What you'll learn:** How associated types on a command trait create a compile-time binding between request and response, eliminating mismatched parsing, unit confusion, and silent type coercion across IPMI, Redfish, and NVMe protocols.
 >
@@ -6,11 +6,11 @@
 
 ## The Untyped Swamp
 
-Most hardware management stacks start life as `raw bytes in â†’ raw bytes out`. This leads to parsing bugs, scaling issues, and unit confusion that are often only found in production.
+Most hardware management stacks start life as `raw bytes in â†?raw bytes out`. This leads to parsing bugs, scaling issues, and unit confusion that are often only found in production.
 
 ## The Typed Command Pattern
 
-### Step 1 â€” Domain newtypes
+### Step 1 â€?Domain newtypes
 
 ```rust
 pub struct Celsius(pub f64);
@@ -18,7 +18,7 @@ pub struct Rpm(pub u32);
 pub struct Volts(pub f64);
 ```
 
-### Step 2 â€” The command trait
+### Step 2 â€?The command trait
 
 The associated type `Response` binds each command to a specific return type.
 
@@ -32,7 +32,7 @@ pub trait IpmiCmd {
 }
 ```
 
-### Step 3 â€” Implementation
+### Step 3 â€?Implementation
 
 Each command struct defines its own response type and parsing logic.
 
@@ -47,7 +47,7 @@ impl IpmiCmd for ReadTemp {
 }
 ```
 
-### Step 4 â€” The executor
+### Step 4 â€?The executor
 
 ```rust
 impl BmcConnection {
@@ -71,9 +71,10 @@ This pattern applies to nearly every hardware protocol:
 
 ## Key Takeaways
 
-1. **Associated type = compile-time contract** â€” locks request to response.
-2. **Encapsulated parsing** â€” logic stays with the command definition.
-3. **Zero-cost dispatch** â€” monomorphized generic calls.
-4. **Universal pattern** â€” fits IPMI, Redfish, NVMe, and more.
+1. **Associated type = compile-time contract** â€?locks request to response.
+2. **Encapsulated parsing** â€?logic stays with the command definition.
+3. **Zero-cost dispatch** â€?monomorphized generic calls.
+4. **Universal pattern** â€?fits IPMI, Redfish, NVMe, and more.
 
 ***
+

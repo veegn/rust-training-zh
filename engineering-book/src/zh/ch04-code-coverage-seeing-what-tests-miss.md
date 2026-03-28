@@ -6,7 +6,7 @@
 > - 在 CI 中设置覆盖率门禁（使用 Codecov 或 Coveralls）
 > - 覆盖率驱动的测试策略：优先处理高风险的测试盲点
 >
-> **相关章节：** [Miri 与 Sanitizer](ch05-miri-valgrind-and-sanitizers-verifying-u.md) — 覆盖率发现未测试代码，Miri 发现已测试代码中的 UB · [基准测试](ch03-benchmarking-metasuring-what-matters.md) — 覆盖率告诉你什么被测试了，基准测试告诉你它有多快
+> **相关章节：** [Miri 与 Sanitizer](ch05-miri-valgrind-and-sanitizers-verifying-u.md) — 覆盖率发现未测试代码，Miri 发现已测试代码中的 UB · [基准测试](ch03-benchmarking-measuring-what-matters.md) — 覆盖率告诉你什么被测试了，基准测试告诉你它有多快
 
 代码覆盖率衡量你的测试实际上执行了哪些行、分支或函数。它不能证明代码的正确性（被覆盖的行仍可能有 Bug），但能可靠地揭示 **盲点** —— 即没有任何测试覆盖到的代码路径。
 

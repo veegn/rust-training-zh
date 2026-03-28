@@ -1,6 +1,6 @@
-# Send & Sync â€” Compile-Time Concurrency Proofs ðŸŸ 
+# Send & Sync â€?Compile-Time Concurrency Proofs ðŸŸ 
 
-> **What you'll learn:** How Rust's `Send` and `Sync` auto-traits turn the compiler into a concurrency auditor â€” proving at compile time which types can cross thread boundaries and which can be shared, with zero runtime cost.
+> **What you'll learn:** How Rust's `Send` and `Sync` auto-traits turn the compiler into a concurrency auditor â€?proving at compile time which types can cross thread boundaries and which can be shared, with zero runtime cost.
 >
 > **Cross-references:** [ch04](ch04-capability-tokens-zero-cost-proof-of-aut.md) (tokens), [ch09](ch09-phantom-types-for-resource-tracking.md) (phantom types), [ch15](ch15-const-fn-compile-time-correctness-proofs.md) (const fn)
 
@@ -38,9 +38,10 @@ pub struct Uart {
 
 ## Key Takeaways
 
-1. **The Compiler is the Auditor** â€” `Send` and `Sync` are derived automatically. You can't "forget" to mark a type as thread-unsafe if it contains non-thread-safe fields.
-2. **Zero Runtime Cost** â€” these traits exist only in the type system. They vanish during compilation.
-3. **Hardware Isolation** â€” use `!Send` handles to pin hardware access to a specific core or thread.
-4. **Fearless Concurrency** â€” you get the performance of shared memory with the safety of a formal proof.
+1. **The Compiler is the Auditor** â€?`Send` and `Sync` are derived automatically. You can't "forget" to mark a type as thread-unsafe if it contains non-thread-safe fields.
+2. **Zero Runtime Cost** â€?these traits exist only in the type system. They vanish during compilation.
+3. **Hardware Isolation** â€?use `!Send` handles to pin hardware access to a specific core or thread.
+4. **Fearless Concurrency** â€?you get the performance of shared memory with the safety of a formal proof.
 
 ***
+

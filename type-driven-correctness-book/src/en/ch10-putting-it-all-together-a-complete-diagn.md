@@ -1,32 +1,32 @@
-# Putting It All Together â€” A Complete Diagnostic Platform ðŸŸ¡
+# Putting It All Together â€?A Complete Diagnostic Platform ðŸŸ¡
 
-> **What you'll learn:** How all seven core patterns (ch02â€“ch09) compose into a single diagnostic workflow â€” authentication, sessions, typed commands, audit tokens, dimensional results, validated data, and phantom-typed registers â€” with zero total runtime overhead.
+> **What you'll learn:** How all seven core patterns (ch02â€“ch09) compose into a single diagnostic workflow â€?authentication, sessions, typed commands, audit tokens, dimensional results, validated data, and phantom-typed registers â€?with zero total runtime overhead.
 >
 > **Cross-references:** Every core pattern chapter (ch02â€“ch09), [ch14](ch14-testing-type-level-guarantees.md) (testing these guarantees)
 
 ## Goal: Composite Workflow
 
-We'll combine seven patterns from chapters 2â€“9 into a single health-check workflow:
-1. **Authenticate** (Capability Token â€” ch04)
-2. **Open IPMI session** (Type-State â€” ch05)
-3. **Send typed commands** (Typed Commands â€” ch02)
-4. **Use audit tokens** (Single-Use Types â€” ch03)
-5. **Return dimensional results** (Dimensional Analysis â€” ch06)
-6. **Validate FRU data** (Validated Boundary â€” ch07)
-7. **Read typed registers** (Phantom Types â€” ch09)
+We'll combine seven patterns from chapters 2â€? into a single health-check workflow:
+1. **Authenticate** (Capability Token â€?ch04)
+2. **Open IPMI session** (Type-State â€?ch05)
+3. **Send typed commands** (Typed Commands â€?ch02)
+4. **Use audit tokens** (Single-Use Types â€?ch03)
+5. **Return dimensional results** (Dimensional Analysis â€?ch06)
+6. **Validate FRU data** (Validated Boundary â€?ch07)
+7. **Read typed registers** (Phantom Types â€?ch09)
 
 ## Composite Implementation
 
 ```rust
 fn full_diagnostic() -> Result<(), String> {
-    // 1. Authenticate â†’ get AdminToken
+    // 1. Authenticate â†?get AdminToken
     let admin = authenticate("admin", "secret")?;
 
-    // 2. Connect and activate (Idle â†’ Active)
+    // 2. Connect and activate (Idle â†?Active)
     let session = Session::connect("192.168.1.100");
     let mut session = session.activate(&admin)?; 
 
-    // 3. Send typed command â†’ get Celsius
+    // 3. Send typed command â†?get Celsius
     let temp: Celsius = session.execute(&ReadTemp { sensor_id: 0 })?;
 
     // 4. Read phantom-typed u16 register
@@ -40,7 +40,7 @@ fn full_diagnostic() -> Result<(), String> {
 
     // 7. Log and consume token
     audit.log("Diagnostic complete");
-    // audit.log("oops"); // âŒ compile error: use of moved value
+    // audit.log("oops"); // â?compile error: use of moved value
 
     Ok(())
 }
@@ -62,9 +62,10 @@ fn full_diagnostic() -> Result<(), String> {
 
 ## Key Takeaways
 
-1. **Seven patterns compose seamlessly** â€” authentication, state, units, commands, and more work together.
-2. **Zero runtime overhead** â€” the generated assembly is as efficient as unchecked C code.
-3. **Incremental adoption** â€” you can use one pattern or all seven as needed.
-4. **Design template** â€” use this composite workflow as a blueprint for your own systems.
+1. **Seven patterns compose seamlessly** â€?authentication, state, units, commands, and more work together.
+2. **Zero runtime overhead** â€?the generated assembly is as efficient as unchecked C code.
+3. **Incremental adoption** â€?you can use one pattern or all seven as needed.
+4. **Design template** â€?use this composite workflow as a blueprint for your own systems.
 
 ***
+

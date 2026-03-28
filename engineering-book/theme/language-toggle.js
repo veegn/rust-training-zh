@@ -42,14 +42,24 @@
   function buildToggle() {
     let nav = document.querySelector(".language-toggle");
     if (!nav) {
+      const toolbar = document.querySelector(".right-buttons");
       const main = document.querySelector(".content main");
-      if (!main) return;
+      if (!toolbar && !main) return;
       nav = document.createElement("nav");
       nav.className = "language-toggle";
       nav.setAttribute("aria-label", "Language switcher / 语言切换");
-      main.prepend(nav);
+      if (toolbar) {
+        toolbar.appendChild(nav);
+      } else {
+        main.prepend(nav);
+      }
     }
     if (!nav) return;
+
+    const toolbar = document.querySelector(".right-buttons");
+    if (toolbar && nav.parentElement !== toolbar) {
+      toolbar.appendChild(nav);
+    }
 
     const currentPath = window.location.pathname;
     const currentLang = detectCurrentLang(currentPath);

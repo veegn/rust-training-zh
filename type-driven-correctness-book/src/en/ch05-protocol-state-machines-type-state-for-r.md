@@ -1,8 +1,8 @@
-# Protocol State Machines ‚Äî Type-State for Real Hardware üî¥
+# Protocol State Machines ‚Ä?Type-State for Real Hardware üî¥
 
 > **What you'll learn:** How type-state encoding makes protocol violations (wrong-order commands, use-after-close) into compile errors, applied to IPMI session lifecycles and PCIe link training.
 >
-> **Cross-references:** [ch01](ch01-the-philosophy-why-types-beat-tests.md) (level 2 ‚Äî state correctness), [ch04](ch04-capability-tokens-zero-cost-proof-of-aut.md) (tokens), [ch09](ch09-phantom-types-for-resource-tracking.md) (phantom types), [ch11](ch11-fourteen-tricks-from-the-trenches.md) (trick 4 ‚Äî typestate builder, trick 8 ‚Äî async type-state)
+> **Cross-references:** [ch01](ch01-the-philosophy-why-types-beat-tests.md) (level 2 ‚Ä?state correctness), [ch04](ch04-capability-tokens-zero-cost-proof-of-aut.md) (tokens), [ch09](ch09-phantom-types-for-resource-tracking.md) (phantom types), [ch11](ch11-fourteen-tricks-from-the-trenches.md) (trick 4 ‚Ä?typestate builder, trick 8 ‚Ä?async type-state)
 
 ## The Problem: Protocol Violations
 
@@ -34,7 +34,7 @@ The compiler enforces:
 
 ## PCIe Link Training (LTSSM)
 
-Link training goes through `Detect ‚Üí Polling ‚Üí Configuration ‚Üí L0`. Type-state ensures `send_tlp()` is only available in the `L0` state.
+Link training goes through `Detect ‚Ü?Polling ‚Ü?Configuration ‚Ü?L0`. Type-state ensures `send_tlp()` is only available in the `L0` state.
 
 ```rust
 impl PcieLink<L0> {
@@ -58,16 +58,17 @@ pub fn firmware_update(
 
 | Protocol | Worthwhile? |
 |----------|:----:|
-| IPMI/USB/TLS Handshake | ‚úÖ Yes |
-| PCIe LTSSM | ‚úÖ Yes |
-| Firmware Update Lifecycle | ‚úÖ Yes |
+| IPMI/USB/TLS Handshake | ‚ú?Yes |
+| PCIe LTSSM | ‚ú?Yes |
+| Firmware Update Lifecycle | ‚ú?Yes |
 | 2-state Request/Response | ‚ö†Ô∏è Maybe not |
 
 ## Key Takeaways
 
-1. **Wrong-order calls are impossible** ‚Äî methods only exist on valid states.
-2. **Transitions consume `self`** ‚Äî prevents using stale states.
-3. **Composable with tokens** ‚Äî enforce both state and privilege.
-4. **Scalable pattern** ‚Äî works for simple sessions and complex firmware lifecycles.
+1. **Wrong-order calls are impossible** ‚Ä?methods only exist on valid states.
+2. **Transitions consume `self`** ‚Ä?prevents using stale states.
+3. **Composable with tokens** ‚Ä?enforce both state and privilege.
+4. **Scalable pattern** ‚Ä?works for simple sessions and complex firmware lifecycles.
 
 ***
+

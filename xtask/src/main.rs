@@ -5,7 +5,7 @@ use std::net::TcpListener;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const SITE_URL: &str = "https://microsoft.github.io/RustTraining";
+const SITE_URL: &str = "https://rust-training.xss.fun";
 const SITE_NAME: &str = "Rust Training Books / Rust 训练书籍";
 const SITE_DESCRIPTION: &str =
     "Bilingual Rust training books covering language migration, async, advanced patterns, and engineering practices. / 覆盖语言迁移、异步、进阶模式与工程实践的双语 Rust 培训书籍。";

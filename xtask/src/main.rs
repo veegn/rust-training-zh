@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 const SITE_URL: &str = "https://rust-training.xss.fun";
+const SITE_URL_ENV: &str = "RUST_TRAINING_SITE_URL";
 const SITE_NAME: &str = "Rust Training Books / Rust 训练书籍";
 const SITE_DESCRIPTION: &str =
     "Bilingual Rust training books covering language migration, async, advanced patterns, and engineering practices. / 覆盖语言迁移、异步、进阶模式与工程实践的双语 Rust 培训书籍。";
@@ -395,16 +396,19 @@ fn rewrite_root_index_links(book_dir: &Path) {
 }
 
 fn write_robots_txt(site: &Path) {
-    let content = format!("User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}/sitemap.xml\n");
+    let site_url = site_url();
+    let content = format!("User-agent: *\nAllow: /\n\nSitemap: {site_url}/sitemap.xml\n");
     fs::write(site.join("robots.txt"), content)
         .expect("failed to write robots.txt / 写入 robots.txt 失败");
     println!("  ✓ robots.txt");
 }
 
 fn write_sitemap(site: &Path) {
+    let site_url = site_url();
     let mut urls = Vec::new();
-    collect_html_urls(site, site, &mut urls);
+    collect_html_urls(site, site, &mut urls, &site_url);
     urls.sort();
+    urls.dedup();
 
     let mut xml = String::from(
         r#"<?xml version="1.0" encoding="UTF-8"?>
@@ -423,18 +427,19 @@ fn write_sitemap(site: &Path) {
     println!("  ✓ sitemap.xml");
 }
 
-fn collect_html_urls(root: &Path, dir: &Path, urls: &mut Vec<String>) {
+fn collect_html_urls(root: &Path, dir: &Path, urls: &mut Vec<String>, site_url: &str) {
     let entries = fs::read_dir(dir).expect("failed to read output directory / 读取输出目录失败");
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {
-            collect_html_urls(root, &path, urls);
+            collect_html_urls(root, &path, urls, site_url);
             continue;
         }
         if path.extension().and_then(|ext| ext.to_str()) != Some("html") {
             continue;
         }
-        if path.file_name().and_then(|name| name.to_str()) == Some("404.html") {
+        let file_name = path.file_name().and_then(|name| name.to_str());
+        if matches!(file_name, Some("404.html" | "print.html" | "toc.html")) {
             continue;
         }
 
@@ -443,12 +448,22 @@ fn collect_html_urls(root: &Path, dir: &Path, urls: &mut Vec<String>) {
             .expect("output path should be under site root / 输出路径必须位于站点根目录下");
         let rel = rel.to_string_lossy().replace('\\', "/");
         let url = if rel == "index.html" {
-            format!("{SITE_URL}/")
+            format!("{site_url}/")
+        } else if let Some(prefix) = rel.strip_suffix("/index.html") {
+            format!("{site_url}/{prefix}/")
         } else {
-            format!("{SITE_URL}/{rel}")
+            format!("{site_url}/{rel}")
         };
         urls.push(url);
     }
+}
+
+fn site_url() -> String {
+    env::var(SITE_URL_ENV)
+        .ok()
+        .map(|value| value.trim().trim_end_matches('/').to_string())
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| SITE_URL.to_string())
 }
 
 fn xml_escape(value: &str) -> String {

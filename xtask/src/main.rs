@@ -194,6 +194,7 @@ fn write_landing_page(site: &Path) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{SITE_NAME}</title>
   <meta name="description" content="{SITE_DESCRIPTION}">
+  <meta name="baidu-site-verification" content="codeva-DCXVdHkCp4">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta name="theme-color" content="#9a3412">
   <link rel="canonical" href="{SITE_URL}/">

@@ -1,63 +1,182 @@
 [English Original](../en/ch16-1-performance-comparison-and-migration.md)
 
-# 性能对比：托管运行时 vs 原生执行
+## 性能对比：托管代码 vs 原生代码
 
-> **你将学到什么：** C# 与 Rust 在真实场景中的性能差异，包括启动时间、内存占用以及 CPU 密集型工作负载。
+> **你将学到：** C# 与 Rust 在现实场景中的性能差异 —— 启动时间、内存占用、吞吐量基准测试、CPU 密集型负载，以及决定何时迁移、何时坚守 C# 的决策树。
 >
-> **难度：** 中级
+> **难度：** 🟡 中级
 
-团队从 C# 迁移到 Rust 的主要原因通常是性能。尽管 .NET（尤其是 .NET 8）已经取得了惊人的进步，但 Rust 的“零成本抽象”和无垃圾回收器（GC）的设计，在效率和可预测性方面依然更胜一筹。
+### 现实场景下的性能特性
+
+| **维度** | **C# (.NET)** | **Rust** | **性能影响** |
+|------------|---------------|----------|------------------------|
+| **启动时间** | 100-500ms (JIT); 5-30ms (.NET 8 AOT) | 1-10ms (原生二进制) | 🚀 **快 10-50 倍** (对比 JIT) |
+| **内存占用** | +30-100% (GC 开销 + 元数据) | 基准水平 (极简运行时) | 💾 **节省 30-50% RAM** |
+| **GC 停顿** | 1-100ms 周期性停顿 | 无 (没有 GC) | ⚡ **极具一致性的延迟** |
+| **CPU 占用** | +10-20% (GC + JIT 开销) | 基准水平 (直接执行) | 🔋 **能效比提升 10-20%** |
+| **二进制体积** | 30-200MB (含运行时); 10-30MB (AOT 裁剪) | 1-20MB (静态二进制) | 📦 **分发体积更小** |
+| **内存安全** | 运行时检查 | 编译时证明 | 🛡️ **零开销的安全性** |
+| **并发性能** | 良好 (需谨慎同步) | 优秀 (无畏并发) | 🏃 **卓越的可扩展性** |
+
+> **关于 .NET 8+ AOT 的说明**：原生 AOT 编译显著缩小了启动时间的差距 (5-30ms)。但在吞吐量和内存方面，GC 的开销和停顿依然存在。在评估迁移时，请针对你的*特定负载*进行基准测试 —— 标题数字有时会产生误导。
+
+### 基准测试示例
+
+```csharp
+// C# - JSON 处理基准测试
+public class JsonProcessor
+{
+    public async Task<List<User>> ProcessJsonFile(string path)
+    {
+        var json = await File.ReadAllTextAsync(path);
+        var users = JsonSerializer.Deserialize<List<User>>(json);
+        
+        return users.Where(u => u.Age > 18)
+                   .OrderBy(u => u.Name)
+                   .Take(1000)
+                   .ToList();
+    }
+}
+
+// 典型表现：处理 100MB 文件约耗时 ~200ms
+// 内存占用：峰值约 ~500MB (受 GC 影响)
+// 二进制体积：约 ~80MB (独立分发模式)
+```
+
+```rust
+// Rust - 等效的 JSON 处理
+use serde::{Deserialize, Serialize};
+use tokio::fs;
+
+#[derive(Deserialize, Serialize)]
+struct User {
+    name: String,
+    age: u32,
+}
+
+pub async fn process_json_file(path: &str) -> Result<Vec<User>, Box<dyn std::error::Error>> {
+    let json = fs::read_to_string(path).await?;
+    let mut users: Vec<User> = serde_json::from_str(&json)?;
+    
+    users.retain(|u| u.age > 18);
+    users.sort_by(|a, b| a.name.cmp(&b.name));
+    users.truncate(1000);
+    
+    Ok(users)
+}
+
+// 典型表现：处理同样的 100MB 文件约耗时 ~120ms
+// 内存占用：峰值约 ~200MB (无 GC 开销)
+// 二进制体积：约 ~8MB (静态二进制文件)
+```
+
+### CPU 密集型工作负载
+
+```csharp
+// C# - 数学计算 (Mandelbrot 集合)
+public class Mandelbrot
+{
+    public static int[,] Generate(int width, int height, int maxIterations)
+    {
+        var result = new int[height, width];
+        
+        Parallel.For(0, height, y =>
+        {
+            for (int x = 0; x < width; x++)
+            {
+                var c = new Complex(
+                    (x - width / 2.0) * 4.0 / width,
+                    (y - height / 2.0) * 4.0 / height);
+                
+                result[y, x] = CalculateIterations(c, maxIterations);
+            }
+        });
+        
+        return result;
+    }
+}
+
+// 性能：约 2.3 秒 (8 核机器)
+// 内存：约 500MB
+```
+
+```rust
+// Rust - 使用 Rayon 进行相同的计算
+use rayon::prelude::*;
+use num_complex::Complex;
+
+pub fn generate_mandelbrot(width: usize, height: usize, max_iterations: u32) -> Vec<Vec<u32>> {
+    (0..height)
+        .into_par_iter()
+        .map(|y| {
+            (0..width)
+                .map(|x| {
+                    let c = Complex::new(
+                        (x as f64 - width as f64 / 2.0) * 4.0 / width as f64,
+                        (y as f64 - height as f64 / 2.0) * 4.0 / height as f64,
+                    );
+                    calculate_iterations(c, max_iterations)
+                })
+                .collect()
+        })
+        .collect()
+}
+
+// 性能：约 1.1 秒 (同样的 8 核机器)  
+// 内存：约 200MB
+// 速度快了 2 倍，且内存节省了 60%
+```
+
+### 如何选择编程语言
+
+**在以下情况下选择 C#：**
+- **开发效率至关重要** —— 拥有极其丰富的工具生态系统。
+- **团队深耕于 .NET** —— 利用现有的知识储备和技能。
+- **企业级服务集成** —— 大量使用微软生态系统。
+- **性能需求中等** —— 现有的性能表现已足够。
+- **富客户端应用** —— 开发 WPF, WinUI, Blazor 等应用。
+- **原型设计与 MVP** —— 追求极速上线。
+
+**在以下情况下选择 Rust：**
+- **性能极度关键** —— CPU 或内存密集型应用。
+- **资源受限环境** —— 嵌入式、边缘计算、Serverless 场景。
+- **常驻后端服务** —— 如高性能 Web 服务器、数据库、系统服务。
+- **系统级编程** —— OS 组件、驱动程序、网络专用工具。
+- **高可靠性要求** —— 金融系统、安全关键型应用。
+- **高并发/并行工作负载** —— 需要高吞吐量的数据处理。
+
+### 迁移策略决策树
+
+```mermaid
+graph TD
+    START["考虑使用 Rust？"]
+    PERFORMANCE["性能是否极度关键？"]
+    TEAM["团队是否有时间学习？"]
+    EXISTING["是否存在大型 C# 代码库？"]
+    NEW_PROJECT["是新项目还是新组件？"]
+    
+    INCREMENTAL["渐进式引入：<br/>• 先从 CLI 工具入手<br/>• 替换性能关键组件<br/>• 开发新微服务"]
+    
+    FULL_RUST["全面拥抱 Rust：<br/>• 绿地项目 (Greenfield)<br/>• 系统级服务<br/>• 高性能 API"]
+    
+    STAY_CSHARP["坚守 C#：<br/>• 优化现有代码<br/>• 利用 .NET AOT / 性能特性<br/>• 考虑 .NET 原生技术"]
+    
+    START --> PERFORMANCE
+    PERFORMANCE -->|是| TEAM
+    PERFORMANCE -->|否| STAY_CSHARP
+    
+    TEAM -->|是| EXISTING
+    TEAM -->|否| STAY_CSHARP
+    
+    EXISTING -->|是| NEW_PROJECT
+    EXISTING -->|否| FULL_RUST
+    
+    NEW_PROJECT -->|新项目| FULL_RUST
+    NEW_PROJECT -->|现有项目| INCREMENTAL
+    
+    style FULL_RUST fill:#c8e6c9,color:#000
+    style INCREMENTAL fill:#fff3e0,color:#000
+    style STAY_CSHARP fill:#e3f2fd,color:#000
+```
 
 ---
-
-## 核心指标一览
-| **指标** | **C# (.NET 8)** | **Rust** | **原因** |
-| :--- | :--- | :--- | :--- |
-| **启动速度** | ~50-200ms | ~1-5ms | 无需 JIT 编译，且没有运行时开销。 |
-| **内存占用** | ~30MB+ (基础) | <1MB (基础) | 无需 GC 堆或大量的元数据存储。 |
-| **二进制体积** | ~10-50MB | ~1-5MB | 静态编译的二进制文件体积更小。 |
-| **p99 延迟** | 波动的 (GC) | 极其稳定 | 没有“全线停顿 (Stop the World)”的 GC 暂停。 |
-
----
-
-## 案例研究：JSON 处理
-处理一个 100MB 的 JSON 文件是一项非常普遍的任务。
-*   **C#**：使用 `System.Text.Json`。虽然经过了高度优化，但在解析过程中依然需要 GC 来清理成千上万个临时创建的字符串和对象。
-*   **Rust**：使用 `Serde`。由于其强大的生命周期系统，它可以实现“就地解析 (In-place Parsing)”，几乎不需要在解析过程中分配额外的内存。
-
----
-
-## CPU 密集型任务：Mandelbrot
-在并行计算 Mandelbrot 集合（一个常见的 CPU 基准测试）时：
-*   **C#**：表现不错，但如果你不小心，在管理大量线程时可能会遇到 GC 竞争。
-*   **Rust**：使用 **Rayon** Crate，你可以获得完美的 CPU 扩展性和零成本的数据并行。编译器会确保不会发生数据竞争，让你能够安全地把硬件性能压榨到 100%。
-
----
-
-## 什么时候该留在 C#
-Rust 并不总是唯一的答案。在以下情况下，请继续使用 C#：
-1.  **开发速度** 的优先级高于原始性能。
-2.  你的应用主要是 **I/O 密集型**（大部分时间在等待数据库或接口响应），且 .NET 的 `async/await` 已经能很好地处理这些负载。
-3.  你需要开发丰富的 **桌面端 UI**（如 WPF、WinForms 或 MAUI）。
-
----
-
-## 什么时候该转向 Rust
-在以下情况下，请考虑迁移到 Rust：
-1.  你的 C# 性能分析工具显示，应用在 GC 回收上花费了太多时间（即出现了性能**瓶颈**）。
-2.  你运行在 **Serverless** 环境（如 AWS Lambda 或 Azure Functions）中，因为更快的冷启动时间直接意味着更少的费用支出。
-3.  你需要在 **资源受限** 的硬件（如物联网（IoT）或边缘计算设备）上运行。
-
----
-
-## C# 开发者总结表
-*   **可预测性至上**：Rust 最大的性能优势并不仅仅是“快”，而是它**稳定地快**。
-*   **降低运营成本**：Rust 服务通常可以在更小、更便宜的云服务器实例上运行，因为它能节省高达 90% 的 RAM。
-*   **Native AOT**：如果你还没准备好切换到 Rust，可以尝试先开启 .NET 的 Native AOT，看看这是否能解决你的启动速度和内存问题。
-
----
-
-## 练习：运行一个基准测试
-**挑战**：在 C# 中写一个简单的循环计算逻辑，然后用 Rust 重写它。使用 `std::time::Instant` 来测量两者之间的差异。请观察 Rust 版本中执行耗时和内存占用的极佳表现。
-
-**关键理解**：Rust 为你提供了 C++ 级别的性能，同时还具备了超越 C# 的安全性（以及通常更好的开发人体工程学）。

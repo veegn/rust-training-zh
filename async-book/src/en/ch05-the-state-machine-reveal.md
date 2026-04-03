@@ -77,7 +77,10 @@ impl Future for FetchTwoPagesStateMachine {
 }
 ```
 
-> **Note**: This desugaring is *conceptual*. The real compiler output uses `unsafe` pin projections — the `get_mut()` calls shown here require `Unpin`, but async state machines are `!Unpin`. The goal is to illustrate state transitions, not produce compilable code.
+> **Note**: This desugaring is *conceptual*. The real compiler output uses
+> `unsafe` pin projections — the `get_mut()` calls shown here require
+> `Unpin`, but async state machines are `!Unpin`. The goal is to illustrate
+> state transitions, not produce compilable code.
 
 ```mermaid
 stateDiagram-v2
@@ -122,12 +125,14 @@ async fn big() {
 
 **Drop optimization**: When a state machine transitions, it drops values no longer needed. In the example above, `fut1` is dropped when we transition from `WaitingPage1` to `WaitingPage2` — the compiler inserts the drop automatically.
 
-> **Practical rule**: Large stack allocations in `async fn` blow up the future's size. If you see stack overflows in async code, check for large arrays or deeply nested futures. Use `Box::pin()` to heap-allocate sub-futures if needed.
+> **Practical rule**: Large stack allocations in `async fn` blow up the future's
+> size. If you see stack overflows in async code, check for large arrays or
+> deeply nested futures. Use `Box::pin()` to heap-allocate sub-futures if needed.
 
 ### Exercise: Predict the State Machine
 
 <details>
-<summary>🏋️ Exercise</summary>
+<summary>🏋️ Exercise (click to expand)</summary>
 
 **Challenge**: Given this async function, sketch the state machine the compiler generates. How many states (enum variants) does it have? What values are stored in each?
 
@@ -143,7 +148,7 @@ async fn pipeline(url: &str) -> Result<usize, Error> {
 <details>
 <summary>🔑 Solution</summary>
 
-Four states:
+Five states:
 
 1. **Start** — stores `url`
 2. **WaitingFetch** — stores `url`, `fetch` future
@@ -165,3 +170,5 @@ Each `.await` creates a yield point = a new enum variant. The `?` adds early-exi
 > **See also:** [Ch 4 — Pin and Unpin](ch04-pin-and-unpin.md) for why the generated enum needs pinning, [Ch 6 — Building Futures by Hand](ch06-building-futures-by-hand.md) to build these state machines yourself
 
 ***
+
+

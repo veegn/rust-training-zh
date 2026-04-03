@@ -92,13 +92,13 @@ trait DynDataStore {
 
 ```rust
 trait Worker {
-    async fn run(&self); // Future might or might not be Send
+    async fn run(self); // Future might or might not be Send
 }
 
 struct MyWorker;
 
 impl Worker for MyWorker {
-    async fn run(&self) {
+    async fn run(self) {
         // If this uses !Send types, the future is !Send
         let rc = std::rc::Rc::new(42);
         some_work().await;
@@ -106,8 +106,12 @@ impl Worker for MyWorker {
     }
 }
 
-// ❌ This fails if the future isn't Send:
+// ❌ This fails because the future is !Send (Rc is !Send):
 // tokio::spawn(worker.run()); // Requires Send + 'static
+//
+// Note: We use `self` (owned) here because tokio::spawn also
+// requires 'static — a future borrowing &self can't be 'static.
+// Even without Rc, `async fn run(&self)` wouldn't be spawnable.
 ```
 
 ### The trait_variant Crate
@@ -126,6 +130,8 @@ trait DataStore {
 // Now you have two traits:
 // - DataStore: no Send bound on the futures
 // - SendDataStore: all futures are Send
+// Both have the same methods, implementors implement DataStore
+// and get SendDataStore for free if their futures are Send.
 
 // Use SendDataStore when you need to spawn:
 async fn spawn_lookup(store: Arc<dyn SendDataStore>) {
@@ -142,15 +148,26 @@ async fn spawn_lookup(store: Arc<dyn SendDataStore>) {
 | Native `async fn` in trait | ✅ | ❌ | Implicit | None |
 | `trait_variant` | ✅ | ✅ | Explicit | `#[trait_variant::make]` |
 | Manual `Box::pin` | ✅ | ✅ | Explicit | High |
-| `async-trait` crate | ✅ | ✅ | `#[async_trait]` | Medium |
+| `async-trait` crate | ✅ | ✅ | `#[async_trait]` | Medium (proc macro) |
 
-> **Recommendation**: For new code (Rust 1.75+), use native async traits with `trait_variant` when you need `dyn` dispatch. The `async-trait` crate is still widely used but boxes every future — the native approach is zero-cost for static dispatch.
+> **Recommendation**: For new code (Rust 1.75+), use native async traits with
+> `trait_variant` when you need `dyn` dispatch. The `async-trait` crate is still
+> widely used but boxes every future — the native approach is zero-cost for
+> static dispatch.
 
 ### Async Closures (Rust 1.85+)
 
 Since Rust 1.85, `async closures` are stable — closures that capture their environment and return a future:
 
 ```rust
+// Before 1.85: awkward workaround
+let urls = vec!["https://a.com", "https://b.com"];
+let fetchers: Vec<_> = urls.iter().map(|url| {
+    let url = url.to_string();
+    // Returns a non-async closure that returns an async block
+    move || async move { reqwest::get(&url).await }
+}).collect();
+
 // After 1.85: async closures just work
 let fetchers: Vec<_> = urls.iter().map(|url| {
     async move || { reqwest::get(url).await }
@@ -175,18 +192,20 @@ where
 }
 ```
 
-> **Migration tip**: If you have code using `Fn() -> impl Future<Output = T>`, consider switching to `AsyncFn() -> T` for cleaner signatures.
+> **Migration tip**: If you have code using `Fn() -> impl Future<Output = T>`,
+> consider switching to `AsyncFn() -> T` for cleaner signatures.
 
 <details>
-<summary><strong>🏋️ Exercise: Design an Async Service Trait</strong></summary>
+<summary><strong>🏋️ Exercise: Design an Async Service Trait</strong> (click to expand)</summary>
 
-**Challenge**: Design a `Cache` trait with async `get` and `set` methods. Implement it twice: once with a `HashMap` (in-memory) and once with a simulated Redis backend.
+**Challenge**: Design a `Cache` trait with async `get` and `set` methods. Implement it twice: once with a `HashMap` (in-memory) and once with a simulated Redis backend (use `tokio::time::sleep` to simulate network latency). Write a generic function that works with both.
 
 <details>
 <summary>🔑 Solution</summary>
 
 ```rust
 use std::collections::HashMap;
+use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 
@@ -198,6 +217,14 @@ trait Cache {
 // --- In-memory implementation ---
 struct MemoryCache {
     store: Mutex<HashMap<String, String>>,
+}
+
+impl MemoryCache {
+    fn new() -> Self {
+        MemoryCache {
+            store: Mutex::new(HashMap::new()),
+        }
+    }
 }
 
 impl Cache for MemoryCache {
@@ -216,6 +243,15 @@ struct RedisCache {
     latency: Duration,
 }
 
+impl RedisCache {
+    fn new(latency_ms: u64) -> Self {
+        RedisCache {
+            store: Mutex::new(HashMap::new()),
+            latency: Duration::from_millis(latency_ms),
+        }
+    }
+}
+
 impl Cache for RedisCache {
     async fn get(&self, key: &str) -> Option<String> {
         sleep(self.latency).await; // Simulate network round-trip
@@ -227,9 +263,25 @@ impl Cache for RedisCache {
         self.store.lock().await.insert(key.to_string(), value);
     }
 }
+
+// --- Generic function working with any Cache ---
+async fn cache_demo<C: Cache>(cache: &C, label: &str) {
+    cache.set("greeting", "Hello, async!".into()).await;
+    let val = cache.get("greeting").await;
+    println!("[{label}] greeting = {val:?}");
+}
+
+#[tokio::main]
+async fn main() {
+    let mem = MemoryCache::new();
+    cache_demo(&mem, "memory").await;
+
+    let redis = RedisCache::new(50);
+    cache_demo(&redis, "redis").await;
+}
 ```
 
-**Key takeaway**: The same generic function works with both implementations through static dispatch. No boxing, no allocation overhead.
+**Key takeaway**: The same generic function works with both implementations through static dispatch. No boxing, no allocation overhead. For dynamic dispatch, add `trait_variant::make(SendCache: Send)`.
 
 </details>
 </details>
@@ -243,3 +295,5 @@ impl Cache for RedisCache {
 > **See also:** [Ch 13 — Production Patterns](ch13-production-patterns.md) for Tower's `Service` trait, [Ch 6 — Building Futures by Hand](ch06-building-futures-by-hand.md) for manual trait implementations
 
 ***
+
+

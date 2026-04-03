@@ -1,4 +1,4 @@
-# Capstone Project: Async Chat Server 🔴
+# Capstone Project: Async Chat Server
 
 This project integrates patterns from across the book into a single, production-style application. You'll build a **multi-room async chat server** using tokio, channels, streams, graceful shutdown, and proper error handling.
 
@@ -15,10 +15,11 @@ This project integrates patterns from across the book into a single, production-
 ## The Problem
 
 Build a TCP chat server where:
+
 1. **Clients** connect via TCP and join named rooms
 2. **Messages** are broadcast to all clients in the same room
 3. **Commands**: `/join <room>`, `/nick <name>`, `/rooms`, `/quit`
-4. The server shuts down gracefully on Ctrl+C
+4. The server shuts down gracefully on Ctrl+C — finishing in-flight messages
 
 ```mermaid
 graph LR
@@ -101,7 +102,10 @@ fn get_or_create_room(rooms: &mut HashMap<String, broadcast::Sender<String>>, na
 }
 ```
 
-**Your job**: Implement room state so that clients can join rooms and messages are broadcast to the sender's current room.
+**Your job**: Implement room state so that:
+- Clients start in `#general`
+- `/join <room>` switches rooms (unsubscribe from old, subscribe to new)
+- Messages are broadcast to all clients in the sender's current room
 
 <details>
 <summary>💡 Hint — Client task structure</summary>
@@ -115,8 +119,24 @@ Use `tokio::select!` to run both:
 ```rust
 loop {
     tokio::select! {
-        result = reader.read_line(&mut line) => { /* ... */ }
-        result = room_rx.recv() => { /* ... */ }
+        // Client sent us a line
+        result = reader.read_line(&mut line) => {
+            match result {
+                Ok(0) | Err(_) => break,
+                Ok(_) => {
+                    // Parse command or broadcast message
+                }
+            }
+        }
+        // Room broadcast received
+        result = room_rx.recv() => {
+            match result {
+                Ok(msg) => {
+                    let _ = writer.write_all(msg.as_bytes()).await;
+                }
+                Err(_) => break,
+            }
+        }
     }
 }
 ```
@@ -129,15 +149,21 @@ Implement the command protocol:
 
 | Command | Action |
 |---------|--------|
-| `/join <room>` | Leave current room, join new room |
+| `/join <room>` | Leave current room, join new room, announce in both |
 | `/nick <name>` | Change display name |
-| `/rooms` | List all active rooms |
+| `/rooms` | List all active rooms and member counts |
 | `/quit` | Disconnect gracefully |
 | Anything else | Broadcast as a chat message |
 
+**Your job**: Parse commands from the input line. For `/rooms`, you'll need to read from the `RoomMap` — use `RwLock::read()` to avoid blocking other clients.
+
 ## Step 4: Graceful Shutdown
 
-Add Ctrl+C handling to stop accepting and exit cleanly.
+Add Ctrl+C handling so the server:
+1. Stops accepting new connections
+2. Sends "Server shutting down..." to all rooms
+3. Waits for in-flight messages to drain
+4. Exits cleanly
 
 ```rust
 use tokio::sync::watch;
@@ -147,8 +173,12 @@ let (shutdown_tx, shutdown_rx) = watch::channel(false);
 // In the accept loop:
 loop {
     tokio::select! {
-        result = listener.accept() => { /* ... */ }
+        result = listener.accept() => {
+            let (socket, addr) = result?;
+            // spawn client task with shutdown_rx.clone()
+        }
         _ = tokio::signal::ctrl_c() => {
+            println!("Shutdown signal received");
             shutdown_tx.send(true)?;
             break;
         }
@@ -156,17 +186,51 @@ loop {
 }
 ```
 
+**Your job**: Add `shutdown_rx.changed()` to each client's `select!` loop so clients exit when shutdown is signaled.
+
 ## Step 5: Error Handling and Edge Cases
 
 Production-harden the server:
 
-1. **Lagging receivers**: Handle `RecvError::Lagged(n)` if a slow client misses messages.
-2. **Backpressure**: The broadcast channel buffer is bounded.
-3. **Timeout**: Disconnect clients that are idle for >5 minutes.
+1. **Lagging receivers**: `broadcast::recv()` returns `RecvError::Lagged(n)` if a slow client misses messages. Handle it gracefully (log + continue, don't crash).
+2. **Nickname validation**: Reject empty or too-long nicknames.
+3. **Backpressure**: The broadcast channel buffer is bounded (100). If a client can't keep up, they get the `Lagged` error.
+4. **Timeout**: Disconnect clients that are idle for >5 minutes.
+
+```rust
+use tokio::time::{timeout, Duration};
+
+// Wrap the read in a timeout:
+match timeout(Duration::from_secs(300), reader.read_line(&mut line)).await {
+    Ok(Ok(0)) | Ok(Err(_)) | Err(_) => break, // EOF, error, or timeout
+    Ok(Ok(_)) => { /* process line */ }
+}
+```
 
 ## Step 6: Integration Test
 
-Write a test that starts the server, connects two clients, and verifies message delivery.
+Write a test that starts the server, connects two clients, and verifies message delivery:
+
+```rust
+#[tokio::test]
+async fn two_clients_can_chat() {
+    // Start server in background
+    let server = tokio::spawn(run_server("127.0.0.1:0")); // Port 0 = OS picks
+
+    // Connect two clients
+    let mut client1 = TcpStream::connect(addr).await.unwrap();
+    let mut client2 = TcpStream::connect(addr).await.unwrap();
+
+    // Client 1 sends a message
+    client1.write_all(b"Hello from client 1\n").await.unwrap();
+
+    // Client 2 should receive it
+    let mut buf = vec![0u8; 1024];
+    let n = client2.read(&mut buf).await.unwrap();
+    let msg = String::from_utf8_lossy(&buf[..n]);
+    assert!(msg.contains("Hello from client 1"));
+}
+```
 
 ## Evaluation Criteria
 
@@ -176,11 +240,17 @@ Write a test that starts the server, connects two clients, and verifies message 
 | Correctness | Messages only go to clients in the same room |
 | Graceful shutdown | Ctrl+C drains messages and exits cleanly |
 | Error handling | Lagged receivers, disconnections, timeouts handled |
+| Code organization | Clean separation: accept loop, client task, room state |
+| Testing | At least 2 integration tests |
 
 ## Extension Ideas
 
-1. **Persistent history**: Store last N messages per room.
-2. **WebSocket support**: Accept WebSocket clients using `tokio-tungstenite`.
-3. **TLS**: Add `tokio-rustls` for encrypted connections.
+Once the basic chat server works, try these enhancements:
+
+1. **Persistent history**: Store last N messages per room; replay to new joiners
+2. **WebSocket support**: Accept both TCP and WebSocket clients using `tokio-tungstenite`
+3. **Rate limiting**: Use `tokio::time::Interval` to limit messages per client per second
+4. **Metrics**: Track connected clients, messages/sec, room count via `prometheus` crate
+5. **TLS**: Add `tokio-rustls` for encrypted connections
 
 ***

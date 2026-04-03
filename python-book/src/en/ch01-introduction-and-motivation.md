@@ -13,16 +13,18 @@
 
 ## The Case for Rust for Python Developers
 
-> **What you'll learn:** Why Python developers are adopting Rust, real-world performance wins (Dropbox, Discord, Pydantic), when Rust is the right choice vs staying with Python, and the core philosophical differences between the two languages.
+> **What you'll learn:** Why Python developers are adopting Rust, real-world performance wins (Dropbox, Discord, Pydantic),
+> when Rust is the right choice vs staying with Python, and the core philosophical differences between the two languages.
 >
 > **Difficulty:** 🟢 Beginner
 
 ### Performance: From Minutes to Milliseconds
 
-Python is famously slow for CPU-bound work. Rust provides C-level performance with a high-level feel.
+Python is famously slow for CPU-bound work. Rust provides C-level performance
+with a high-level feel.
 
 ```python
-# Python - ~2 seconds for 10 million calls
+# Python — ~2 seconds for 10 million calls
 import time
 
 def fibonacci(n: int) -> int:
@@ -40,7 +42,7 @@ print(f"Elapsed: {elapsed:.2f}s")  # ~2s on typical hardware
 ```
 
 ```rust
-// Rust - ~0.07 seconds for the same 10 million calls
+// Rust — ~0.07 seconds for the same 10 million calls
 use std::time::Instant;
 
 fn fibonacci(n: u64) -> u64 {
@@ -62,17 +64,19 @@ fn main() {
     println!("Elapsed: {:.2?}", start.elapsed());  // ~0.07s
 }
 ```
-
 > Note: Rust should be run in release mode (`cargo run --release`) for a fair performance comparison.
->
-> **Why the difference?** Python dispatches every `+` through a dictionary lookup, unboxes integers from heap objects, and checks types at every operation. Rust compiles `fibonacci` directly to a handful of x86 `add`/`mov` instructions - the same code a C compiler would produce.
+> **Why the difference?** Python dispatches every `+` through a dictionary lookup,
+> unboxes integers from heap objects, and checks types at every operation. Rust compiles
+> `fibonacci` directly to a handful of x86 `add`/`mov` instructions — the same code a
+> C compiler would produce.
 
 ### Memory Safety Without a Garbage Collector
 
-Python's reference-counting GC has known issues: circular references, unpredictable `__del__` timing, and memory fragmentation. Rust eliminates these at compile time.
+Python's reference-counting GC has known issues: circular references, unpredictable
+`__del__` timing, and memory fragmentation. Rust eliminates these at compile time.
 
 ```python
-# Python - circular reference that CPython's ref counter can't free
+# Python — circular reference that CPython's ref counter can't free
 class Node:
     def __init__(self, value):
         self.value = value
@@ -83,7 +87,7 @@ class Node:
         self.children.append(child)
         child.parent = self  # Circular reference!
 
-# These two nodes reference each other - ref count never reaches 0.
+# These two nodes reference each other — ref count never reaches 0.
 # CPython's cycle detector will *eventually* clean them up,
 # but you can't control when, and it adds GC pause overhead.
 root = Node("root")
@@ -92,10 +96,10 @@ root.add_child(child)
 ```
 
 ```rust
-// Rust - ownership prevents circular references by design
+// Rust — ownership prevents circular references by design
 struct Node {
     value: String,
-    children: Vec<Node>,  // Children are OWNED - no cycles possible
+    children: Vec<Node>,  // Children are OWNED — no cycles possible
 }
 
 impl Node {
@@ -120,7 +124,9 @@ fn main() {
 }
 ```
 
-> **Key insight:** In Rust, the child doesn't hold a reference back to the parent. If you truly need cross-references (like a graph), you use explicit mechanisms like `Rc<RefCell<T>>` or indices - making the complexity visible and intentional.
+> **Key insight**: In Rust, the child doesn't hold a reference back to the parent.
+> If you truly need cross-references (like a graph), you use explicit mechanisms
+> like `Rc<RefCell<T>>` or indices — making the complexity visible and intentional.
 
 ***
 
@@ -128,16 +134,17 @@ fn main() {
 
 ### 1. Runtime Type Errors
 
-The most common Python production bug: passing the wrong type to a function. Type hints help, but they aren't enforced.
+The most common Python production bug: passing the wrong type to a function.
+Type hints help, but they aren't enforced.
 
 ```python
-# Python - type hints are suggestions, not rules
+# Python — type hints are suggestions, not rules
 def process_user(user_id: int, name: str) -> dict:
     return {"id": user_id, "name": name.upper()}
 
-# These all "work" at the call site - fail at runtime
-process_user("not-a-number", 42)        # TypeError at .upper()
-process_user(None, "Alice")             # Works until you use user_id as int
+# These all "work" at the call site — fail at runtime
+process_user("not-a-number", 42)        # TypeError: int has no .upper()
+process_user(None, "Alice")             # Silently stores None as id — bug hides until downstream code expects int
 
 # Even with mypy, you can still bypass types:
 data = json.loads('{"id": "oops"}')     # Always returns Any
@@ -145,7 +152,7 @@ process_user(data["id"], data["name"])  # mypy can't catch this
 ```
 
 ```rust
-// Rust - the compiler catches all of these before the program runs
+// Rust — the compiler catches all of these before the program runs
 fn process_user(user_id: i64, name: &str) -> User {
     User {
         id: user_id,
@@ -153,8 +160,8 @@ fn process_user(user_id: i64, name: &str) -> User {
     }
 }
 
-// process_user("not-a-number", 42);     // Compile error: expected i64, found &str
-// process_user(None, "Alice");           // Compile error: expected i64, found Option
+// process_user("not-a-number", 42);     // ❌ Compile error: expected i64, found &str
+// process_user(None, "Alice");           // ❌ Compile error: expected i64, found Option
 // Extra arguments are always a compile error.
 
 // Deserializing JSON is type-safe too:
@@ -164,21 +171,22 @@ struct UserInput {
     name: String, // Must be a string in the JSON
 }
 let input: UserInput = serde_json::from_str(json_str)?; // Returns Err if types mismatch
-process_user(input.id, &input.name); // Guaranteed correct types
+process_user(input.id, &input.name); // ✅ Guaranteed correct types
 ```
 
 ### 2. None: The Billion Dollar Mistake (Python Edition)
 
-`None` can appear anywhere a value is expected. Python has no compile-time way to prevent `AttributeError: 'NoneType' object has no attribute ...`.
+`None` can appear anywhere a value is expected. Python has no compile-time way
+to prevent `AttributeError: 'NoneType' object has no attribute ...`.
 
 ```python
-# Python - None sneaks in everywhere
+# Python — None sneaks in everywhere
 def find_user(user_id: int) -> dict | None:
     users = {1: {"name": "Alice"}, 2: {"name": "Bob"}}
     return users.get(user_id)
 
 user = find_user(999)         # Returns None
-print(user["name"])           # TypeError: 'NoneType' object is not subscriptable
+print(user["name"])           # 💥 TypeError: 'NoneType' object is not subscriptable
 
 # Even with Optional type hint, nothing enforces the check:
 from typing import Optional
@@ -186,11 +194,11 @@ def get_name(user_id: int) -> Optional[str]:
     return None
 
 name: Optional[str] = get_name(1)
-print(name.upper())          # AttributeError - mypy warns, runtime doesn't care
+print(name.upper())          # 💥 AttributeError — mypy warns, runtime doesn't care
 ```
 
 ```rust
-// Rust - None is impossible unless explicitly handled
+// Rust — None is impossible unless explicitly handled
 fn find_user(user_id: i64) -> Option<User> {
     let users = HashMap::from([
         (1, User { name: "Alice".into() }),
@@ -200,7 +208,7 @@ fn find_user(user_id: i64) -> Option<User> {
 }
 
 let user = find_user(999);  // Returns None variant of Option<User>
-// println!("{}", user.name);  // Compile error: Option<User> has no field `name`
+// println!("{}", user.name);  // ❌ Compile error: Option<User> has no field `name`
 
 // You MUST handle the None case:
 match find_user(999) {
@@ -216,10 +224,12 @@ let name = find_user(999)
 
 ### 3. The GIL: Python's Concurrency Ceiling
 
-Python's Global Interpreter Lock means threads don't run Python code in parallel. `threading` is only useful for I/O-bound work; CPU-bound work requires `multiprocessing` (with its serialization overhead) or C extensions.
+Python's Global Interpreter Lock means threads don't run Python code in parallel.
+`threading` is only useful for I/O-bound work; CPU-bound work requires `multiprocessing`
+(with its serialization overhead) or C extensions.
 
 ```python
-# Python - threads DON'T speed up CPU work because of the GIL
+# Python — threads DON'T speed up CPU work because of the GIL
 import threading
 import time
 
@@ -245,7 +255,7 @@ with Pool(4) as p:
 ```
 
 ```rust
-// Rust - true parallelism, no GIL, no serialization overhead
+// Rust — true parallelism, no GIL, no serialization overhead
 use std::thread;
 
 fn cpu_work(n: u64) -> u64 {
@@ -266,8 +276,7 @@ fn main() {
 }
 ```
 
-> **With Rayon:** parallelism is even simpler.
->
+> **With Rayon** (Rust's parallel iterator library), parallelism is even simpler:
 > ```rust
 > use rayon::prelude::*;
 > let results: Vec<u64> = inputs.par_iter().map(|&n| cpu_work(n)).collect();
@@ -275,7 +284,8 @@ fn main() {
 
 ### 4. Deployment and Distribution Pain
 
-Python deployment is notoriously difficult: venvs, system Python conflicts, `pip install` failures, C extension wheels, Docker images with full Python runtime.
+Python deployment is notoriously difficult: venvs, system Python conflicts,
+`pip install` failures, C extension wheels, Docker images with full Python runtime.
 
 ```python
 # Python deployment checklist:
@@ -296,8 +306,8 @@ Python deployment is notoriously difficult: venvs, system Python conflicts, `pip
 
 ```rust
 // Rust deployment: single static binary, no runtime needed
-// cargo build --release -> one binary, ~5-20 MB
-// Copy it anywhere - no Python, no venv, no dependencies
+// cargo build --release → one binary, ~5-20 MB
+// Copy it anywhere — no Python, no venv, no dependencies
 
 // Docker image: ~5 MB (from scratch or distroless)
 // FROM scratch
@@ -346,7 +356,7 @@ Python deployment is notoriously difficult: venvs, system Python conflicts, `pip
 - **Result**: Millions saved in infrastructure costs
 
 ### Discord: Voice/Video Backend
-- **Before (Python -> Go)**: GC pauses causing audio drops
+- **Before (Python → Go)**: GC pauses causing audio drops
 - **After (Rust)**: Consistent low-latency performance
 - **Result**: Better user experience, reduced server costs
 
@@ -355,8 +365,8 @@ Python deployment is notoriously difficult: venvs, system Python conflicts, `pip
 - **Result**: Workers run with microsecond cold starts
 
 ### Pydantic V2
-- **Before**: Pure Python validation - slow for large payloads
-- **After**: Rust core (via PyO3) - **5-50x faster** validation
+- **Before**: Pure Python validation — slow for large payloads
+- **After**: Rust core (via PyO3) — **5–50x faster** validation
 - **Result**: Same Python API, dramatically faster execution
 
 ### Why This Matters for Python Developers:
@@ -381,24 +391,24 @@ Python deployment is notoriously difficult: venvs, system Python conflicts, `pip
 - **Performance without sacrifice**: Zero-cost abstractions, no runtime overhead
 - **Correctness first**: If it compiles, entire categories of bugs are impossible
 - **Explicit over implicit**: No hidden behavior, no implicit conversions
-- **Ownership**: Resources have exactly one owner - memory, files, sockets
+- **Ownership**: Resources have exactly one owner — memory, files, sockets
 - **Fearless concurrency**: The type system prevents data races at compile time
 
 ```mermaid
 graph LR
-    subgraph PY["Python"]
+    subgraph PY["🐍 Python"]
         direction TB
-        PY_CODE["Your Code"] --> PY_INTERP["Interpreter<br/>CPython VM"]
-        PY_INTERP --> PY_GC["Garbage Collector<br/>ref count + GC"]
-        PY_GC --> PY_GIL["GIL<br/>no true parallelism"]
+        PY_CODE["Your Code"] --> PY_INTERP["Interpreter — CPython VM"]
+        PY_INTERP --> PY_GC["Garbage Collector — ref count + GC"]
+        PY_GC --> PY_GIL["GIL — no true parallelism"]
         PY_GIL --> PY_OS["OS / Hardware"]
     end
 
-    subgraph RS["Rust"]
+    subgraph RS["🦀 Rust"]
         direction TB
         RS_CODE["Your Code"] --> RS_NONE["No runtime overhead"]
-        RS_NONE --> RS_OWN["Ownership<br/>compile-time, zero-cost"]
-        RS_OWN --> RS_THR["Native threads<br/>true parallelism"]
+        RS_NONE --> RS_OWN["Ownership — compile-time, zero-cost"]
+        RS_OWN --> RS_THR["Native threads — true parallelism"]
         RS_THR --> RS_OS["OS / Hardware"]
     end
 
@@ -421,7 +431,7 @@ graph LR
 | None/null | `None` anywhere | `Option<T>` | Compile-time None safety |
 | Error handling | `raise`/`try`/`except` | `Result<T, E>` | Explicit, no hidden control flow |
 | Mutability | Everything mutable | Immutable by default | Opt-in to mutation |
-| Speed | Interpreted (~10-100x slower) | Compiled (C/C++ speed) | Orders of magnitude faster |
+| Speed | Interpreted (~10–100x slower) | Compiled (C/C++ speed) | Orders of magnitude faster |
 | Concurrency | GIL limits threads | No GIL, `Send`/`Sync` traits | True parallelism by default |
 | Dependencies | `pip install` / `poetry add` | `cargo add` | Built-in dependency management |
 | Build system | setuptools/poetry/hatch | Cargo | Single unified tool |
@@ -434,24 +444,26 @@ graph LR
 ## Exercises
 
 <details>
-<summary><strong>Exercise: Mental Model Check</strong></summary>
+<summary><strong>🏋️ Exercise: Mental Model Check</strong> (click to expand)</summary>
 
-**Challenge:** For each Python snippet, predict what Rust would require differently. Don't write code - just describe the constraint.
+**Challenge**: For each Python snippet, predict what Rust would require differently. Don't write code — just describe the constraint.
 
-1. `x = [1, 2, 3]; y = x; x.append(4)` - What happens in Rust?
-2. `data = None; print(data.upper())` - How does Rust prevent this?
-3. `import threading; shared = []; threading.Thread(target=shared.append, args=(1,)).start()` - What does Rust demand?
+1. `x = [1, 2, 3]; y = x; x.append(4)` — What happens in Rust?
+2. `data = None; print(data.upper())` — How does Rust prevent this?
+3. `import threading; shared = []; threading.Thread(target=shared.append, args=(1,)).start()` — What does Rust demand?
 
 <details>
-<summary>Solution</summary>
+<summary>🔑 Solution</summary>
 
-1. **Ownership move**: `let y = x;` moves `x` - `x.push(4)` is a compile error. You'd need `let y = x.clone();` or borrow with `let y = &x;`.
-2. **No null**: `data` can't be `None` unless it's `Option<String>`. You must `match` or use `.unwrap()` / `if let` - no surprise `NoneType` errors.
+1. **Ownership move**: `let y = x;` moves `x` — `x.push(4)` is a compile error. You'd need `let y = x.clone();` or borrow with `let y = &x;`.
+2. **No null**: `data` can't be `None` unless it's `Option<String>`. You must `match` or use `.unwrap()` / `if let` — no surprise `NoneType` errors.
 3. **Send + Sync**: The compiler requires `shared` to be wrapped in `Arc<Mutex<Vec<i32>>>`. Forgetting the lock = compile error, not a race condition.
 
-**Key takeaway:** Rust shifts runtime failures to compile-time errors. The "friction" you feel is the compiler catching real bugs.
+**Key takeaway**: Rust shifts runtime failures to compile-time errors. The "friction" you feel is the compiler catching real bugs.
 
 </details>
 </details>
 
 ***
+
+

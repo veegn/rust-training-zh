@@ -90,6 +90,8 @@ println!("{}", pinned.as_ref().get_ref()); // "hello"
 
 // But we can't get &mut String back (which would allow mem::swap):
 // let mutable: &mut String = Pin::into_inner(pinned); // Only if String: Unpin
+// String IS Unpin, so this actually works for String.
+// But for self-referential state machines (which are !Unpin), it's blocked.
 ```
 
 In real code, you mostly encounter Pin in three places:
@@ -128,12 +130,12 @@ impl Unpin for MySimpleFuture {} // "I'm safe to move, trust me"
 | What | When | How |
 |------|------|-----|
 | Pin a future on the heap | Storing in a collection, returning from function | `Box::pin(future)` |
-| Pin a future on the stack | Local use in `select!` or manual polling | `tokio::pin!(future)` |
+| Pin a future on the stack | Local use in `select!` or manual polling | `tokio::pin!(future)` or `pin_mut!` from `pin-utils` |
 | Pin in function signature | Accepting pinned futures | `future: Pin<&mut F>` |
 | Require Unpin | When you need to move a future after creation | `F: Future + Unpin` |
 
 <details>
-<summary><strong>🏋️ Exercise: Pin and Move</strong></summary>
+<summary><strong>🏋️ Exercise: Pin and Move</strong> (click to expand)</summary>
 
 **Challenge**: Which of these code snippets compile? For each one that doesn't, explain why and fix it.
 
@@ -161,11 +163,13 @@ let pinned = Pin::new(&mut fut);
 
 **Snippet A**: ✅ **Compiles.** `Box::pin()` puts the future on the heap. Moving the `Box` moves the *pointer*, not the future itself. The future stays pinned in its heap location.
 
-**Snippet B**: ❌ **Does not compile.** `tokio::pin!` pins the future to the stack and rebinds `fut` as `Pin<&mut ...>`. You can't move out of a pinned reference. **Fix**: Don't move it — use it in place:
+**Snippet B**: ✅ **Compiles.** `tokio::pin!` pins the future to the stack and rebinds `fut` as `Pin<&mut ...>`. `let moved = fut` moves the **`Pin` wrapper** (a pointer), not the underlying future — the future stays pinned on the stack. This is just like `Box::pin`: moving the `Box` doesn't move the heap allocation. However, `fut` is consumed by the move, so you can't use `fut` afterwards — only `moved`:
 ```rust
 let fut = async { 42 };
 tokio::pin!(fut);
-let result = fut.await; // Use directly, don't reassign
+let moved = fut;        // Moves the Pin<&mut> wrapper — OK
+// fut.await;           // ❌ Error: fut was moved
+let result = moved.await; // ✅ Use moved instead
 ```
 
 **Snippet C**: ❌ **Does not compile.** `Pin::new()` requires `T: Unpin`. Async blocks generate `!Unpin` types. **Fix**: Use `Box::pin()` or `unsafe Pin::new_unchecked()`:
@@ -174,7 +178,7 @@ let fut = async { 42 };
 let pinned = Box::pin(fut); // Heap-pin — works with !Unpin
 ```
 
-**Key takeaway**: `Box::pin()` is the safe, easy way to pin `!Unpin` futures. `tokio::pin!()` pins on the stack but the future can't be moved after. `Pin::new()` only works with `Unpin` types.
+**Key takeaway**: `Box::pin()` is the safe, easy way to pin `!Unpin` futures. `tokio::pin!()` pins on the stack — you can move the `Pin<&mut>` wrapper (it's just a pointer), but the underlying future stays put. `Pin::new()` only works with `Unpin` types.
 
 </details>
 </details>
@@ -182,9 +186,11 @@ let pinned = Box::pin(fut); // Heap-pin — works with !Unpin
 > **Key Takeaways — Pin and Unpin**
 > - `Pin<P>` is a wrapper that **prevents the pointee from being moved** — essential for self-referential state machines
 > - `Box::pin()` is the safe, easy default for pinning futures on the heap
-> - `tokio::pin!()` pins on the stack — cheaper but the future can't be moved afterward
+> - `tokio::pin!()` pins on the stack — you can move the `Pin<&mut>` wrapper, but the underlying future stays put
 > - `Unpin` is an auto-trait opt-out: types that implement `Unpin` can be moved even when pinned (most types are `Unpin`; async blocks are not)
 
 > **See also:** [Ch 2 — The Future Trait](ch02-the-future-trait.md) for `Pin<&mut Self>` in poll, [Ch 5 — The State Machine Reveal](ch05-the-state-machine-reveal.md) for why async state machines are self-referential
 
 ***
+
+

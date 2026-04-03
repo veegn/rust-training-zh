@@ -105,6 +105,12 @@ enum MaybeDone<F: Future> {
     Taken, // Output has been taken
 }
 
+// MaybeDone<F> stores F::Output, which the compiler can't prove
+// is Unpin even when F: Unpin. Since we only use Join with Unpin
+// futures and never pin-project into fields, implementing Unpin
+// by hand is safe and lets us call self.get_mut() in poll().
+impl<A: Future + Unpin, B: Future + Unpin> Unpin for Join<A, B> {}
+
 impl<A, B> Join<A, B>
 where
     A: Future,
@@ -125,30 +131,32 @@ where
 {
     type Output = (A::Output, B::Output);
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let this = self.get_mut();
+
         // Poll A if not done
-        if let MaybeDone::Pending(ref mut fut) = self.a {
+        if let MaybeDone::Pending(ref mut fut) = this.a {
             if let Poll::Ready(val) = Pin::new(fut).poll(cx) {
-                self.a = MaybeDone::Done(val);
+                this.a = MaybeDone::Done(val);
             }
         }
 
         // Poll B if not done
-        if let MaybeDone::Pending(ref mut fut) = self.b {
+        if let MaybeDone::Pending(ref mut fut) = this.b {
             if let Poll::Ready(val) = Pin::new(fut).poll(cx) {
-                self.b = MaybeDone::Done(val);
+                this.b = MaybeDone::Done(val);
             }
         }
 
         // Both done?
-        match (&self.a, &self.b) {
+        match (&this.a, &this.b) {
             (MaybeDone::Done(_), MaybeDone::Done(_)) => {
                 // Take both outputs
-                let a_val = match std::mem::replace(&mut self.a, MaybeDone::Taken) {
+                let a_val = match std::mem::replace(&mut this.a, MaybeDone::Taken) {
                     MaybeDone::Done(v) => v,
                     _ => unreachable!(),
                 };
-                let b_val = match std::mem::replace(&mut self.b, MaybeDone::Taken) {
+                let b_val = match std::mem::replace(&mut this.b, MaybeDone::Taken) {
                     MaybeDone::Done(v) => v,
                     _ => unreachable!(),
                 };
@@ -159,15 +167,17 @@ where
     }
 }
 
-// Usage:
+// Usage (async blocks are !Unpin, so wrap them with Box::pin):
 // let (page1, page2) = Join::new(
-//     http_get("https://example.com/a"),
-//     http_get("https://example.com/b"),
+//     Box::pin(http_get("https://example.com/a")),
+//     Box::pin(http_get("https://example.com/b")),
 // ).await;
 // Both requests run concurrently!
 ```
 
-> **Key insight**: "Concurrent" here means *interleaved on the same thread*. Join doesn't spawn threads — it polls both futures in the same `poll()` call. This is cooperative concurrency, not parallelism.
+> **Key insight**: "Concurrent" here means *interleaved on the same thread*.
+> Join doesn't spawn threads — it polls both futures in the same `poll()` call.
+> This is cooperative concurrency, not parallelism.
 
 ```mermaid
 graph LR
@@ -240,12 +250,19 @@ where
         Poll::Pending
     }
 }
+
+// Usage with timeout:
+// match Select::new(http_get(url), TimerFuture::new(timeout)).await {
+//     Either::Left(response) => println!("Got response: {}", response),
+//     Either::Right(()) => println!("Request timed out!"),
+// }
 ```
 
-> **Fairness note**: Our `Select` always polls A first — if both are ready, A always wins. Tokio's `select!` macro randomizes the poll order for fairness.
+> **Fairness note**: Our `Select` always polls A first — if both are ready, A
+> always wins. Tokio's `select!` macro randomizes the poll order for fairness.
 
 <details>
-<summary><strong>🏋️ Exercise: Build a RetryFuture</strong></summary>
+<summary><strong>🏋️ Exercise: Build a RetryFuture</strong> (click to expand)</summary>
 
 **Challenge**: Build a `RetryFuture<F, Fut>` that takes a closure `F: Fn() -> Fut` and retries up to N times if the inner future returns `Err`. It should return the first `Ok` result or the last `Err`.
 
@@ -267,7 +284,7 @@ where
     factory: F,
     current: Option<Fut>,
     remaining: usize,
-    last_error: Option< E>,
+    last_error: Option<E>,
 }
 
 impl<F, Fut, T, E> RetryFuture<F, Fut, T, E>
@@ -318,6 +335,11 @@ where
         }
     }
 }
+
+// Usage:
+// let result = RetryFuture::new(3, || async {
+//     http_get("https://flaky-server.com/api").await
+// }).await;
 ```
 
 **Key takeaway**: The retry future is itself a state machine: it holds the current attempt and creates new inner futures on failure. This is how combinators compose — futures all the way down.
@@ -334,3 +356,5 @@ where
 > **See also:** [Ch 2 — The Future Trait](ch02-the-future-trait.md) for the trait definition, [Ch 8 — Tokio Deep Dive](ch08-tokio-deep-dive.md) for production-grade equivalents
 
 ***
+
+

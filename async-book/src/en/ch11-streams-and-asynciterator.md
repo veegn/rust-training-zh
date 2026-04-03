@@ -146,6 +146,7 @@ async fn stream_examples() {
 ```rust
 // Rust: Stream of database rows
 // NOTE: try_stream! (not stream!) is required when using ? inside the body.
+// stream! doesn't propagate errors — try_stream! yields Err(e) and ends.
 fn get_users(db: &Database) -> impl Stream<Item = Result<User, DbError>> + '_ {
     try_stream! {
         let mut cursor = db.query("SELECT * FROM users").await?;
@@ -165,10 +166,27 @@ while let Some(result) = users.next().await {
 }
 ```
 
+```csharp
+// C# equivalent:
+async IAsyncEnumerable<User> GetUsers() {
+    await using var reader = await db.QueryAsync("SELECT * FROM users");
+    while (await reader.ReadAsync()) {
+        yield return User.FromRow(reader);
+    }
+}
+
+// Consume:
+await foreach (var user in GetUsers()) {
+    Console.WriteLine(user.Name);
+}
+```
+
 <details>
-<summary><strong>🏋️ Exercise: Build an Async Stats Aggregator</strong></summary>
+<summary><strong>🏋️ Exercise: Build an Async Stats Aggregator</strong> (click to expand)</summary>
 
 **Challenge**: Given a stream of sensor readings `Stream<Item = f64>`, write an async function that consumes the stream and returns `(count, min, max, average)`. Use `StreamExt` combinators — don't just collect into a Vec.
+
+*Hint*: Use `.fold()` to accumulate state across the stream.
 
 <details>
 <summary>🔑 Solution</summary>
@@ -176,6 +194,7 @@ while let Some(result) = users.next().await {
 ```rust
 use futures::stream::{self, StreamExt};
 
+#[derive(Debug)]
 struct Stats {
     count: usize,
     min: f64,
@@ -202,6 +221,17 @@ async fn compute_stats<S: futures::Stream<Item = f64> + Unpin>(stream: S) -> Sta
             },
         )
         .await
+}
+
+#[tokio::test]
+async fn test_stats() {
+    let readings = stream::iter(vec![23.5, 24.1, 22.8, 25.0, 23.9]);
+    let stats = compute_stats(readings).await;
+
+    assert_eq!(stats.count, 5);
+    assert!((stats.min - 22.8).abs() < f64::EPSILON);
+    assert!((stats.max - 25.0).abs() < f64::EPSILON);
+    assert!((stats.average() - 23.86).abs() < 0.01);
 }
 ```
 
@@ -237,6 +267,12 @@ pub trait AsyncWrite {
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>>;
     fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>>;
 }
+
+/// Buffered reading with line support
+pub trait AsyncBufRead: AsyncRead {
+    fn poll_fill_buf(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<&[u8]>>;
+    fn consume(self: Pin<&mut Self>, amt: usize);
+}
 ```
 
 **In practice**, you rarely call these `poll_*` methods directly. Instead, use the extension traits `AsyncReadExt` and `AsyncWriteExt` which provide `.await`-friendly helper methods:
@@ -268,6 +304,44 @@ async fn io_examples() -> tokio::io::Result<()> {
 }
 ```
 
+**Implementing custom async I/O** — wrap a protocol over raw TCP:
+
+```rust
+use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
+use std::pin::Pin;
+use std::task::{Context, Poll};
+
+/// A length-prefixed protocol: [u32 length][payload bytes]
+struct FramedStream<T> {
+    inner: T,
+}
+
+impl<T: AsyncRead + AsyncReadExt + Unpin> FramedStream<T> {
+    /// Read one complete frame
+    async fn read_frame(&mut self) -> tokio::io::Result<Vec<u8>>
+    {
+        // Read the 4-byte length prefix
+        let len = self.inner.read_u32().await? as usize;
+
+        // Read exactly that many bytes
+        let mut payload = vec![0u8; len];
+        self.inner.read_exact(&mut payload).await?;
+        Ok(payload)
+    }
+}
+
+impl<T: AsyncWrite + AsyncWriteExt + Unpin> FramedStream<T> {
+    /// Write one complete frame
+    async fn write_frame(&mut self, data: &[u8]) -> tokio::io::Result<()>
+    {
+        self.inner.write_u32(data.len() as u32).await?;
+        self.inner.write_all(data).await?;
+        self.inner.flush().await?;
+        Ok(())
+    }
+}
+```
+
 | Sync Trait | Async Trait (tokio) | Async Trait (futures) | Extension Trait |
 |-----------|--------------------|-----------------------|----------------|
 | `std::io::Read` | `tokio::io::AsyncRead` | `futures::io::AsyncRead` | `AsyncReadExt` |
@@ -277,10 +351,14 @@ async fn io_examples() -> tokio::io::Result<()> {
 
 > **tokio vs futures I/O traits**: They're similar but not identical — tokio's `AsyncRead` uses `ReadBuf` (handles uninitialized memory safely), while `futures::AsyncRead` uses `&mut [u8]`. Use `tokio_util::compat` to convert between them.
 
-<details>
-<summary><strong>🏋️ Exercise: Build an Async Line Counter</strong></summary>
+> **Copy utilities**: `tokio::io::copy(&mut reader, &mut writer)` is the async equivalent of `std::io::copy` — useful for proxy servers or file transfers. `tokio::io::copy_bidirectional` copies both directions concurrently.
 
-**Challenge**: Write an async function that takes any `AsyncBufRead` source and returns the number of non-empty lines.
+<details>
+<summary><strong>🏋️ Exercise: Build an Async Line Counter</strong> (click to expand)</summary>
+
+**Challenge**: Write an async function that takes any `AsyncBufRead` source and returns the number of non-empty lines. It should work with files, TCP streams, or any buffered reader.
+
+*Hint*: Use `AsyncBufReadExt::lines()` and count lines where `!line.is_empty()`.
 
 <details>
 <summary>🔑 Solution</summary>
@@ -300,9 +378,16 @@ async fn count_non_empty_lines<R: tokio::io::AsyncBufRead + Unpin>(
     }
     Ok(count)
 }
+
+// Works with any AsyncBufRead:
+// let file = tokio::io::BufReader::new(tokio::fs::File::open("data.txt").await?);
+// let count = count_non_empty_lines(file).await?;
+//
+// let tcp = tokio::io::BufReader::new(TcpStream::connect("...").await?);
+// let count = count_non_empty_lines(tcp).await?;
 ```
 
-**Key takeaway**: By programming against `AsyncBufRead` instead of a concrete type, your I/O code is reusable across files, sockets, pipes, and even in-memory buffers.
+**Key takeaway**: By programming against `AsyncBufRead` instead of a concrete type, your I/O code is reusable across files, sockets, pipes, and even in-memory buffers (`tokio::io::BufReader::new(std::io::Cursor::new(data))`).
 
 </details>
 </details>
@@ -316,3 +401,5 @@ async fn count_non_empty_lines<R: tokio::io::AsyncBufRead + Unpin>(
 > **See also:** [Ch 9 — When Tokio Isn't the Right Fit](ch09-when-tokio-isnt-the-right-fit.md) for `FuturesUnordered` (related pattern), [Ch 13 — Production Patterns](ch13-production-patterns.md) for backpressure with bounded channels
 
 ***
+
+

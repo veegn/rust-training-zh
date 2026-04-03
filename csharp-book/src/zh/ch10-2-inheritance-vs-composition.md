@@ -1,108 +1,255 @@
 [English Original](../en/ch10-2-inheritance-vs-composition.md)
 
-# 继承 vs 组合
+## 继承 vs 组合 (Composition)
 
-> **你将学到什么：** 为什么 Rust 没有类继承，trait + struct 如何取代深层类层级结构，以及如何通过组合实现多态。
+> **你将学到：** 为什么 Rust 没有类继承；特性 (Traits) + 结构体 (Structs) 是如何替代深层类层级的；以及如何通过组合实现多态的实践模式。
 >
-> **难度：** 中级
+> **难度：** 🟡 中级
 
-C# 的基因里流淌着“类继承（Class Inheritance）”。然而，Rust 对此采取了完全不同的策略：完全放弃继承，拥抱 **组合 (Composition)** 与 **Trait**。
-
----
-
-## 为什么不设计继承？
-继承往往由于由于“脆弱的基类”问题而导致代码紧耦合。Rust 的模型更加简洁明了：
-1.  **结构体 (Structs)**：负责承载数据。
-2.  **Trait**：负责定义行为。
-3.  **组合 (Composition)**：负责将它们联结在一起。
-
----
-
-## C# 方式 (继承)
+### C# - 基于类的继承
 ```csharp
-public abstract class Animal {
-    public string Name { get; set; }
+// C# - 基于类的继承
+public abstract class Animal
+{
+    public string Name { get; protected set; }
     public abstract void MakeSound();
-}
-
-public class Dog : Animal {
-    public override void MakeSound() => Console.WriteLine("汪汪!");
-}
-```
-
-## Rust 方式 (组合)
-```rust
-trait Animal {
-    fn make_sound(&self);
-}
-
-struct Dog {
-    name: String, // 数据由结构体直接持有
-}
-
-impl Animal for Dog {
-    fn make_sound(&self) {
-        println!("汪汪!");
-    }
-}
-```
-
----
-
-## 没有继承，如何共享行为？
-在 C# 中，你可能会把公共逻辑写在基类的 `virtual` 方法中。而在 Rust 中，你可以使用 **Trait 默认方法**。
-
-```rust
-trait Animal {
-    fn name(&self) -> &str;
     
-    // 共享的“虚函数”行为
-    fn sleep(&self) {
-        println!("{} 正在睡觉...", self.name());
+    public virtual void Sleep()
+    {
+        Console.WriteLine($"{Name} is sleeping");
+    }
+}
+
+public class Dog : Animal
+{
+    public Dog(string name) { Name = name; }
+    
+    public override void MakeSound()
+    {
+        Console.WriteLine("Woof!");
+    }
+    
+    public void Fetch()
+    {
+        Console.WriteLine($"{Name} is fetching");
+    }
+}
+
+// 基于接口的约束
+public interface IFlyable
+{
+    void Fly();
+}
+
+public class Bird : Animal, IFlyable
+{
+    public Bird(string name) { Name = name; }
+    
+    public override void MakeSound()
+    {
+        Console.WriteLine("Tweet!");
+    }
+    
+    public void Fly()
+    {
+        Console.WriteLine($"{Name} is flying");
     }
 }
 ```
 
----
-
-## 通过 Trait Bound 实现多态
-你不再需要去判断一个对象是不是某个“子类”，而是去判断它是否具备所需的“Trait 能力”。
-
+### Rust 组合模型
 ```rust
-fn perform_action<T: Animal + Flyable>(creature: &T) {
-    creature.make_sound();
-    creature.fly();
+// Rust - 通过特性实现组合优于继承
+pub trait Animal {
+    fn name(&self) -> &str;
+    fn make_sound(&self);
+    
+    // 默认实现 (类似于 C# 的虚方法)
+    fn sleep(&self) {
+        println!("{} is sleeping", self.name());
+    }
+}
+
+pub trait Flyable {
+    fn fly(&self);
+}
+
+// 将数据与行为分离
+#[derive(Debug)]
+pub struct Dog {
+    name: String,
+}
+
+#[derive(Debug)]
+pub struct Bird {
+    name: String,
+    wingspan: f64,
+}
+
+// 为类型实现行为
+impl Animal for Dog {
+    fn name(&self) -> &str {
+        &self.name
+    }
+    
+    fn make_sound(&self) {
+        println!("Woof!");
+    }
+}
+
+impl Dog {
+    pub fn new(name: String) -> Self {
+        Dog { name }
+    }
+    
+    pub fn fetch(&self) {
+        println!("{} is fetching", self.name);
+    }
+}
+
+impl Animal for Bird {
+    fn name(&self) -> &str {
+        &self.name
+    }
+    
+    fn make_sound(&self) {
+        println!("Tweet!");
+    }
+}
+
+impl Flyable for Bird {
+    fn fly(&self) {
+        println!("{} is flying with {:.1}m wingspan", self.name, self.wingspan);
+    }
+}
+
+// 多重特性约束 (类似于实现多个接口)
+fn make_flying_animal_sound<T>(animal: &T) 
+where 
+    T: Animal + Flyable,
+{
+    animal.make_sound();
+    animal.fly();
 }
 ```
-**关键理解：** 这种“按需组合”的方式更具灵活性。你可以同时给 `Bird` 结构体赋予 `Animal` 和 `Flyable` 两个 trait，而不需要像继承那样去设计复杂的 `FlyingAnimal` 基类。
+
+```mermaid
+graph TD
+    subgraph "C# 继承层级"
+        CS_ANIMAL["Animal (抽象类)"]
+        CS_DOG["Dog : Animal"]
+        CS_BIRD["Bird : Animal, IFlyable"]
+        CS_VTABLE["虚方法分发<br/>运行时开销"]
+        CS_COUPLING["[错误] 紧耦合<br/>[错误] 菱形继承问题<br/>[错误] 深层层级结构"]
+        
+        CS_ANIMAL --> CS_DOG
+        CS_ANIMAL --> CS_BIRD
+        CS_DOG --> CS_VTABLE
+        CS_BIRD --> CS_VTABLE
+        CS_ANIMAL --> CS_COUPLING
+    end
+    
+    subgraph "Rust 组合模型"
+        RUST_ANIMAL["trait Animal"]
+        RUST_FLYABLE["trait Flyable"]
+        RUST_DOG["struct Dog"]
+        RUST_BIRD["struct Bird"]
+        RUST_IMPL1["impl Animal for Dog"]
+        RUST_IMPL2["impl Animal for Bird"]
+        RUST_IMPL3["impl Flyable for Bird"]
+        RUST_STATIC["静态分发<br/>零成本"]
+        RUST_FLEXIBLE["[OK] 灵活的组合<br/>[OK] 无层级限制<br/>[OK] 自由混入特性"]
+        
+        RUST_DOG --> RUST_IMPL1
+        RUST_BIRD --> RUST_IMPL2
+        RUST_BIRD --> RUST_IMPL3
+        RUST_IMPL1 --> RUST_ANIMAL
+        RUST_IMPL2 --> RUST_ANIMAL
+        RUST_IMPL3 --> RUST_FLYABLE
+        RUST_IMPL1 --> RUST_STATIC
+        RUST_IMPL2 --> RUST_STATIC
+        RUST_IMPL3 --> RUST_STATIC
+        RUST_ANIMAL --> RUST_FLEXIBLE
+        RUST_FLYABLE --> RUST_FLEXIBLE
+    end
+    
+    style CS_COUPLING fill:#ffcdd2,color:#000
+    style RUST_FLEXIBLE fill:#c8e6c9,color:#000
+    style CS_VTABLE fill:#fff3e0,color:#000
+    style RUST_STATIC fill:#c8e6c9,color:#000
+```
 
 ---
 
-## C# 开发者总结表
-| **C# (面向对象)** | **Rust (数据导向)** |
-| :--- | :--- |
-| **基类** | Trait (定义行为) |
-| **基类里的字段** | 必须由具体的每一个结构体分别持有 |
-| **虚函数 (Virtual)** | 带默认实现的 Trait 方法 |
-| **重写 (Override)** | 对 Trait 方法的一个普通实现 |
-| **抽象类** | 不包含默认实现的 Trait |
+## 练习
 
----
+<details>
+<summary><strong>🏋️ 练习：使用特性替换继承</strong> (点击展开)</summary>
 
-## 练习：用组合代替继承
-**挑战：** 将一个 `Shape -> Shape3D` 的继承层级替换为两个独立的 trait：`HasArea` 和 `HasVolume`。并为圆柱体 `Cylinder` 实现它们。
+以下 C# 代码使用了继承。请使用特性组合在 Rust 中重写它：
 
-```rust
-trait HasArea { fn area(&self) -> f64; }
-trait HasVolume { fn volume(&self) -> f64; }
-
-struct Cylinder { radius: f64, height: f64 }
-
-impl HasArea for Cylinder { ... }
-impl HasVolume for Cylinder { ... }
-
-fn check_3d_shape(shape: impl HasArea + HasVolume) {
-    println!("面积为 {}, 体积为 {}", shape.area(), shape.volume());
+```csharp
+public abstract class Shape { public abstract double Area(); }
+public abstract class Shape3D : Shape { public abstract double Volume(); }
+public class Cylinder : Shape3D
+{
+    public double Radius { get; }
+    public double Height { get; }
+    public Cylinder(double r, double h) { Radius = r; Height = h; }
+    public override double Area() => 2.0 * Math.PI * Radius * (Radius + Height);
+    public override double Volume() => Math.PI * Radius * Radius * Height;
 }
 ```
-**关键理解：** 通过将注意力集中在一个类型**能做什么** (Traits) 而非它**是什么** (Inheritance) 上，你可以编写出更加模块化、更易于测试的代码。
+
+要求：
+1. 定义 `HasArea` 特性，包含 `fn area(&self) -> f64`。
+2. 定义 `HasVolume` 特性，包含 `fn volume(&self) -> f64`。
+3. 实现 `Cylinder` 结构体并实现上述两个特性。
+4. 编写一个函数 `fn print_shape_info(shape: &(impl HasArea + HasVolume))` —— 注意多重特性约束的用法（无需复杂的继承）。
+
+<details>
+<summary>🔑 参考答案</summary>
+
+```rust
+use std::f64::consts::PI;
+
+trait HasArea {
+    fn area(&self) -> f64;
+}
+
+trait HasVolume {
+    fn volume(&self) -> f64;
+}
+
+struct Cylinder {
+    radius: f64,
+    height: f64,
+}
+
+impl HasArea for Cylinder {
+    fn area(&self) -> f64 {
+        2.0 * PI * self.radius * (self.radius + self.height)
+    }
+}
+
+impl HasVolume for Cylinder {
+    fn volume(&self) -> f64 {
+        PI * self.radius * self.radius * self.height
+    }
+}
+
+fn print_shape_info(shape: &(impl HasArea + HasVolume)) {
+    println!("面积：   {:.2}", shape.area());
+    println!("体积：   {:.2}", shape.volume());
+}
+
+fn main() {
+    let c = Cylinder { radius: 3.0, height: 5.0 };
+    print_shape_info(&c);
+}
+```
+
+**关键洞察**：C# 需要一个三层结构（Shape → Shape3D → Cylinder）。Rust 使用扁平化的特性组合 —— `impl HasArea + HasVolume` 组合了各项能力，无需建立深层的继承关系。
+
+</details>
+</details>

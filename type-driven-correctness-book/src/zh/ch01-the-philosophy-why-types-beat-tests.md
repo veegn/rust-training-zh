@@ -1,120 +1,165 @@
 [English Original](../en/ch01-the-philosophy-why-types-beat-tests.md)
 
-# 核心理念：为什么类型优于测试 🟢
+# 核心理念 —— 为什么类型胜过测试 🟢
 
-> **你将学到什么？** 编译期正确性的三个层次（值、状态、能力）；测试覆盖率如何因未能表达“不可能状态”而误导开发者；以及如何在业务逻辑进入第一行 `if` 语句之前，就捕捉到逻辑错误。
+> **你将学到：**
+> - 编译期正确性的三个层次（值、状态、协议）。
+> - 泛型函数签名如何充当编译器检查的保证。
+> - 何时“构造即正确 (correct-by-construction)”模式值得投入，以及何时不值得。
 
-## 引言：测试的局限性
+> **参考：** [第 2 章](ch02-typed-command-interfaces-request-determi.md)（类型化命令）、[第 5 章](ch05-protocol-state-machines-type-state-for-r.md)（类型状态）、[第 13 章](ch13-reference-card.md)（速查卡）。
 
-软件开发中的传统智慧是：“如果您没有测试它，它就是损坏的。” 虽然这对于验证业务逻辑很有价值，但测试本质上是 **反应性** 的。它们验证 *已知* 的输入集。
+## 运行时检查的成本
 
-相比之下，类型驱动开发是 **原生** 的。它验证 *所有可能* 的状态集。
+考虑诊断代码库中一个典型的运行时守卫 (Guard)：
 
-### 案例研究：传感器读数的“幽灵 Bug”
-
-考虑一段典型的系统编程代码，它从传感器读取原始字节：
-
-```rust
-fn handle_sensor(sensor_type: &str, raw: &[u8]) {
+```rust,ignore
+fn read_sensor(sensor_type: &str, raw: &[u8]) -> f64 {
     match sensor_type {
-        "temperature" => {
-             let val = raw[0] as i8 as f64;
-             println!("摄氏度: {}", val);
-        }
-        "voltage" => {
-             let val = u16::from_be_bytes([raw[0], raw[1]]) as f64 / 1000.0;
-             println!("电压: {}V", val);
-        }
-        _ => panic!("未知传感器类型"),
+        "temperature" => raw[0] as i8 as f64,          // 有符号字节
+        "fan_speed"   => u16::from_le_bytes([raw[0], raw[1]]) as f64,
+        "voltage"     => u16::from_le_bytes([raw[0], raw[1]]) as f64 / 1000.0,
+        _             => panic!("未知传感器类型: {sensor_type}"),
     }
 }
 ```
 
-这段代码充满了可能（且在实践中经常发生）被单元测试漏掉的问题：
-1. **错义 (Mis-interpretation)**：将电压传递给原本期待温度处理的代码。
-2. **越界 (Out of bounds)**：如果 `raw` 只有 1 个字节，电压分支会发生 Panic。
-3. **单位混淆 (Unit confusion)**：传感器输出了 mV，但代码可能期待的是 V。
+这个函数有 **四种失效模式** 是编译器无法捕捉到的：
 
-单元测试能抓到这些吗？当然。但你必须 **预先想到** 每一种错误情况。如果你忘记测试 1 字节的 `raw` 数组，错误就会进入生产。
+1. **拼写错误**：`"temperture"` → 在运行时发生 panic。
+2. **错误的 `raw` 长度**：`fan_speed` 仅带有 1 个字节 → 在运行时发生 panic。
+3. **调用者误用**：调用者将返回的 `f64` 当作 RPM 使用，而它实际上是 °C → 逻辑 bug，且无声无息。
+4. **扩展缺失**：添加了新的传感器类型但未更新此 `match` 语句 → 在运行时发生 panic。
+
+每种失效模式都是在 **部署之后** 才被发现的。测试虽然有所帮助，但它们只能覆盖有人编写过的案例。而类型系统涵盖了 **所有** 情况，包括那些没人预料到的情况。
 
 ## 正确性的三个层次
 
-本书将教你如何利用 Rust 强大的类型系统，在三个不断深化的层次上强制执行不变量。
+### 层次 1 —— 值正确性 (Value Correctness)
+**使无效值无法被表达。**
 
-### 层次 1：值正确性 (Value Correctness)
+```rust,ignore
+// ❌ 任何 u16 都可以是 "port" —— 0 是无效的但可以通过编译
+fn connect(port: u16) { /* ... */ }
 
-**目标：使无效值无法被表达。**
-
-如果不允许构造无效的对象，你就永远不需要编写代码来处理它们。
-
-*   **无法捕获的失败模式**：函数接受 `u16` 作为端口号，但业务逻辑禁止使用端口 0。
-*   **类型化解决方案**：使用 `NonZeroU16` 或 `Newtype` 包装器。
-
-```rust
-pub struct Port(u16); // 私有字段
+// ✅ 只有经过校验的端口才能存在
+pub struct Port(u16);  // 私有字段
 
 impl TryFrom<u16> for Port {
     type Error = &'static str;
     fn try_from(v: u16) -> Result<Self, Self::Error> {
-        if v == 0 { return Err("端口 0 无效识别"); }
-        Ok(Port(v))
+        if v > 0 { Ok(Port(v)) } else { Err("端口必须 > 0") }
     }
 }
+
+fn connect(port: Port) { /* ... */ }
+// Port(0) 永远无法被构造出来 —— 不变性在任何地方都成立
 ```
 
-现在，下游的每一个函数（如 `listen(port: Port)`）都 **绝对保证** 不会收到 0，且不需要在自己的函数体内增加 `if v == 0` 的检查。
+**硬件示例**：`SensorId(u8)` —— 包装一个原始传感器编号，并校验其在 SDR 范围内。
 
-### 层次 2：状态正确性 (State Correctness)
+### 层次 2 —— 状态正确性 (State Correctness)
+**使无效的状态转换无法被表达。**
 
-**目标：使无效的转换无法表达。**
+```rust,ignore
+use std::marker::PhantomData;
 
-这是 **Type-state 模式** 进场的地方。与其使用 `enum State` 并在运行时检查，不如使用类型来表示对象的状态。
+struct Disconnected;
+struct Connected;
 
-*   **无法捕获的失败模式**：在调用 `.start()` 之前调用了 `.stop()`。
-*   **类型化解决方案**：状态机。
-
-```rust
-struct Waiting;
-struct Running;
-
-struct Engine<S> { _state: S }
-
-impl Engine<Waiting> {
-    fn start(self) -> Engine<Running> { Engine { _state: Running } }
+struct Socket<State> {
+    fd: i32,
+    _state: PhantomData<State>,
 }
 
-impl Engine<Running> {
-    fn stop(self) -> Engine<Waiting> { Engine { _state: Waiting } }
+impl Socket<Disconnected> {
+    fn connect(self, addr: &str) -> Socket<Connected> {
+        // ... 连接逻辑 ...
+        Socket { fd: self.fd, _state: PhantomData }
+    }
 }
+
+impl Socket<Connected> {
+    fn send(&mut self, data: &[u8]) { /* ... */ }
+    fn disconnect(self) -> Socket<Disconnected> {
+        Socket { fd: self.fd, _state: PhantomData }
+    }
+}
+
+// Socket<Disconnected> 没有 send() 方法 —— 如果尝试调用将导致编译错误
 ```
 
-在 `Engine<Waiting>` 上调用 `.stop()` 甚至 **无法编译**。编译器不再仅仅是一个检查器，它变成了你的架构蓝图的强制执行者。
+**硬件示例**：GPIO 引脚模式 —— `Pin<Input>` 拥有 `read()` 方法但没有 `write()` 方法。
 
-### 层次 3：能力正确性 (Capability Correctness)
+### 层次 3 —— 协议正确性 (Protocol Correctness)
+**使无效的交互无法被表达。**
 
-**目标：必须持有“能力令牌”才能执行受限操作。**
+```rust,ignore
+use std::io;
 
-这是本书中最强大的模式。你可以在编译期证明调用者已经获得了特定的授权或完成了特定的先验步骤。
-
-*   **无法捕获的失败模式**：在尚未验证用户身份的情况下执行敏感的操作。
-*   **类型化解决方案**：能力令牌。
-
-```rust
-struct AuthenticatedToken { user_id: u64 };
-
-fn delete_record(token: &AuthenticatedToken, record_id: u64) {
-    // 只有能出示令牌，才能调用此函数
+trait IpmiCmd {
+    type Response;
+    fn parse_response(&self, raw: &[u8]) -> io::Result<Self::Response>;
 }
+
+// 为便于说明进行了简化 —— 完整特性请参阅第 2 章，
+// 包含 net_fn()、cmd_byte()、payload() 和 parse_response()。
+
+struct ReadTemp { sensor_id: u8 }
+impl IpmiCmd for ReadTemp {
+    type Response = Celsius;
+    fn parse_response(&self, raw: &[u8]) -> io::Result<Celsius> {
+        Ok(Celsius(raw[0] as i8 as f64))
+    }
+}
+
+# #[derive(Debug)] struct Celsius(f64);
+
+fn execute<C: IpmiCmd>(cmd: &C, raw: &[u8]) -> io::Result<C::Response> {
+    cmd.parse_response(raw)
+}
+// ReadTemp 始终返回 Celsius —— 不会意外地得到 Rpm
 ```
 
-## 为什么类型胜过测试
+**硬件示例**：IPMI、Redfish、NVMe Admin 命令 —— 请求类型决定了响应类型。
 
-总结来说，类型不仅仅是数据标签：
+## 类型作为编译器检查的保证
 
-1.  **类型是普适的**：测试验证输入子集；类型验证全部取值空间。
-2.  **类型是持久的**：测试会在 CI 中失败；类型在代码生命周期内都在强制执行。
-3.  **类型是强制性的**：你可以跳过测试；但你无法绕过编译器（除非使用 `unsafe`，这通常也是我们要极力规避的）。
+当你编写如下代码时：
 
-在本指南中，我们将从最基础的模式开始，逐步深入到复杂的协议机和硬件抽象，目标始终只有一个：**让你的软件在构建之初就保持正确性。**
+```rust,ignore
+fn execute<C: IpmiCmd>(cmd: &C) -> io::Result<C::Response>
+```
+
+你不仅仅是在编写一个函数 —— 你是在声明一个 **保证**：“对于任何实现了 `IpmiCmd` 的命令类型 `C`，执行它必定产生 `C::Response`。”编译器在每次构建代码时都会 **验证** 这个保证。如果类型不匹配，程序就无法通过编译。
+
+这就是为什么 Rust 的类型系统如此强大 —— 它不仅仅是在捕捉错误，它是在 **编译期强制执行正确性**。
+
+## 何时 不 使用这些模式
+
+构造即正确 (Correct-by-construction) 并不总是最佳选择：
+
+| 场景 | 建议 |
+|-----------|---------------|
+| 安全批判性边界 (上电序列、加密) | ✅ 始终使用 —— 这里的 bug 会损毁硬件或泄露秘密 |
+| 跨模块的公共 API | ✅ 通常建议使用 —— 误用应当导致编译错误 |
+| 拥有 3 个以上状态的状态机 | ✅ 通常建议使用 —— 类型状态 (Type-state) 可防止错误的转换 |
+| 单个 50 行函数内部的辅助工具 | ❌ 过度设计 —— 简单的 `assert!` 足矣 |
+| 原型设计 / 探索未知硬件 | ❌ 先使用原始类型 —— 在理解行为后再进行细化 |
+| 面向用户的 CLI 解析 | ⚠️ 在边界处使用 `clap` + `TryFrom`，内部使用原始类型即可 |
+
+关键问题在于：**“如果这个 bug 在生产环境中发生，后果有多严重？”**
+
+- 风扇停止 → GPU 损毁 → **使用类型**
+- 错误的 DER 记录 → 客户收到错误数据 → **使用类型**
+- 调试日志消息稍微出错 → **使用 `assert!`**
+
+## 关键要点
+
+1. **正确性的三个层次** —— 值 (新类型)、状态 (类型状态)、协议 (关联类型) —— 每一层都消除了更广泛的一类 bug。
+2. **类型作为保证** —— 每个泛型函数签名都是一份合同，编译器在每次构建时都会对其进行检查。
+3. **成本问题** —— “如果这个 bug 发布了，后果有多严重？”决定了类型还是测试才是正确的工具。
+4. **类型是对测试的补充** —— 它们消除了整个 **类别** 的错误；测试则覆盖特定的 **数值** 和边界情况。
+5. **知道何时停止** —— 内部辅助工具和临时原型很少需要类型级的强制约束。
 
 ***

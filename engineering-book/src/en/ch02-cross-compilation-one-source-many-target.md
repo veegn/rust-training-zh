@@ -88,7 +88,7 @@ Instead of passing `--target` on every command, configure defaults in
 linker = "aarch64-linux-gnu-gcc"
 rustflags = ["-C", "target-feature=+crc"]
 
-# Linker for musl static builds (usually just the system x86_64-linux-musl-gcc works)
+# Linker for musl static builds (usually just the system gcc works)
 [target.x86_64-unknown-linux-musl]
 linker = "musl-gcc"
 rustflags = ["-C", "target-feature=+crc,+aes"]
@@ -368,6 +368,13 @@ my_workspace/
 ```toml
 # .cargo/config.toml for the project
 
+# Release profile optimizations (already in Cargo.toml, shown for reference)
+# [profile.release]
+# lto = true
+# codegen-units = 1
+# panic = "abort"
+# strip = true
+
 # aarch64 for ARM servers (Graviton, Ampere, Grace)
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
@@ -495,4 +502,5 @@ jobs:
 - **`cross`** is the easiest path for ARM and other exotic targets — Docker handles the sysroot
 - Always test with `file` and `ldd` to verify the binary matches your deployment target
 
-***
+---
+

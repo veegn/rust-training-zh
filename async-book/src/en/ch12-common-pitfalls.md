@@ -71,42 +71,73 @@ async fn good_delay() {
 ```rust
 use std::sync::Mutex; // std Mutex — NOT async-aware
 
-// ❌ WRONG: MutexGuard held across .await
+// ⚠️ RISKY: MutexGuard held across .await
 async fn bad_mutex(data: &Mutex<Vec<String>>) {
     let mut guard = data.lock().unwrap();
     guard.push("item".into());
-    some_io().await; // 💥 Guard is held here — blocks other threads from locking!
+    some_io().await; // Guard is held here — blocks other threads from locking!
     guard.push("another".into());
 }
+// NOTE: This compiles! std::sync::MutexGuard is !Send, but the compiler only
+// enforces Send on the Future when you pass it to something that requires it
+// (e.g., tokio::spawn). Calling bad_mutex(...).await directly compiles fine.
+// However, tokio::spawn(bad_mutex(data)) will fail with a Send bound error.
+```
 
-// ✅ FIX 1: Scope the guard to drop before .await
-async fn good_mutex_scoped(data: &Mutex<Vec<String>>) {
+**Why this is usually a problem** — but not always:
+
+Holding a `std::sync::Mutex` across `.await` blocks the **OS thread** for the
+duration of the I/O, preventing the executor from polling other tasks on that
+thread. For short critical sections this is wasteful; for long I/O it's a
+performance trap.
+
+**However**, there are legitimate cases where you *must* hold a lock across an
+`.await` — the same way a database transaction holds a lock between read and
+commit. Dropping and re-acquiring the lock introduces a **TOCTOU (time-of-check
+to time-of-use) race**: another task can modify the data between your two
+critical sections. The right fix depends on the use case:
+
+```rust
+// OPTION 1: Scope the guard — works when operations are independent
+async fn scoped_mutex(data: &Mutex<Vec<String>>) {
     {
         let mut guard = data.lock().unwrap();
         guard.push("item".into());
     } // Guard dropped here
-    some_io().await; // Safe — lock is released
+    some_io().await; // Lock is released — other tasks can proceed
     {
         let mut guard = data.lock().unwrap();
         guard.push("another".into());
     }
 }
+// ⚠️ Careful: another task can lock + modify the Vec between the two sections.
+//    This is fine if the two pushes are independent, but wrong if "another"
+//    depends on state set by "item".
 
-// ✅ FIX 2: Use tokio::sync::Mutex (async-aware)
+// OPTION 2: Use tokio::sync::Mutex — holds lock across .await without
+//           blocking the OS thread. Best when you need transactional
+//           read-modify-write across an await point.
 use tokio::sync::Mutex as AsyncMutex;
 
-async fn good_async_mutex(data: &AsyncMutex<Vec<String>>) {
+async fn async_mutex(data: &AsyncMutex<Vec<String>>) {
     let mut guard = data.lock().await; // Async lock — doesn't block the thread
     guard.push("item".into());
     some_io().await; // OK — tokio Mutex guard is Send
     guard.push("another".into());
+    // Guard held the whole time — no TOCTOU race, no thread blocked.
 }
 ```
 
 > **When to use which Mutex**:
 > - `std::sync::Mutex`: Short critical sections with no `.await` inside
-> - `tokio::sync::Mutex`: When you must hold the lock across `.await` points
+> - `tokio::sync::Mutex`: When you need to hold the lock across `.await` points
+>   (transactional semantics, TOCTOU avoidance)
 > - `parking_lot::Mutex`: Drop-in `std` replacement, faster, smaller, still no `.await`
+>
+> **Rule of thumb**: Don't blindly split a critical section around an `.await`.
+> Ask whether the two halves are truly independent. If they aren't — if the
+> second half depends on state from the first — use `tokio::sync::Mutex` or
+> redesign the data flow.
 
 ### Cancellation Hazards
 
@@ -165,7 +196,7 @@ impl Drop for DbConnection {
 }
 ```
 
-**Best practice**: Provide an explicit `async fn close(self)` method, and explain in the documentation that callers should use it. Use `Drop` only as a safety net, not as the primary cleanup path.
+**Best practice**: Provide an explicit `async fn close(self)` method and document that callers should use it. Rely on `Drop` only as a safety net, not the primary cleanup path.
 
 ### select! Fairness and Starvation
 
@@ -178,6 +209,8 @@ async fn unfair(mut fast: mpsc::Receiver<i32>, mut slow: mpsc::Receiver<i32>) {
         tokio::select! {
             Some(v) = fast.recv() => println!("fast: {v}"),
             Some(v) = slow.recv() => println!("slow: {v}"),
+            // If both are ready, tokio randomly picks one.
+            // But if `fast` is ALWAYS ready, `slow` rarely gets polled.
         }
     }
 }
@@ -250,7 +283,7 @@ A real-world scenario: a service handles requests fine for 10 minutes, then stop
 - [ ] Add health check endpoints that verify task responsiveness
 
 <details>
-<summary><strong>🏋️ Exercise: Spot the Bugs</strong></summary>
+<summary><strong>🏋️ Exercise: Spot the Bugs</strong> (click to expand)</summary>
 
 **Challenge**: Find all the async pitfalls in this code and fix them.
 
@@ -361,6 +394,13 @@ async fn handle_request(user_id: u64, db_pool: &Pool) -> Result<Response> {
     let orders = fetch_orders(user_id).await?;     // still the same span
     Ok(build_response(user, orders))
 }
+```
+
+Output (with `tracing_subscriber::fmt::json()`):
+
+```json
+{"timestamp":"...","level":"INFO","span":{"name":"handle_request","user_id":"42"},"message":"looking up user"}
+{"timestamp":"...","level":"INFO","span":{"name":"handle_request","user_id":"42"},"fields":{"email":"a@b.com"},"message":"found user"}
 ```
 
 #### Debugging Checklist
@@ -575,3 +615,5 @@ async fn test_producer_consumer() {
 > **See also:** [Ch 8 — Tokio Deep Dive](ch08-tokio-deep-dive.md) for sync primitives, [Ch 13 — Production Patterns](ch13-production-patterns.md) for graceful shutdown and structured concurrency
 
 ***
+
+

@@ -12,7 +12,7 @@ Most languages with `async/await` hide the machinery. C# has the CLR thread pool
 
 **Rust has nothing.**
 
-There is no built-in runtime, no thread pool, no event loop. The `async` keyword is a zero-cost compilation strategy - it transforms your function into a state machine that implements the `Future` trait. Someone else (an *executor*) must drive that state machine forward.
+There is no built-in runtime, no thread pool, no event loop. The `async` keyword is a zero-cost compilation strategy — it transforms your function into a state machine that implements the `Future` trait. Someone else (an *executor*) must drive that state machine forward.
 
 ### Three Key Properties of Rust Async
 
@@ -42,7 +42,7 @@ graph LR
     style GC fill:#e3f2fd,color:#000
 ```
 
-> \* Python coroutines are lazy like Rust futures - they don't execute until awaited or scheduled. However, Python still uses GC and has no ownership/lifetime concerns.
+> \* Python coroutines are lazy like Rust futures — they don't execute until awaited or scheduled. However, Python still uses GC and has no ownership/lifetime concerns.
 
 ### No Built-In Runtime
 
@@ -56,14 +56,13 @@ fn main() {
     let future = fetch_data(); // Creates the Future, but doesn't execute it
     // future is just a struct sitting on the stack
     // No output, no side effects, nothing happens
-    drop(future); // Silently dropped - work was never started
+    drop(future); // Silently dropped — work was never started
 }
 ```
 
 Compare with C# where `Task` starts eagerly:
-
 ```csharp
-// C# - this immediately starts executing:
+// C# — this immediately starts executing:
 async Task<string> FetchData() => "hello";
 
 var task = FetchData(); // Already running!
@@ -76,7 +75,7 @@ This is the single most important mental shift:
 
 | | C# / JavaScript | Python | Go | Rust |
 |---|---|---|---|---|
-| **Creation** | `Task` starts executing immediately | Coroutine is **lazy** - returns an object, doesn't run until awaited or scheduled | Goroutine starts immediately | `Future` does nothing until polled |
+| **Creation** | `Task` starts executing immediately | Coroutine is **lazy** — returns an object, doesn't run until awaited or scheduled | Goroutine starts immediately | `Future` does nothing until polled |
 | **Dropping** | Detached task continues running | Unawaited coroutine is garbage-collected (with a warning) | Goroutine runs until return | Dropping a Future cancels it |
 | **Runtime** | Built into the language/VM | `asyncio` event loop (must be explicitly started) | Built into the binary (M:N scheduler) | You choose (tokio, smol, etc.) |
 | **Scheduling** | Automatic (thread pool) | Event loop + `await` or `create_task()` | Automatic (GMP scheduler) | Explicit (`spawn`, `block_on`) |
@@ -102,9 +101,9 @@ graph TD
     MANY["Many concurrent connections?<br/>(100+)"]
     FEW["Few concurrent tasks?<br/>(<10)"]
 
-    USE_ASYNC["Use async/await"]
-    USE_THREADS["Use std::thread or rayon"]
-    USE_SPAWN_BLOCKING["Use spawn_blocking()"]
+    USE_ASYNC["✅ Use async/await"]
+    USE_THREADS["✅ Use std::thread or rayon"]
+    USE_SPAWN_BLOCKING["✅ Use spawn_blocking()"]
     MAYBE_SYNC["Consider synchronous code<br/>(simpler, less overhead)"]
 
     START -->|Network, files, DB| IO
@@ -132,7 +131,7 @@ Async isn't free. For low-concurrency workloads, synchronous code can outperform
 |------|-----|
 | **State machine overhead** | Each `.await` adds an enum variant; deeply nested futures produce large, complex state machines |
 | **Dynamic dispatch** | `Box<dyn Future>` adds indirection and kills inlining |
-| **Context switching** | Cooperative scheduling still has cost - the executor must manage a task queue, wakers, and I/O registrations |
+| **Context switching** | Cooperative scheduling still has cost — the executor must manage a task queue, wakers, and I/O registrations |
 | **Compile time** | Async code generates more complex types, slowing down compilation |
 | **Debuggability** | Stack traces through state machines are harder to read (see Ch. 12) |
 
@@ -141,7 +140,7 @@ Async isn't free. For low-concurrency workloads, synchronous code can outperform
 ### Exercise: When Would You Use Async?
 
 <details>
-<summary>Exercise</summary>
+<summary>🏋️ Exercise (click to expand)</summary>
 
 For each scenario, decide whether async is appropriate and explain why:
 
@@ -151,22 +150,24 @@ For each scenario, decide whether async is appropriate and explain why:
 4. A game engine running a physics simulation at 60 FPS
 
 <details>
-<summary>Solution</summary>
+<summary>🔑 Solution</summary>
 
-1. **Async** - I/O-bound with massive concurrency. Each connection spends most time waiting for data. Threads would require 10K stacks.  
-2. **Sync/threads** - CPU-bound, single task. Async adds overhead with no benefit. Use `rayon` for parallel compression.  
-3. **Async** - Five concurrent I/O waits. `tokio::join!` runs all five queries simultaneously.  
-4. **Sync/threads** - CPU-bound, latency-sensitive. Async's cooperative scheduling could introduce frame jitter.  
+1. **Async** — I/O-bound with massive concurrency. Each connection spends most time waiting for data. Threads would require 10K stacks.
+2. **Sync/threads** — CPU-bound, single task. Async adds overhead with no benefit. Use `rayon` for parallel compression.
+3. **Async** — Five concurrent I/O waits. `tokio::join!` runs all five queries simultaneously.
+4. **Sync/threads** — CPU-bound, latency-sensitive. Async's cooperative scheduling could introduce frame jitter.
 
 </details>
 </details>
 
-> **Key Takeaways - Why Async is Different**
-> - Rust futures are **lazy** - they do nothing until polled by an executor
-> - There is **no built-in runtime** - you choose (or build) your own
+> **Key Takeaways — Why Async is Different**
+> - Rust futures are **lazy** — they do nothing until polled by an executor
+> - There is **no built-in runtime** — you choose (or build) your own
 > - Async is a **zero-cost compilation strategy** that produces state machines
 > - Async shines for **I/O-bound concurrency**; for CPU-bound work, use threads or rayon
 
-> **See also:** [Ch 2 - The Future Trait](ch02-the-future-trait.md), [Ch 7 - Executors and Runtimes](ch07-executors-and-runtimes.md)
+> **See also:** [Ch 2 — The Future Trait](ch02-the-future-trait.md) for the trait that makes this all work, [Ch 7 — Executors and Runtimes](ch07-executors-and-runtimes.md) for choosing your runtime
 
 ***
+
+

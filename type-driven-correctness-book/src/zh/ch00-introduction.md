@@ -10,7 +10,7 @@
 
 ---
 
-这是一本关于如何利用 Rust 类型系统，让整类 bug **在编译阶段就无法出现** 的实用指南。虽然配套书籍 [Rust 模式](../../../rust-patterns-book/) 讲解了相关机制（Traits、关联类型、Type-state），但本指南将展示如何将这些机制 **应用** 到真实世界领域——如硬件诊断、密码学、协议校验和嵌入式系统。
+这是一本关于如何利用 Rust 类型系统，让整类 bug **在编译阶段就无法出现** 的实用指南。虽然配套书籍 [Rust 模式](../../rust-patterns-book/) 讲解了相关机制（Traits、关联类型、Type-state），但本指南将展示如何将这些机制 **应用** 到真实世界领域——如硬件诊断、密码学、协议校验和嵌入式系统。
 
 这里的每一个模式都遵循同一个原则：**将运行时检查的不变量推动到类型系统中，从而让编译器强制执行它们。**
 
@@ -56,18 +56,18 @@
 | 14 | 测试类型层保证 | 🟡 | trybuild, proptest, cargo-show-asm |
 | 15 | `const fn` | 🔶 | 内存映射、寄存器、位字段的编译期证明 |
 | 16 | `Send` 与 `Sync` | 🔶 | 编译期并发正确性证明 |
-| 17 | Redfish 客户端实战讲解 | 🟡 | 将八种模式组合成类型安全的 Redfish 客户端 |
-| 18 | Redfish 服务器实战讲解 | 🟡 | Builder Type-state、源令牌、健康汇总、混入 |
+| 17 | 实战演练 —— 类型安全的 Redfish 客户端 | 🟡 | 将八种模式组合成类型安全的 Redfish 客户端 |
+| 18 | 实战演练 —— 类型安全的 Redfish 服务器 | 🟡 | Builder Type-state、源令牌、健康状况汇总、混入 |
 
 ## 前置要求
 
 | 概念 | 学习位置 |
 |---------|-------------------|
-| 所有权与借用 | [Rust 模式](../../../rust-patterns-book/)，第 1 章 |
-| Traits 与关联类型 | [Rust 模式](../../../rust-patterns-book/)，第 2 章 |
-| Newtypes 与 Type-state | [Rust 模式](../../../rust-patterns-book/)，第 3 章 |
-| PhantomData | [Rust 模式](../../../rust-patterns-book/)，第 4 章 |
-| 泛型与 Trait 约束 | [Rust 模式](../../../rust-patterns-book/)，第 1 章 |
+| 所有权与借用 | [Rust 模式](../../rust-patterns-book/)，第 1 章 |
+| Traits 与关联类型 | [Rust 模式](../../rust-patterns-book/)，第 2 章 |
+| Newtypes 与 Type-state | [Rust 模式](../../rust-patterns-book/)，第 3 章 |
+| PhantomData | [Rust 模式](../../rust-patterns-book/)，第 4 章 |
+| 泛型与 Trait 约束 | [Rust 模式](../../rust-patterns-book/)，第 1 章 |
 
 ## “构造即正确”光谱
 

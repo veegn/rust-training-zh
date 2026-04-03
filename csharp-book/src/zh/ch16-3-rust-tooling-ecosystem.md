@@ -1,70 +1,126 @@
 [English Original](../en/ch16-3-rust-tooling-ecosystem.md)
 
-# Rust 工具链生态
+## C# 开发者的核心 Rust 工具链指南
 
-> **你将学到什么：** Rust 生态系统中的核心工具，以及它们如何与你熟悉的 C# 开发环境进行映射。
+> **你将学到：** Rust 开发工具与 C# 等效工具的映射关系 —— Clippy (Roslyn 分析器), rustfmt (dotnet format), cargo doc (XML 文档), cargo watch (dotnet watch) 以及 VS Code 扩展。
 >
-> **难度：** 初级
+> **难度：** 🟢 入门
 
-Rust 最大的优势之一就是其高度统一的工具链。在 C# 中，你可能需要在 Visual Studio、NuGet 和 MSBuild 之间频繁切换。而在 Rust 中，几乎所有事情都由一个极其强大的工具来处理：**Cargo**。
+### 工具对比表
 
----
+| C# 工具 | Rust 等效项 | 安装方式 | 用途 |
+|---------|----------------|---------|---------|
+| Roslyn 分析器 | **Clippy** | `rustup component add clippy` | Lint 检查 + 代码风格建议 |
+| `dotnet format` | **rustfmt** | `rustup component add rustfmt` | 自动格式化代码 |
+| XML 文档注释 | **`cargo doc`** | 内置 | 生成 HTML 格式文档 |
+| OmniSharp / Roslyn | **rust-analyzer** | VS Code 扩展插件 | IDE 语言支持 |
+| `dotnet watch` | **cargo-watch** | `cargo install cargo-watch` | 保存文件时自动重新构建 |
+| — | **cargo-expand** | `cargo install cargo-expand` | 查看宏展开后的代码 |
+| `dotnet audit` | **cargo-audit** | `cargo install cargo-audit` | 安全漏洞扫描 |
 
-## “全能”工具：Cargo
-Cargo 既是你的构建系统，也是你的包管理器和测试执行器。
-*   **`cargo new`**：创建一个新项目（类似于 `dotnet new`）。
-*   **`cargo build`**：编译你的代码（类似于 `dotnet build`）。
-*   **`cargo run`**：构建并运行项目（类似于 `dotnet run`）。
-*   **`cargo test`**：执行你的测试用例（类似于 `dotnet test`）。
-*   **`cargo doc`**：直接通过你的代码注释生成 HTML 文档。
-
----
-
-## C# 与 Rust 工具对照表
-| **C# / .NET 工具** | **Rust 对应物** | **说明** |
-| :--- | :--- | :--- |
-| **NuGet** | **crates.io** | 全球中央包注册中心。 |
-| **Roslyn 分析器** | **Clippy** | 一个非常彻底的“代码静态分析器”，能捕捉到数百种常见错误。 |
-| **dotnet format** | **rustfmt** | 官方推荐的代码格式化工具。 |
-| **VS 调试器** | **CodeLLDB** | 这是 VS Code 开发环境中通用的调试器。 |
-| **dotnet watch** | **cargo-watch** | 在你保存代码时自动重新执行测试或构建。 |
-
----
-
-## 你的新“密友”：Clippy
-**Clippy** 不仅仅是一个简单的静态分析工具；它更像是一位与你结对编程的资深程序员。它不仅能抓出错漏，还能为你的代码提供更原汁原味（Idiomatic）的优化建议。
+### Clippy：你的自动化代码审查员
 ```bash
-# 在你的项目根目录下运行 Clippy：
+# 在你的项目上运行 Clippy
 cargo clippy
+
+# 将警告视为错误 (用于 CI/CD 流水线)
+cargo clippy -- -D warnings
+
+# 自动修复部分建议
+cargo clippy --fix
 ```
-示例建议：“由于你正在检查 `v.len() == 0`，为什么不试试直接用 `v.is_empty()` 呢？”
 
----
-
-## “头等公民”级别的文档
-在 C# 中，你可能会用到 DocFX 或 Doxygen。而在 Rust 中，你只需使用 `cargo doc` 即可。
 ```rust
-/// 这个函数执行两个整数相加。
-/// 
+// Clippy 可以捕获数百种反模式 (Anti-patterns)：
+
+// 使用 Clippy 之前：
+if x == true { }           // 警告：不必要的布尔值相等性检查
+let _ = vec.len() == 0;    // 警告：请改用 .is_empty()
+for i in 0..vec.len() { }  // 警告：请改用 .iter().enumerate()
+
+// 根据 Clippy 建议修改后：
+if x { }
+let _ = vec.is_empty();
+for (i, item) in vec.iter().enumerate() { }
+```
+
+### rustfmt：保持统一的代码格式
+```bash
+# 格式化所有文件
+cargo fmt
+
+# 仅检查格式是否正确而不修改 (用于 CI/CD)
+cargo fmt -- --check
+```
+
+```toml
+# rustfmt.toml —— 自定义格式化规则 (类似于 .editorconfig)
+max_width = 100
+tab_spaces = 4
+use_field_init_shorthand = true
+```
+
+### cargo doc：文档生成工具
+```bash
+# 生成并打开文档 (包含所有依赖项的文档)
+cargo doc --open
+
+# 运行文档中的测试示例 (Doc-tests)
+cargo test --doc
+```
+
+```rust
+/// 计算圆的面积。
+///
+/// # 参数
+/// * `radius` - 圆的半径 (必须为非负数)
+///
 /// # 示例
 /// ```
-/// let result = my_crate::add(2, 3);
-/// assert_eq!(result, 5);
+/// let area = my_crate::circle_area(5.0);
+/// assert!((area - 78.54).abs() < 0.01);
 /// ```
-pub fn add(a: i32, b: i32) -> i32 { a + b }
+///
+/// # Panics
+/// 如果 `radius` 为负数，则会发生 Panic。
+pub fn circle_area(radius: f64) -> f64 {
+    assert!(radius >= 0.0, "半径必须为非负数");
+    std::f64::consts::PI * radius * radius
+}
+// 在 /// ``` 代码块中的代码会在运行 `cargo test` 时被编译并执行！
 ```
-**高级技巧**：写在注释中 `/// ``` ` 块内的示例代码，会在执行 `cargo test` 时被**真实地运行并测试**。这意味着你的文档将永远不会过时！
+
+### cargo watch：自动重构/运行
+```bash
+# 文件变动时自动重新构建 (类似于 dotnet watch)
+cargo watch -x check          # 仅进行类型检查 (速度最快)
+cargo watch -x test           # 保存时运行测试
+cargo watch -x 'run -- args'  # 保存时运行程序
+cargo watch -x clippy         # 保存时运行 Lint 检查
+```
+
+### cargo expand：查看宏生成的代码
+```bash
+# 查看派生宏展开后的具体代码
+cargo expand --lib            # 展开 lib.rs
+cargo expand module_name      # 展开特定模块
+```
+
+### 推荐的 VS Code 扩展
+
+| 扩展插件 | 用途 |
+|-----------|---------|
+| **rust-analyzer** | 代码补全、内联错误提示、代码重构 |
+| **CodeLLDB** | 调试器 (类似于 Visual Studio 调试器) |
+| **Even Better TOML** | Cargo.toml 语法高亮 |
+| **crates** | 在 Cargo.toml 中显示最新的 Crate 版本 |
+| **Error Lens** | 将错误/警告信息直接显示在代码行末 |
 
 ---
 
-## C# 开发者总结表
-*   **一剑封喉：** 只要学会了 `cargo`，你就已经掌握了 90% 的 Rust 工作流。
-*   **高度标准化：** 因为大家都在用同一套工具（如 `rustfmt`、`clippy` 和 `cargo`），所以你遇到的几乎所有 Rust 项目在代码风格和工作流上都是极其一致的。
-*   **VS Code 是霸主：** 虽然 CLion 也非常棒，但大多数 Rust 开发者（Rustaceans）还是习惯使用 VS Code 并配合 **rust-analyzer** 插件来进行开发。
+若想深入探索本指南中提到的进阶课题，请参阅配套的训练文档：
 
----
-
-## 练习：运行一次 Clippy
-**挑战**：在你的 "Hello World" 项目中运行 `cargo clippy`。接着，尝试写一段故意不那么“正宗”的代码（例如 `if x == true { ... }`），然后看看 Clippy 是否能成功捕捉到它。
-
-**关键理解**：Rust 的工具链旨在把你培养成一名更优秀的程序员。不要觉得那些报错和建议很烦人，它们是在实实在在地帮助你提高！
+- **[Rust 设计模式](../../rust-patterns-book/src/SUMMARY.md)** —— 固定投影 (Pin projections)、自定义分配器、Arena 模式、无锁数据结构以及高级不安全 (Unsafe) 模式。
+- **[异步 Rust 训练](../../async-book/src/SUMMARY.md)** —— 深度解析 tokio、异步取消安全性、流处理以及生产环境下的异步架构。
+- **[面向 C++ 开发者的 Rust 训练](../../c-cpp-book/src/SUMMARY.md)** —— 如果你的团队也有 C++ 经验，此文档涵盖了移动语义映射、RAII 差异以及模板与泛型的对比。
+- **[面向 C 开发者的 Rust 训练](../../c-cpp-book/src/SUMMARY.md)** —— 适用于互操作场景，涵盖了 FFI 模式、嵌入式 Rust 调试以及 `no_std` 编程。

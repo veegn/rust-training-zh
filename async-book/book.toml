@@ -13,7 +13,7 @@ theme = "../theme"
 git-repository-url = "https://github.com/microsoft/RustTraining"
 default-theme = "light"
 preferred-dark-theme = "ayu"
-additional-js = ["../theme/mermaid.min.js", "../theme/mermaid-init.js", "../theme/language-toggle.js"]
+additional-js = ["../theme/mermaid.min.js", "../theme/mermaid-init.js"]
 additional-css = ["../theme/custom.css"]
 site-url = "/RustTraining/async-book/"
 

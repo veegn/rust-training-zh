@@ -139,12 +139,14 @@ impl Future for Delay {
 }
 ```
 
-> **Key insight**: In C#, the TaskScheduler handles waking automatically. In Rust, **you** (or the I/O library you use) are responsible for calling `waker.wake()`. Forget it, and your program silently hangs.
+> **Key insight**: In C#, the TaskScheduler handles waking automatically.
+> In Rust, **you** (or the I/O library you use) are responsible for calling
+> `waker.wake()`. Forget it, and your program silently hangs.
 
 ### Exercise: Implement a CountdownFuture
 
 <details>
-<summary>🏋️ Exercise</summary>
+<summary>🏋️ Exercise (click to expand)</summary>
 
 **Challenge**: Implement a `CountdownFuture` that counts down from N to 0, printing the current count each time it's polled. When it reaches 0, it completes with `Ready("Liftoff!")`.
 
@@ -199,3 +201,5 @@ impl Future for CountdownFuture {
 > **See also:** [Ch 3 — How Poll Works](ch03-how-poll-works.md) for the executor loop, [Ch 6 — Building Futures by Hand](ch06-building-futures-by-hand.md) for more complex implementations
 
 ***
+
+

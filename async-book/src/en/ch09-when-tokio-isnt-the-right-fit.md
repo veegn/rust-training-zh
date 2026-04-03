@@ -60,24 +60,13 @@ async fn process_items(items: &[String]) {
 
 This is annoying! In Go, you can just `go func() { use(item) }` with a closure. In Rust, the ownership system forces you to think about who owns what and how long it lives.
 
-### Scoped Tasks and Alternatives
+### Alternatives to `tokio::spawn`
 
-Several solutions exist for the `'static` problem:
+Not every problem requires `spawn`. Here are three tools that each solve a
+*different* constraint:
 
 ```rust
-// 1. tokio::task::LocalSet — run !Send futures on current thread
-use tokio::task::LocalSet;
-
-let local_set = LocalSet::new();
-local_set.run_until(async {
-    tokio::task::spawn_local(async {
-        // Can use Rc, Cell, and other !Send types here
-        let rc = std::rc::Rc::new(42);
-        println!("{rc}");
-    }).await.unwrap();
-}).await;
-
-// 2. FuturesUnordered — concurrent without spawning
+// 1. FuturesUnordered — avoids 'static entirely (no spawn!)
 use futures::stream::{FuturesUnordered, StreamExt};
 
 async fn process_items(items: &[String]) {
@@ -90,18 +79,36 @@ async fn process_items(items: &[String]) {
         .collect();
 
     // Drive all futures to completion
-    futures.for_each(|result| async {
+    futures.for_each(|result| async move {
         println!("Result: {result:?}");
     }).await;
 }
 
+// 2. tokio::task::LocalSet — run !Send futures on current thread
+//    ⚠️  Still requires 'static — solves Send, not 'static
+use tokio::task::LocalSet;
+
+let local_set = LocalSet::new();
+local_set.run_until(async {
+    tokio::task::spawn_local(async {
+        // Can use Rc, Cell, and other !Send types here
+        let rc = std::rc::Rc::new(42);
+        println!("{rc}");
+    }).await.unwrap();
+}).await;
+
 // 3. tokio JoinSet (tokio 1.21+) — managed set of spawned tasks
+//    ⚠️  Still requires 'static + Send — solves task *management*,
+//    not the 'static problem. Useful for tracking, aborting, and
+//    joining a dynamic group of tasks.
 use tokio::task::JoinSet;
 
 async fn with_joinset() {
     let mut set = JoinSet::new();
 
     for i in 0..10 {
+        // i is Copy and moved into the closure — already 'static.
+        // You'd still need Arc or clone for borrowed data.
         set.spawn(async move {
             tokio::time::sleep(Duration::from_millis(100)).await;
             i * 2
@@ -113,6 +120,14 @@ async fn with_joinset() {
     }
 }
 ```
+
+> **Which tool solves which problem?**
+>
+> | Constraint you hit | Tool | Avoids `'static`? | Avoids `Send`? |
+> |---|---|---|---|
+> | Can't make futures `'static` | `FuturesUnordered` | ✅ Yes | ✅ Yes |
+> | Futures are `'static` but `!Send` | `LocalSet` | ❌ No | ✅ Yes |
+> | Need to track / abort spawned tasks | `JoinSet` | ❌ No | ❌ No |
 
 ### Lightweight Runtimes for Libraries
 
@@ -151,12 +166,16 @@ where
 }
 ```
 
-> **Rule of thumb**: Libraries should depend on `futures` crate, not `tokio`. Applications should depend on `tokio` (or their chosen runtime). This keeps the ecosystem composable.
+> **Rule of thumb**: Libraries should depend on `futures` crate, not `tokio`.
+> Applications should depend on `tokio` (or their chosen runtime).
+> This keeps the ecosystem composable.
 
 <details>
-<summary><strong>🏋️ Exercise: FuturesUnordered vs Spawn</strong></summary>
+<summary><strong>🏋️ Exercise: FuturesUnordered vs Spawn</strong> (click to expand)</summary>
 
-**Challenge**: Write the same function two ways — once using `tokio::spawn` (requires `'static`) and once using `FuturesUnordered` (borrows data).
+**Challenge**: Write the same function two ways — once using `tokio::spawn` (requires `'static`) and once using `FuturesUnordered` (borrows data). The function receives `&[String]` and returns the length of each string after a simulated async lookup.
+
+Compare: Which approach requires `.clone()`? Which can borrow the input slice?
 
 <details>
 <summary>🔑 Solution</summary>
@@ -195,6 +214,20 @@ async fn lengths_without_spawn(items: &[String]) -> Vec<usize> {
 
     futures.collect().await
 }
+
+#[tokio::test]
+async fn test_both_versions() {
+    let items = vec!["hello".into(), "world".into(), "rust".into()];
+
+    let v1 = lengths_with_spawn(&items).await;
+    // Note: v1 preserves insertion order (sequential join)
+
+    let mut v2 = lengths_without_spawn(&items).await;
+    v2.sort(); // FuturesUnordered returns in completion order
+
+    assert_eq!(v1, vec![5, 5, 4]);
+    assert_eq!(v2, vec![4, 5, 5]);
+}
 ```
 
 **Key takeaway**: `FuturesUnordered` avoids the `'static` requirement by running all futures on the current task (no thread migration). The trade-off: all futures share one task — if one blocks, the others stall. Use `spawn` for CPU-heavy work that should run on separate threads.
@@ -211,3 +244,5 @@ async fn lengths_without_spawn(items: &[String]) -> Vec<usize> {
 > **See also:** [Ch 8 — Tokio Deep Dive](ch08-tokio-deep-dive.md) for when spawn is the right tool, [Ch 11 — Streams](ch11-streams-and-asynciterator.md) for `buffer_unordered()` as another concurrency limiter
 
 ***
+
+

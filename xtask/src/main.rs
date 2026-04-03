@@ -131,21 +131,47 @@ fn build_to(dir_name: &str) {
 
     let mut ok = 0u32;
     for &(slug, _, _, _) in BOOKS {
-        let book_dir = root.join(slug);
-        if !book_dir.is_dir() {
+        let book_folder = root.join(slug);
+        if !book_folder.is_dir() {
             eprintln!("  ✗ {slug}/ not found, skipping / 未找到，已跳过");
             continue;
         }
+
+        let summary_path = book_folder.join("src").join("SUMMARY.md");
+        let en_dir = book_folder.join("src").join("en");
+        let mut modified = false;
+        let original_summary = fs::read_to_string(&summary_path).ok();
+
+        if let (Some(mut content), true) = (original_summary.clone(), en_dir.is_dir()) {
+            content.push_str("\n\n<!-- Hidden English Section -->\n");
+            let mut entries: Vec<_> = fs::read_dir(&en_dir).unwrap().flatten().collect();
+            entries.sort_by_key(|e| e.file_name());
+            for entry in entries {
+                let name = entry.file_name().to_string_lossy().into_owned();
+                if name.ends_with(".md") && name != "SUMMARY.md" {
+                    content.push_str(&format!("- [ ](en/{})\n", name));
+                }
+            }
+            fs::write(&summary_path, content).expect("failed to write temporary SUMMARY.md");
+            modified = true;
+        }
+
         let dest = out.join(slug);
         let status = Command::new("mdbook")
             .args(["build", "--dest-dir"])
             .arg(&dest)
-            .current_dir(&book_dir)
+            .current_dir(&book_folder)
             .status()
-            .expect("failed to run mdbook - is it installed? / 运行 mdbook 失败，是否已安装？");
+            .expect("failed to run mdbook");
+
+        if modified {
+            if let Some(original) = original_summary {
+                fs::write(&summary_path, original).expect("failed to restore SUMMARY.md");
+            }
+        }
 
         if status.success() {
-            rewrite_root_index_links(&dest);
+            write_book_redirect(&dest);
             println!("  ✓ {slug}");
             ok += 1;
         } else {
@@ -371,7 +397,7 @@ fn write_landing_page(site: &Path) {
     <div class="grid">
 {cards}
     </div>
-    <footer>Built with <a href="https://rust-lang.github.io/mdBook/">mdBook</a> / 基于 mdBook 构建</footer>
+    <footer>Built with <a href="https://rust-lang.github.io/mdBook/">mdBook</a></footer>
   </div>
 </body>
 </html>
@@ -383,17 +409,22 @@ fn write_landing_page(site: &Path) {
     println!("  ✓ index.html");
 }
 
-fn rewrite_root_index_links(book_dir: &Path) {
-    let index_path = book_dir.join("index.html");
-    let Ok(html) = fs::read_to_string(&index_path) else {
-        return;
-    };
-
-    let rewritten = html.replace("href=\"ch", "href=\"en/ch");
-    if rewritten != html {
-        fs::write(&index_path, rewritten)
-            .expect("failed to rewrite root index links / 重写根首页链接失败");
-    }
+fn write_book_redirect(dest: &Path) {
+    let index_html = r#"<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=zh/ch00-introduction.html">
+    <title>Redirecting / 重定向中...</title>
+  </head>
+  <body>
+    <p>Redirecting to <a href="zh/ch00-introduction.html">zh/ch00-introduction.html</a>...</p>
+    <script>window.location.href="zh/ch00-introduction.html";</script>
+  </body>
+</html>
+"#;
+    fs::write(dest.join("index.html"), index_html)
+        .expect("failed to write book redirect index.html");
 }
 
 fn write_robots_txt(site: &Path) {

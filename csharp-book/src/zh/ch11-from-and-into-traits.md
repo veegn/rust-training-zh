@@ -1,93 +1,200 @@
 [English Original](../en/ch11-from-and-into-traits.md)
 
-# Rust 中的类型转换：From 与 Into
+## Rust 中的类型转换
 
-> **你将学到什么：** `From`/`Into` trait 与 C# 隐式/显式转换运算符的对比，`TryFrom`/`TryInto` 如何表示可能失败的转换，以及 `FromStr` 如何用于解析字符串。
+> **你将学到：** `From`/`Into` 特性与 C# 的隐式/显式运算符对比；用于处理可能失败转换的 `TryFrom`/`TryInto`；用于解析的 `FromStr`；以及惯用的字符串转换模式。
 >
-> **难度：** 中级
+> **难度：** 🟡 中级
 
-C# 使用隐式和显式转换运算符来实现类型间的变换。而在 Rust 中，你需要通过一套标准的 Trait：`From`、`Into`、`TryFrom` 以及 `TryInto` 来完成类似的工作。
+C# 使用隐式/显式转换和强制转换运算符。Rust 使用 `From` 和 `Into` 特性进行安全、显式的类型转换。
 
----
-
-## `From` 与 `Into` Trait
-这些 Trait 是为那些**总是会成功**的转换而设计的。
-*   **`From<T>`**：定义了如何从类型 `T` 构建 `Self`。
-*   **`Into<T>`**：这是 `From` 的对称关联。如果你为类型 `U` 实现了 `From<T>`，Rust 编译器会自动为类型 `T` 也会提供一个 `Into<U>` 实现。
-
-### Rust 示例
-```rust
-struct Seconds(i32);
-
-impl From<i32> for Seconds {
-    fn from(val: i32) -> Self { Seconds(val) }
-}
-
-let s = Seconds::from(60);
-let s: Seconds = 60.into(); // Into 是编译器自动生成的
-```
-
-### C# 对应物
+### C# 转换模式
 ```csharp
-public struct Seconds {
-    public int Value { get; }
-    public Seconds(int v) => Value = v;
-    public static implicit operator Seconds(int v) => new Seconds(v);
+// C# 隐式/显式转换
+public class Temperature
+{
+    public double Celsius { get; }
+    
+    public Temperature(double celsius) { Celsius = celsius; }
+    
+    // 隐式转换
+    public static implicit operator double(Temperature t) => t.Celsius;
+    
+    // 显式转换
+    public static explicit operator Temperature(double d) => new Temperature(d);
+}
+
+double temp = new Temperature(100.0);  // 隐式转换
+Temperature t = (Temperature)37.5;     // 显式转换 (强制转换)
+```
+
+### Rust 的 From 和 Into
+```rust
+#[derive(Debug)]
+struct Temperature {
+    celsius: f64,
+}
+
+impl From<f64> for Temperature {
+    fn from(celsius: f64) -> Self {
+        Temperature { celsius }
+    }
+}
+
+impl From<Temperature> for f64 {
+    fn from(temp: Temperature) -> f64 {
+        temp.celsius
+    }
+}
+
+fn main() {
+    // 使用 From
+    let temp = Temperature::from(100.0);
+    
+    // 使用 Into (当实现了 From 时，Into 会自动可用)
+    let temp2: Temperature = 37.5.into();
+    
+    // 也适用于函数参数
+    fn process_temp(temp: impl Into<Temperature>) {
+        let t: Temperature = temp.into();
+        println!("温度：{:.1}°C", t.celsius);
+    }
+    
+    process_temp(98.6);
+    process_temp(Temperature { celsius: 0.0 });
 }
 ```
 
----
+```mermaid
+graph LR
+    A["impl From&lt;f64&gt; for Temperature"] -->|"自动生成"| B["impl Into&lt;Temperature&gt; for f64"]
+    C["Temperature::from(37.5)"] -->|"显式调用"| D["Temperature"]
+    E["37.5.into()"] -->|"通过 Into 实现隐式风格"| D
+    F["fn process(t: impl Into&lt;Temperature&gt;)"] -->|"两者都接受"| D
 
-## `TryFrom` 与 `TryInto`
-对于那些**可能失败**的转换（可能会根据输入值决定是否报错），Rust 提供了一套 `TryFrom` 和 `TryInto` Trait。它们的转换方法会返回一个 `Result`。
+    style A fill:#c8e6c9,color:#000
+    style B fill:#bbdefb,color:#000
+```
 
+> **经验法则**：实现 `From`，你就能免费获得 `Into`。调用者可以使用阅读起来更自然的那一个。
+
+### 用于可能失败转换的 TryFrom
 ```rust
-impl TryFrom<i32> for EvenNumber {
-    type Error = String;
+use std::convert::TryFrom;
 
+impl TryFrom<i32> for Temperature {
+    type Error = String;
+    
     fn try_from(value: i32) -> Result<Self, Self::Error> {
-        if value % 2 == 0 {
-            Ok(EvenNumber(value))
+        if value < -273 {
+            Err(format!("温度 {}°C 低于绝对零度", value))
         } else {
-            Err("不是偶数".to_string())
+            Ok(Temperature { celsius: value as f64 })
         }
+    }
+}
+
+fn main() {
+    match Temperature::try_from(-300) {
+        Ok(t) => println!("有效：{:?}", t),
+        Err(e) => println!("错误：{}", e),
     }
 }
 ```
 
----
-
-## `FromStr`：字符串解析
-Rust 中没有像 `int.Parse()` 或 `DateTime.TryParse()` 这样的静态方法，而是通过为你的类型实现 `FromStr` Trait。这能让你可以直接在字符串上调用 `.parse()` 方法。
-
+### 字符串转换
 ```rust
-let point: Point = "10,20".parse().expect("无效的坐标格式");
-```
-
----
-
-## C# 开发者总结表
-| **概念** | **C# 特性** | **Rust Trait** |
-| :--- | :--- | :--- |
-| **隐式转换** | `implicit operator` | `From` / `Into` |
-| **显式转换** | `explicit operator` | `From` / `Into` (在 Rust 中仍是显式的) |
-| **安全的转换失败** | 自定义的 `Try...` 方法 | `TryFrom` / `TryInto` |
-| **字符串转类型** | `T.Parse()` | `FromStr` |
-| **类型转字符串** | `T.ToString()` | `Display` trait |
-
----
-
-## 练习：在 API 中使用 `Into`
-**挑战：** 编写一个 `print_seconds` 函数，要求它能接收任何**可以被转换为 `Seconds` 结构体**的值作为参数。
-
-```rust
-fn print_seconds(time: impl Into<Seconds>) {
-    let s: Seconds = time.into();
-    println!("时间是 {} 秒", s.0);
+// 通过 Display 特性实现 ToString
+impl std::fmt::Display for Temperature {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.1}°C", self.celsius)
+    }
 }
 
-// 这两种写法现在都行得通了！
-print_seconds(60); 
-print_seconds(Seconds(120));
+// 现在 .to_string() 自动生效
+let s = Temperature::from(100.0).to_string(); // "100.0°C"
+
+// 用于解析字符串的 FromStr
+use std::str::FromStr;
+
+impl FromStr for Temperature {
+    type Err = String;
+    
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim_end_matches("°C").trim();
+        let celsius: f64 = s.parse().map_err(|e| format!("无效的温度：{}", e))?;
+        Ok(Temperature { celsius })
+    }
+}
+
+let t: Temperature = "100.0°C".parse().unwrap();
 ```
-**关键理解：** 在函数参数中使用 `impl Into<T>` 能够极大得增强你 API 的灵活性。它既能让调用方传具体类型，也能传能转换成该类型的其他值，这在 Rust 中非常地“地道（Idiomatic）”。
+
+---
+
+## 练习
+
+<details>
+<summary><strong>🏋️ 练习：货币转换器</strong> (点击展开)</summary>
+
+创建一个 `Money` 结构体，展示完整的转换生态系统：
+
+1. `Money { cents: i64 }` (以分存储金额，避免浮点数精度问题)
+2. 实现 `From<i64>` (将输入视为整美元 → `cents = dollars * 100`)
+3. 实现 `TryFrom<f64>` —— 拒绝负数金额，并四舍五入到最近的分
+4. 实现 `Display` 以显示 `"$1.50"` 格式
+5. 实现 `FromStr` 以解析 `"$1.50"` 或 `"1.50"` 到 `Money` 结构体
+6. 编写一个函数 `fn total(items: &[impl Into<Money> + Copy]) -> Money` 来求和
+
+<details>
+<summary>🔑 参考答案</summary>
+
+```rust
+use std::fmt;
+use std::str::FromStr;
+
+#[derive(Debug, Clone, Copy)]
+struct Money { cents: i64 }
+
+impl From<i64> for Money {
+    fn from(dollars: i64) -> Self {
+        Money { cents: dollars * 100 }
+    }
+}
+
+impl TryFrom<f64> for Money {
+    type Error = String;
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        if value < 0.0 {
+            Err(format!("负数金额：{value}"))
+        } else {
+            Ok(Money { cents: (value * 100.0).round() as i64 })
+        }
+    }
+}
+
+impl fmt::Display for Money {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "${}.{:02}", self.cents / 100, self.cents.abs() % 100)
+    }
+}
+
+impl FromStr for Money {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim_start_matches('$');
+        let val: f64 = s.parse().map_err(|e| format!("{e}"))?;
+        Money::try_from(val)
+    }
+}
+
+fn main() {
+    let a = Money::from(10);                       // $10.00
+    let b = Money::try_from(3.50).unwrap();         // $3.50
+    let c: Money = "$7.25".parse().unwrap();        // $7.25
+    println!("{a} + {b} + {c}");
+}
+```
+
+</details>
+</details>

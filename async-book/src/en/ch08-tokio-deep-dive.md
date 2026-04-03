@@ -139,7 +139,10 @@ async fn cancellation_example() {
 }
 ```
 
-> **Important**: Dropping a `JoinHandle` does NOT cancel the task in tokio. The task becomes *detached* and keeps running. You must explicitly call `.abort()` to cancel it. This is different from dropping a `Future` directly, which does cancel/drop the underlying computation.
+> **Important**: Dropping a `JoinHandle` does NOT cancel the task in tokio.
+> The task becomes *detached* and keeps running. You must explicitly call
+> `.abort()` to cancel it. This is different from dropping a `Future` directly,
+> which does cancel/drop the underlying computation.
 
 ### Tokio Sync Primitives
 
@@ -182,7 +185,9 @@ tx.send(42).unwrap();
 println!("Latest: {}", *rx.borrow());
 ```
 
-> **Note:** `.unwrap()` is used for brevity throughout these channel examples. In production, handle send/receive errors gracefully — a failed `.send()` means the receiver was dropped, and a failed `.recv()` means the channel is closed.
+> **Note:** `.unwrap()` is used for brevity throughout these channel examples.
+> In production, handle send/receive errors gracefully — a failed `.send()` means
+> the receiver was dropped, and a failed `.recv()` means the channel is closed.
 
 ```mermaid
 graph LR
@@ -210,13 +215,21 @@ graph LR
     WATCH --> C6["Consumer 2"]
 ```
 
-## Case Study: Choosing the Right Channel
+## Case Study: Choosing the Right Channel for a Notification Service
+
+You're building a notification service where:
+- Multiple API handlers produce events
+- A single background task batches and sends them
+- A config watcher updates rate limits at runtime
+- A shutdown signal must reach all components
+
+**Which channels for each?**
 
 | Requirement | Channel | Why |
 |-------------|---------|-----|
-| API handlers → Batcher | `mpsc` (bounded) | N Producers, 1 Consumer. Bounded for backpressure |
-| Config watcher → Rate limiter | `watch` | Only the latest config matters |
-| Shutdown signal → All components | `broadcast` | Every component must receive the notification independently |
+| API handlers → Batcher | `mpsc` (bounded) | N producers, 1 consumer. Bounded for backpressure — if the batcher falls behind, API handlers slow down instead of OOM |
+| Config watcher → Rate limiter | `watch` | Only the latest config matters. Multiple readers (each worker) see the current value |
+| Shutdown signal → All components | `broadcast` | Every component must receive the shutdown notification independently |
 | Single health-check response | `oneshot` | Request/response pattern — one value, then done |
 
 ```mermaid
@@ -240,7 +253,7 @@ graph LR
 ```
 
 <details>
-<summary><strong>🏋️ Exercise: Build a Task Pool</strong></summary>
+<summary><strong>🏋️ Exercise: Build a Task Pool</strong> (click to expand)</summary>
 
 **Challenge**: Build a function `run_with_limit` that accepts a list of async closures and a concurrency limit, executing at most N tasks simultaneously. Use `tokio::sync::Semaphore`.
 
@@ -277,6 +290,12 @@ where
     }
     results
 }
+
+// Usage:
+// let tasks: Vec<_> = urls.into_iter().map(|url| {
+//     move || async move { fetch(url).await }
+// }).collect();
+// let results = run_with_limit(tasks, 10).await; // Max 10 concurrent
 ```
 
 **Key takeaway**: `Semaphore` is the standard way to limit concurrency in tokio. Each task acquires a permit before starting work. When the semaphore is full, new tasks wait asynchronously (non-blocking) until a slot opens.
@@ -293,3 +312,5 @@ where
 > **See also:** [Ch 9 — When Tokio Isn't the Right Fit](ch09-when-tokio-isnt-the-right-fit.md) for alternatives to spawn, [Ch 12 — Common Pitfalls](ch12-common-pitfalls.md) for MutexGuard-across-await bugs
 
 ***
+
+

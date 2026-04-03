@@ -9,7 +9,6 @@
 ## What an Executor Does
 
 An executor has two jobs:
-
 1. **Poll futures** when they're ready to make progress
 2. **Sleep efficiently** when no futures are ready (using OS I/O notification APIs)
 
@@ -120,12 +119,27 @@ let (result, buf) = stream.read(buf).await;  // buf is moved in, returned back
 let n = result?;
 ```
 
+```rust
+// Cargo.toml: tokio-uring = "0.5"
+// NOTE: Linux-only, requires kernel 5.1+
+
+fn main() {
+    tokio_uring::start(async {
+        let file = tokio_uring::fs::File::open("data.bin").await.unwrap();
+        let buf = vec![0u8; 4096];
+        let (result, buf) = file.read_at(buf, 0).await;
+        let bytes_read = result.unwrap();
+        println!("Read {} bytes: {:?}", bytes_read, &buf[..bytes_read]);
+    });
+}
+```
+
 | Aspect | epoll (tokio) | io_uring (tokio-uring) |
 |--------|--------------|----------------------|
 | **Model** | Readiness notification | Completion notification |
 | **Syscalls** | epoll_wait + read/write | Batched SQE/CQE ring |
 | **Buffer ownership** | App retains (&mut buf) | Ownership transfer (move buf) |
-| **Platform** | Linux, macOS, Windows | Linux 5.1+ only |
+| **Platform** | Linux, macOS (kqueue), Windows (IOCP) | Linux 5.1+ only |
 | **Zero-copy** | No (userspace copy) | Yes (registered buffers) |
 | **Maturity** | Production-ready | Experimental |
 
@@ -257,19 +271,26 @@ graph TD
 | **no_std** | ❌ | ❌ | ❌ | ✅ |
 | **Timer** | ✅ Built-in | ✅ Built-in | Via `async-io` | ✅ HAL-based |
 | **I/O** | ✅ Own abstractions | ✅ std mirror | ✅ Via `async-io` | ✅ HAL drivers |
+| **Channels** | ✅ Rich set | ✅ | Via `async-channel` | ✅ |
 | **Learning curve** | Medium | Low | Low | High (HW) |
 | **Binary size** | Large | Medium | Small | Tiny |
 
 <details>
-<summary><strong>🏋️ Exercise: Runtime Comparison</strong></summary>
+<summary><strong>🏋️ Exercise: Runtime Comparison</strong> (click to expand)</summary>
 
-**Challenge**: Write the same program using three different runtimes (tokio, smol, and async-std).
+**Challenge**: Write the same program using three different runtimes (tokio, smol, and async-std). The program should:
+1. Fetch a URL (simulate with a sleep)
+2. Read a file (simulate with a sleep)
+3. Print both results
+
+This exercise demonstrates that the async/await code is the same — only the runtime setup differs.
 
 <details>
 <summary>🔑 Solution</summary>
 
 ```rust
 // ----- tokio version -----
+// Cargo.toml: tokio = { version = "1", features = ["full"] }
 #[tokio::main]
 async fn main() {
     let (url_result, file_result) = tokio::join!(
@@ -286,6 +307,7 @@ async fn main() {
 }
 
 // ----- smol version -----
+// Cargo.toml: smol = "2", futures-lite = "2"
 fn main() {
     smol::block_on(async {
         let (url_result, file_result) = futures_lite::future::zip(
@@ -303,6 +325,7 @@ fn main() {
 }
 
 // ----- async-std version -----
+// Cargo.toml: async-std = { version = "1", features = ["attributes"] }
 #[async_std::main]
 async fn main() {
     let (url_result, file_result) = futures::future::join(
@@ -333,3 +356,5 @@ async fn main() {
 > **See also:** [Ch 8 — Tokio Deep Dive](ch08-tokio-deep-dive.md) for tokio specifics, [Ch 9 — When Tokio Isn't the Right Fit](ch09-when-tokio-isnt-the-right-fit.md) for alternatives
 
 ***
+
+

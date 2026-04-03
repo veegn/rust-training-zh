@@ -1,76 +1,240 @@
 [English Original](../en/ch08-1-package-management-cargo-vs-nuget.md)
 
-# 包管理：Cargo 与 NuGet
+## 包管理：Cargo vs NuGet
 
-> **你将学到什么：** `Cargo.toml` 与 `.csproj` 的对应关系、版本说明符、`Cargo.lock` 的作用、用于条件编译的 feature flag，以及常用 Cargo 命令。
+> **你将学到：** `Cargo.toml` 与 `.csproj` 的对比；版本指定方式；`Cargo.lock` 的作用；用于条件编译的特性标志 (Feature flags)；以及常用 Cargo 命令与其 NuGet/dotnet 等效命令的映射。
 >
-> **难度：** 初级
+> **难度：** 🟢 初级
 
 ### 依赖声明
-在 C# 中，你使用 `.csproj` 或 `NuGet.config`。而在 Rust 中，你需要使用 `Cargo.toml`。
 
-#### C# .csproj
+#### C# NuGet 依赖
 ```xml
-<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+<!-- MyApp.csproj -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  
+  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  <PackageReference Include="Serilog" Version="3.0.1" />
+  <PackageReference Include="Microsoft.AspNetCore.App" />
+  
+  <ProjectReference Include="../MyLibrary/MyLibrary.csproj" />
+</Project>
 ```
 
-#### Rust Cargo.toml
-```toml
-[dependencies]
-serde_json = "1.0"
-```
-
----
-
-## 版本管理与锁文件
-Rust 默认使用语义化版本 (SemVer)。
-*   **`"1.0"`**：表示版本号应该是 `>=1.0.0` 且 `<2.0.0`。
-*   **`Cargo.lock`**：此文件会自动生成，它确保了项目中每一个开发者所使用的每一个依赖包的版本是**绝对一致的**。这非常类似于现代 .NET 项目中的 `packages.lock.json`。
-
----
-
-## Feature Flags: 条件编译
-Cargo 包含一个非常强大的功能，即 **Features**。它可以让你将某些依赖或代码块声明为可选，从而减少编译时间和二进制文件的体积。
-
+#### Rust Cargo 依赖
 ```toml
 # Cargo.toml
+[package]
+name = "my_app"
+version = "0.1.0"
+edition = "2021"
+
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"               # 来自 crates.io (类似于 NuGet)
+serde = { version = "1.0", features = ["derive"] }  # 带有特性 (features) 开关
+log = "0.4"
+tokio = { version = "1.0", features = ["full"] }
+
+# 本地依赖 (类似于 ProjectReference)
+my_library = { path = "../my_library" }
+
+# Git 依赖
+my_git_crate = { git = "https://github.com/user/repo" }
+
+# 开发依赖 (类似于测试相关的包)
+[dev-dependencies]
+criterion = "0.5"               # 基准测试工具
+proptest = "1.0"               # 属性测试工具
 ```
 
-在你的代码中，你可以通过 `#[cfg(feature = "...")]` 来条件性地包含某些代码。相比 C# 中的 `#if DEBUG` 等预处理指令，这是一个更加清晰和标准化的解决方案。
+### 版本管理
 
----
+#### C# 包版本管理
+```xml
+<!-- 中心化包管理 (Directory.Packages.props) -->
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  
+  <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+  <PackageVersion Include="Serilog" Version="3.0.1" />
+</Project>
 
-## 常用命令对照表
+<!-- 用于可复现构建的 packages.lock.json -->
+```
 
-| **操作** | **`dotnet` 命令** | **`cargo` 命令** |
-| :--- | :--- | :--- |
-| **构建项目** | `dotnet build` | `cargo build` |
-| **运行项目** | `dotnet run` | `cargo run` |
-| **运行测试** | `dotnet test` | `cargo test` |
-| **添加依赖包** | `dotnet add package X` | `cargo add X` |
-| **更新依赖包** | `dotnet restore` | `cargo update` |
-
----
-
-## 常见第三方库 (Crates) 对应物
-| **C# 库** | **Rust 对应物** | **用途** |
-| :--- | :--- | :--- |
-| **Newtonsoft.Json** | `serde_json` | 序列化/反序列化 |
-| **HttpClient** | `reqwest` | HTTP 请求 |
-| **Entity Framework** | `diesel` 或 `sqlx` | 数据库/ORM |
-| **Serilog / NLog** | `tracing` 或 `log` | 日志记录 |
-| **xUnit / NUnit** | 内置 `#[test]` | 单元测试 |
-
----
-
-## 练习：添加一个依赖
-**挑战：** 向你的项目中添加用于处理日期时间的 `chrono` 库，并启用其 `serde` 功能。
-
-**答案：**
+#### Rust 版本管理
 ```toml
+# Cargo.toml - 语义化版本控制 (SemVer)
 [dependencies]
-chrono = { version = "0.4", features = ["serde"] }
+serde = "1.0"        # 兼容 1.x.x (>=1.0.0, <2.0.0)
+log = "0.4.17"       # 兼容 0.4.x (>=0.4.17, <0.5.0)
+regex = "=1.5.4"     # 指定精确版本
+chrono = "^0.4"      # 脱字符要求 (默认行为)
+uuid = "~1.3.0"      # 波浪号要求 (>=1.3.0, <1.4.0)
+
+# Cargo.lock - 用于可复现构建的精确版本信息 (自动生成)
+[[package]]
+name = "serde"
+version = "1.0.163"
+# ... 完整的精确依赖树
 ```
-**关键理解：** Cargo 不仅仅是一个简单的包管理器；它还是一个构建系统和测试运行器，为 Rust 开发人员提供了一个统一、舒心的开发体验。
+
+### 包源码 (Package Sources)
+
+#### C# 包源码配置
+```xml
+<!-- nuget.config -->
+<configuration>
+  <packageSources>
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+    <add key="MyCompanyFeed" value="https://pkgs.dev.azure.com/company/_packaging/feed/nuget/v3/index.json" />
+  </packageSources>
+</configuration>
+```
+
+#### Rust 包源码配置
+```toml
+# .cargo/config.toml
+[source.crates-io]
+replace-with = "my-awesome-registry"
+
+[source.my-awesome-registry]
+registry = "https://my-intranet:8080/index"
+
+# 备用镜像/仓库
+[registries]
+my-registry = { index = "https://my-intranet:8080/index" }
+
+# 在 Cargo.toml 中使用
+[dependencies]
+my_crate = { version = "1.0", registry = "my-registry" }
+```
+
+### 常用命令对比
+
+| 任务 | C# 命令 | Rust 命令 |
+|------|------------|-------------|
+| 还原依赖包 | `dotnet restore` | `cargo fetch` |
+| 添加依赖包 | `dotnet add package Newtonsoft.Json` | `cargo add serde_json` |
+| 移除依赖包 | `dotnet remove package Newtonsoft.Json` | `cargo remove serde_json` |
+| 更新依赖包 | `dotnet update` | `cargo update` |
+| 列出依赖树 | `dotnet list package` | `cargo tree` |
+| 安全审计 | `dotnet list package --vulnerable` | `cargo audit` |
+| 清理构建产物 | `dotnet clean` | `cargo clean` |
+
+### 特性 (Features)：条件编译
+
+#### C# 条件编译
+```csharp
+#if DEBUG
+    Console.WriteLine("Debug mode");
+#elif RELEASE
+    Console.WriteLine("Release mode");
+#endif
+
+// 项目文件中的特性定义
+<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+</PropertyGroup>
+```
+
+#### Rust 特性门控 (Feature Gates)
+```toml
+# Cargo.toml
+[features]
+default = ["json"]              # 默认启用的特性
+json = ["serde_json"]          # 启用此特性时会带上 serde_json 依赖
+xml = ["serde_xml"]            # 另一种序列化方式
+advanced = ["json", "xml"]     # 组合特性
+
+[dependencies]
+serde_json = { version = "1.0", optional = true }
+serde_xml = { version = "0.4", optional = true }
+```
+
+```rust
+// 基于特性进行条件编译
+#[cfg(feature = "json")]
+use serde_json;
+
+#[cfg(feature = "xml")]
+use serde_xml;
+
+pub fn serialize_data(data: &MyStruct) -> String {
+    #[cfg(feature = "json")]
+    return serde_json::to_string(data).unwrap();
+    
+    #[cfg(feature = "xml")]
+    return serde_xml::to_string(data).unwrap();
+    
+    #[cfg(not(any(feature = "json", feature = "xml")))]
+    return "没有启用序列化特性".to_string();
+}
+```
+
+### 使用外部 Crate
+
+#### 面向 C# 开发者的常用 Crate 映射
+
+| C# 类库 | Rust Crate | 用途 |
+|------------|------------|---------|
+| System.Text.Json / Newtonsoft.Json | `serde_json` | JSON 序列化 |
+| HttpClient | `reqwest` | HTTP 客户端 |
+| Entity Framework | `diesel` / `sqlx` | ORM / SQL 工具包 |
+| NLog/Serilog | `log` + `env_logger` | 日志记录 |
+| xUnit/NUnit | 内置的 `#[test]` | 单元测试 |
+| Moq | `mockall` | Mock 测试 |
+| Flurl | `url` | URL 操作 |
+| Polly | `tower` | 弹性/重试模式 |
+
+#### 示例：HTTP 客户端迁移
+```csharp
+// C# HttpClient 用法
+public class ApiClient
+{
+    private readonly HttpClient _httpClient;
+    
+    public async Task<User> GetUserAsync(int id)
+    {
+        var response = await _httpClient.GetAsync($"/users/{id}");
+        var json = await response.Content.ReadAsStringAsync();
+        return System.Text.Json.JsonSerializer.Deserialize<User>(json);
+    }
+}
+```
+
+```rust
+// Rust reqwest 用法
+use reqwest;
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct User {
+    id: u32,
+    name: String,
+}
+
+struct ApiClient {
+    client: reqwest::Client,
+}
+
+impl ApiClient {
+    async fn get_user(&self, id: u32) -> Result<User, reqwest::Error> {
+        let user = self.client
+            .get(&format!("https://api.example.com/users/{}", id))
+            .send()
+            .await?
+            .json::<User>()
+            .await?;
+        
+        Ok(user)
+    }
+}
+```
+
+---

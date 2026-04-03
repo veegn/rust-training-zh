@@ -403,6 +403,99 @@ pub fn query_gpu_info() -> GpuResult {
 | Ignoring cross-compilation | Using `Command::new("gcc")` without respecting `$CC` | Use the `cc` crate which handles cross-compilation toolchains |
 | Panicking without context | `unwrap()` gives opaque "build script failed" error | Use `.expect("descriptive message")` or print `cargo::warning=` |
 
+### Application: Embedding Build Metadata
+
+The project currently uses `env!("CARGO_PKG_VERSION")` for version
+reporting. A build script would extend this with richer metadata:
+
+```rust
+// build.rs — proposed addition
+fn main() {
+    println!("cargo::rerun-if-changed=.git/HEAD");
+    println!("cargo::rerun-if-changed=.git/refs");
+    println!("cargo::rerun-if-changed=build.rs");
+
+    // Embed git hash for traceability in diagnostic reports
+    if let Ok(output) = std::process::Command::new("git")
+        .args(["rev-parse", "--short=10", "HEAD"])
+        .output()
+    {
+        let hash = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        println!("cargo::rustc-env=APP_GIT_HASH={hash}");
+    } else {
+        println!("cargo::rustc-env=APP_GIT_HASH=unknown");
+    }
+
+    // Embed build timestamp for report correlation
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs().to_string())
+        .unwrap_or_else(|_| "0".into());
+    println!("cargo::rustc-env=APP_BUILD_EPOCH={timestamp}");
+
+    // Emit target triple — useful in multi-arch deployment
+    let target = std::env::var("TARGET").unwrap_or_else(|_| "unknown".into());
+    println!("cargo::rustc-env=APP_TARGET={target}");
+}
+```
+
+```rust
+// src/version.rs — consuming the metadata
+pub struct BuildInfo {
+    pub version: &'static str,
+    pub git_hash: &'static str,
+    pub build_epoch: &'static str,
+    pub target: &'static str,
+}
+
+pub const BUILD_INFO: BuildInfo = BuildInfo {
+    version: env!("CARGO_PKG_VERSION"),
+    git_hash: env!("APP_GIT_HASH"),
+    build_epoch: env!("APP_BUILD_EPOCH"),
+    target: env!("APP_TARGET"),
+};
+
+impl BuildInfo {
+    /// Parse the epoch at runtime when needed (const &str → u64 is not
+    /// possible on stable Rust — there is no const fn for str-to-int).
+    pub fn build_epoch_secs(&self) -> u64 {
+        self.build_epoch.parse().unwrap_or(0)
+    }
+}
+
+impl std::fmt::Display for BuildInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "DiagTool v{} (git:{} target:{})",
+            self.version, self.git_hash, self.target
+        )
+    }
+}
+```
+
+> **Key insight from the project**: The codebase has zero `build.rs` files
+> across all many crates because it's pure Rust with no C dependencies, no codegen,
+> and no system library linking. When you need these, `build.rs` is the tool — but
+> don't add it "just because." The absence of build scripts in a large codebase
+> is a feature, not a gap. See [Dependency Management](ch06-dependency-management-and-supply-chain-s.md)
+> for how the project manages its supply chain without custom build logic.
+> is a *positive* signal of a clean architecture.
+
+### Try It Yourself
+
+1. **Embed git metadata**: Create a `build.rs` that emits `APP_GIT_HASH` and
+   `APP_BUILD_EPOCH` as environment variables. Consume them with `env!()` in
+   `main.rs` and print the build info. Verify the hash changes after a commit.
+
+2. **Probe a system library**: Write a `build.rs` that uses `pkg-config` to probe
+   for `libz` (zlib). Emit `cargo::rustc-cfg=has_zlib` if found. In `main.rs`,
+   conditionally print "zlib available" or "zlib not found" based on the cfg flag.
+
+3. **Trigger a build failure intentionally**: Remove the `rerun-if-changed` line
+   from your `build.rs` and observe how many times it reruns during `cargo build`
+   and `cargo test`. Then add it back and compare.
+
 ### Reproducible Builds
 
 Chapter 1 teaches embedding timestamps and git hashes into binaries. This is
@@ -565,4 +658,5 @@ fn main() {
 - Prefer runtime detection over build-time detection for optional hardware
 - Use `SOURCE_DATE_EPOCH` to make builds reproducible when embedding timestamps
 
-***
+---
+

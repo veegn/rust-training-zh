@@ -1,6 +1,7 @@
 ## Installation and Setup
 
-> **What you'll learn:** How to install Rust and its toolchain, the Cargo build system vs pip/Poetry, IDE setup, your first `Hello, world!` program, and essential Rust keywords mapped to Python equivalents.
+> **What you'll learn:** How to install Rust and its toolchain, the Cargo build system vs pip/Poetry,
+> IDE setup, your first `Hello, world!` program, and essential Rust keywords mapped to Python equivalents.
 >
 > **Difficulty:** 🟢 Beginner
 
@@ -35,16 +36,16 @@ rustup update
 
 ### IDE Setup
 
-**VS Code** (recommended)：
+**VS Code** (recommended):
 ```text
 Extensions to install:
-- rust-analyzer        -> Essential: IDE features, type hints, completions
-- Even Better TOML     -> Syntax highlighting for Cargo.toml
-- CodeLLDB             -> Debugger support
+- rust-analyzer        ← Essential: IDE features, type hints, completions
+- Even Better TOML     ← Syntax highlighting for Cargo.toml
+- CodeLLDB             ← Debugger support
 
 # Python equivalent mapping:
-# rust-analyzer ~= Pylance (but with 100% type coverage, always)
-# cargo clippy  ~= ruff (but checks correctness, not just style)
+# rust-analyzer ≈ Pylance (but with 100% type coverage, always)
+# cargo clippy  ≈ ruff (but checks correctness, not just style)
 ```
 
 ***
@@ -53,7 +54,7 @@ Extensions to install:
 
 ### Python Hello World
 ```python
-# hello.py - just run it
+# hello.py — just run it
 print("Hello, World!")
 
 # Run:
@@ -62,7 +63,7 @@ print("Hello, World!")
 
 ### Rust Hello World
 ```rust
-// src/main.rs - must be compiled first
+// src/main.rs — must be compiled first
 fn main() {
     println!("Hello, World!");   // println! is a macro (note the !)
 }
@@ -75,7 +76,7 @@ fn main() {
 
 ```text
 Python:                              Rust:
---------                             -----
+─────────                            ─────
 - No main() needed                   - fn main() is the entry point
 - Indentation = blocks               - Curly braces {} = blocks
 - print() is a function              - println!() is a macro (the ! matters)
@@ -123,7 +124,7 @@ graph TD
     style Rust fill:#d4edda
 ```
 
-> **Key difference:** Rust projects are simpler - no `__init__.py`, no virtual environments, no `setup.py` vs `setup.cfg` vs `pyproject.toml` confusion. Just `Cargo.toml` + `src/`.
+> **Key difference**: Rust projects are simpler — no `__init__.py`, no virtual environments, no `setup.py` vs `setup.cfg` vs `pyproject.toml` confusion. Just `Cargo.toml` + `src/`.
 
 ***
 
@@ -132,7 +133,7 @@ graph TD
 ### Project Configuration
 
 ```toml
-# Python - pyproject.toml
+# Python — pyproject.toml
 [project]
 name = "myproject"
 version = "0.1.0"
@@ -147,7 +148,7 @@ dev = ["pytest", "ruff", "mypy"]
 ```
 
 ```toml
-# Rust - Cargo.toml
+# Rust — Cargo.toml
 [package]
 name = "myproject"
 version = "0.1.0"
@@ -158,7 +159,8 @@ reqwest = "0.12"          # HTTP client (like requests)
 serde = { version = "1.0", features = ["derive"] }  # Serialization (like pydantic)
 
 [dev-dependencies]
-# Test dependencies - only compiled for `cargo test`
+# Test dependencies — only compiled for `cargo test`
+# (No separate test config needed — `cargo test` is built in)
 ```
 
 ### Common Cargo Commands
@@ -168,11 +170,11 @@ pip install requests               cargo add reqwest
 pip install -r requirements.txt    cargo build           # auto-installs deps
 pip install -e .                   cargo build            # always "editable"
 python -m pytest                   cargo test
-python -m mypy .                   # Built into compiler - always runs
+python -m mypy .                   # Built into compiler — always runs
 ruff check .                       cargo clippy
 ruff format .                      cargo fmt
 python main.py                     cargo run
-python -c "..."                    # No equivalent - use cargo run or tests
+python -c "..."                    # No equivalent — use cargo run or tests
 
 # Rust-specific:
 cargo new myproject                # Create new project
@@ -183,85 +185,120 @@ cargo update                       # Update deps (like pip install --upgrade)
 
 ***
 
+
 ## Essential Rust Keywords for Python Developers
 
 ### Variable and Mutability Keywords
 
 ```rust
-// let - declare a variable (like Python assignment, but immutable by default)
+// let — declare a variable (like Python assignment, but immutable by default)
 let name = "Alice";          // Python: name = "Alice" (but mutable)
+// name = "Bob";             // ❌ Compile error! Immutable by default
 
-// mut - opt into mutability
-let mut count = 0;           // Python: count = 0 (always mutable)
-count += 1;                  // Allowed because of `mut`
+// mut — opt into mutability
+let mut count = 0;           // Python: count = 0 (always mutable in Python)
+count += 1;                  // ✅ Allowed because of `mut`
 
-// const - compile-time constant
+// const — compile-time constant (like Python's convention of UPPER_CASE, but enforced)
 const MAX_SIZE: usize = 1024;   // Python: MAX_SIZE = 1024 (convention only)
+
+// static — global variable (use sparingly; Python has module-level globals)
+static VERSION: &str = "1.0";
 ```
 
 ### Ownership and Borrowing Keywords
 
 ```rust
-// These have NO Python equivalents - they're Rust-specific concepts
+// These have NO Python equivalents — they're Rust-specific concepts
 
-// & - borrow (read-only reference)
-fn print_name(name: &str) { }    // Python passes references always
+// & — borrow (read-only reference)
+fn print_name(name: &str) { }    // Python: def print_name(name: str) — but Python passes ref always
 
-// &mut - mutable borrow
-fn append(list: &mut Vec<i32>) { }  // Python: always mutable
+// &mut — mutable borrow
+fn append(list: &mut Vec<i32>) { }  // Python: def append(lst: list) — always mutable in Python
 
-// move - transfer ownership
+// move — transfer ownership (happens implicitly in Rust, never in Python)
 let s1 = String::from("hello");
-let s2 = s1;    // s1 is MOVED to s2 - s1 is no longer valid
+let s2 = s1;    // s1 is MOVED to s2 — s1 is no longer valid
+// println!("{}", s1);  // ❌ Compile error: value moved
 ```
 
 ### Type Definition Keywords
 
 ```rust
-// struct - like a Python dataclass or NamedTuple
+// struct — like a Python dataclass or NamedTuple
 struct Point {               // @dataclass
     x: f64,                  // class Point:
     y: f64,                  //     x: float
 }                            //     y: float
 
-// enum - like Python's enum but MUCH more powerful (carries data)
+// enum — like Python's enum but MUCH more powerful (carries data)
 enum Shape {                 // No direct Python equivalent
     Circle(f64),             // Each variant can hold different data
     Rectangle(f64, f64),
 }
 
-// impl - attach methods to a type
+// impl — attach methods to a type (like defining methods in a class)
 impl Point {                 // class Point:
     fn distance(&self) -> f64 {  //     def distance(self) -> float:
         (self.x.powi(2) + self.y.powi(2)).sqrt()
     }
 }
 
-// trait - like Python's ABC or Protocol (PEP 544)
+// trait — like Python's ABC or Protocol (PEP 544)
 trait Drawable {             // class Drawable(Protocol):
     fn draw(&self);          //     def draw(self) -> None: ...
 }
+
+// type — type alias (like Python's TypeAlias)
+type UserId = i64;           // UserId = int  (or TypeAlias)
 ```
 
 ### Control Flow Keywords
 
 ```rust
-// match - exhaustive pattern matching
+// match — exhaustive pattern matching (like Python 3.10+ match, but enforced)
 match value {
     1 => println!("one"),
     2 | 3 => println!("two or three"),
-    _ => println!("other"),          // _ = wildcard
+    _ => println!("other"),          // _ = wildcard (like Python's case _:)
 }
 
-// loop - infinite loop (like while True:)
+// if let — destructure + conditional (Pythonic: if (m := regex.match(s)):)
+if let Some(x) = optional_value {
+    println!("{}", x);
+}
+
+// loop — infinite loop (like while True:)
 loop {
     break;  // Must break to exit
 }
 
-// for - iteration
+// for — iteration (like Python's for, but needs .iter() more often)
 for item in collection.iter() {      // for item in collection:
     println!("{}", item);
 }
+
+// while let — loop with destructuring
+while let Some(item) = stack.pop() {
+    process(item);
+}
+```
+
+### Visibility Keywords
+
+```rust
+// pub — public (Python has no real private; uses _ convention)
+pub fn greet() { }           // def greet():  — everything is "public" in Python
+
+// pub(crate) — visible within the crate only
+pub(crate) fn internal() { } // def _internal():  — single underscore convention
+
+// (no keyword) — private to the module
+fn private_helper() { }      // def __private():  — double underscore name mangling
+
+// In Python, "private" is a gentleman's agreement.
+// In Rust, private is enforced by the compiler.
 ```
 
 ---
@@ -269,17 +306,16 @@ for item in collection.iter() {      // for item in collection:
 ## Exercises
 
 <details>
-<summary><strong>Exercise: First Rust Program</strong></summary>
+<summary><strong>🏋️ Exercise: First Rust Program</strong> (click to expand)</summary>
 
-**Challenge:** Create a new Rust project and write a program that:
-
+**Challenge**: Create a new Rust project and write a program that:
 1. Declares a variable `name` with your name (type `&str`)
 2. Declares a mutable variable `count` starting at 0
 3. Uses a `for` loop from 1..=5 to increment `count` and print `"Hello, {name}! (count: {count})"`
 4. After the loop, print whether count is even or odd using a `match` expression
 
 <details>
-<summary>Solution</summary>
+<summary>🔑 Solution</summary>
 
 ```bash
 cargo new hello_rust && cd hello_rust
@@ -304,13 +340,15 @@ fn main() {
 }
 ```
 
-**Key takeaways:**
+**Key takeaways**:
 - `let` is immutable by default (you need `mut` to change `count`)
 - `1..=5` is inclusive range (Python's `range(1, 6)`)
 - `match` is an expression that returns a value
-- No `self`, no `if __name__ == "__main__"` - just `fn main()`
+- No `self`, no `if __name__ == "__main__"` — just `fn main()`
 
 </details>
 </details>
 
 ***
+
+

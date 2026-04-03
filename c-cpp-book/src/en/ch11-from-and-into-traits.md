@@ -1,73 +1,118 @@
-# 11. From and Into Traits 🟢
+# Rust From and Into traits
 
-The `From` and `Into` traits are used for type conversions in Rust. They are designed to be used together: if you implement `From` for a type, you get the `Into` implementation for free.
+> **What you'll learn:** Rust's type conversion traits — `From<T>` and `Into<T>` for infallible conversions, `TryFrom` and `TryInto` for fallible ones. Implement `From` and get `Into` for free. Replaces C++ conversion operators and constructors.
 
-### 1. The `From` Trait
-The `From` trait allows a type to define how to create itself from another type.
-
+- ```From``` and ```Into``` are complementary traits to facilitate type conversion
+- Types normally implement the ```From``` trait. The ```String::from()``` converts from "&str" to ```String```, and the compiler can automatically derive ```&str.into```
 ```rust
-let my_str = "hello";
-let my_string = String::from(my_str); // Converting &str to String
+struct Point {x: u32, y: u32}
+// Construct a Point from a tuple
+impl From<(u32, u32)> for Point {
+    fn from(xy : (u32, u32)) -> Self {
+        Point {x : xy.0, y: xy.1}       // Construct Point using the tuple elements
+    }
+}
+fn main() {
+    let s = String::from("Rust");
+    let x = u32::from(true);
+    let p = Point::from((40, 42));
+    // let p : Point = (40.42)::into(); // Alternate form of the above
+    println!("s: {s} x:{x} p.x:{} p.y {}", p.x, p.y);   
+}
 ```
 
-We can implement it for our own types:
-```rust
-struct Number {
-    value: i32,
-}
+# Exercise: From and Into
+- Implement a ```From``` trait for ```Point``` to convert into a type called ```TransposePoint```. ```TransposePoint``` swaps the ```x``` and ```y``` elements of ```Point```
 
-impl From<i32> for Number {
-    fn from(item: i32) -> Self {
-        Number { value: item }
+<details><summary>Solution (click to expand)</summary>
+
+```rust
+struct Point { x: u32, y: u32 }
+struct TransposePoint { x: u32, y: u32 }
+
+impl From<Point> for TransposePoint {
+    fn from(p: Point) -> Self {
+        TransposePoint { x: p.y, y: p.x }
     }
 }
 
 fn main() {
-    let num = Number::from(30);
-    println!("My number is {}", num.value);
+    let p = Point { x: 10, y: 20 };
+    let tp = TransposePoint::from(p);
+    println!("Transposed: x={}, y={}", tp.x, tp.y);  // x=20, y=10
+
+    // Using .into() — works automatically when From is implemented
+    let p2 = Point { x: 3, y: 7 };
+    let tp2: TransposePoint = p2.into();
+    println!("Transposed: x={}, y={}", tp2.x, tp2.y);  // x=7, y=3
+}
+// Output:
+// Transposed: x=20, y=10
+// Transposed: x=7, y=3
+```
+
+</details>
+
+# Rust Default trait
+- ```Default``` can be used to implement default values for a type
+    - Types can use the ```Derive``` macro with ```Default``` or provide a custom implementation
+```rust
+#[derive(Default, Debug)]
+struct Point {x: u32, y: u32}
+#[derive(Debug)]
+struct CustomPoint {x: u32, y: u32}
+impl Default for CustomPoint {
+    fn default() -> Self {
+        CustomPoint {x: 42, y: 42}
+    }
+}
+fn main() {
+    let x = Point::default();   // Creates a Point{0, 0}
+    println!("{x:?}");
+    let y = CustomPoint::default();
+    println!("{y:?}");
 }
 ```
 
----
+### Rust Default trait
+- ```Default``` trait has several use cases including
+    - Performing a partial copy and using default initialization for rest
+    - Default alternative for ```Option``` types in methods like ```unwrap_or_default()```
+```rust
+#[derive(Debug)]
+struct CustomPoint {x: u32, y: u32}
+impl Default for CustomPoint {
+    fn default() -> Self {
+        CustomPoint {x: 42, y: 42}
+    }
+}
+fn main() {
+    let x = CustomPoint::default();
+    // Override y, but leave rest of elements as the default
+    let y = CustomPoint {y: 43, ..CustomPoint::default()};
+    println!("{x:?} {y:?}");
+    let z : Option<CustomPoint> = None;
+    // Try changing the unwrap_or_default() to unwrap()
+    println!("{:?}", z.unwrap_or_default());
+}
+```
 
-### 2. The `Into` Trait
-The `Into` trait is the reciprocal of the `From` trait. If you have implemented the `From` trait for your type, `Into` will call it when necessary.
-
+### Other Rust type conversions
+- Rust doesn't support implicit type conversions and ```as``` can be used for ```explicit``` conversions
+- ```as``` should be sparingly used because it's subject to loss of data by narrowing and so forth. In general, it's preferable to use ```into()``` or ```from()``` where possible
 ```rust
 fn main() {
-    let int = 5;
-    let num: Number = int.into(); // int is converted into Number
-    println!("My number is {}", num.value);
-}
-```
-
----
-
-### 3. `TryFrom` and `TryInto`
-Similar to `From` and `Into`, `TryFrom` and `TryInto` are used for conversions that can fail (fallible conversions). They return a `Result`.
-
-```rust
-use std::convert::TryFrom;
-
-struct EvenNumber(i32);
-
-impl TryFrom<i32> for EvenNumber {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        if value % 2 == 0 {
-            Ok(EvenNumber(value))
-        } else {
-            Err(())
-        }
+    let f = 42u8;
+    // let g : u32 = f;    // Will not compile
+    let g = f as u32;      // Ok, but not preferred. Subject to rules around narrowing
+    let g : u32 = f.into(); // Most preferred form; infallible and checked by the compiler
+    // let k : u8 = g.into();  // Fails to compile; narrowing can result in loss of data
+    
+    // Attempting a narrowing operation requires use of try_into
+    if let Ok(k) = TryInto::<u8>::try_into(g) {
+        println!("{k}");
     }
 }
 ```
 
----
 
-### Summary for C/C++ Developers
-- **In C++**: You use conversion constructors (e.g., `Point(const Tuple& t)`) or conversion operators (e.g., `operator int()`). These can often happen implicitly, leading to subtle bugs.
-- **In Rust**: Conversions are explicit using `From` and `Into`. There are **no implicit type conversions** in Rust. This makes the flow of data across types much easier to track and debug.
-
-***

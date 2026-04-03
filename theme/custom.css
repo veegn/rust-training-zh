@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --content-max: 960px;
   --rt-accent: #d97706;
   --rt-accent-soft: rgba(217, 119, 6, 0.14);
@@ -157,6 +157,13 @@ body,
 
 .right-buttons .language-toggle {
   margin-left: 0.5rem;
+}
+
+/* Hide /en/ folders from sidebar since we only want /zh/ indexed,
+   but we want /en/ to be built as HTML. */
+.sidebar li:has(a[href*="/en/"]),
+.sidebar-scrollbox a[href*="/en/"] {
+    display: none !important;
 }
 
 

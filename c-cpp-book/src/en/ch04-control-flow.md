@@ -1,97 +1,83 @@
-# 4. Control Flow 🟢
+# Rust if keyword
 
-In Rust, control flow constructs like `if`, `match`, and `loop` are often **expressions**, meaning they can return a value.
+> **What you'll learn:** Rust's control flow constructs — `if`/`else` as expressions, `loop`/`while`/`for`, `match`, and how they differ from C/C++ counterparts. The key insight: most Rust control flow returns values.
 
-### Conditional: `if`
-Unlike C/C++, Rust's `if` is an expression. You can use it to assign values.
+- In Rust, ```if``` is actually an expression, i.e., it can be used to assign values, but it also behaves like a statement. [▶ Try it](https://play.rust-lang.org/)
 
 ```rust
 fn main() {
     let x = 42;
-    
-    // As a statement
     if x < 42 {
-        println!("Too small");
+        println!("Smaller than the secret of life");
+    } else if x == 42 {
+        println!("Is equal to the secret of life");
     } else {
-        println!("Just right");
+        println!("Larger than the secret of life");
     }
-
-    // As an expression
-    let status = if x == 42 { "Winner" } else { "Loser" };
-    println!("Status: {status}");
+    let is_secret_of_life = if x == 42 {true} else {false};
+    println!("{}", is_secret_of_life);
 }
 ```
 
----
-
-### Looping: `loop`, `while`, and `for`
-
-#### 1. `loop`
-An infinite loop. You can use `break` to return a value from the loop.
-
+# Rust loops using while and for
+- The ```while``` keyword can be used to loop while an expression is true
 ```rust
 fn main() {
-    let mut x = 0;
-    
-    let result = loop {
+    let mut x = 40;
+    while x != 42 {
         x += 1;
-        if x == 10 {
-            break x * 2; // Returns 20
-        }
-    };
-    println!("Result: {result}");
+    }
 }
 ```
-
-#### 2. `while`
-Standard while loop.
-```rust
-let mut n = 3;
-while n != 0 {
-    println!("{n}!");
-    n -= 1;
-}
-```
-
-#### 3. `for`
-Used to iterate over collections or ranges.
+- The ```for``` keyword can be used to iterate over ranges
 ```rust
 fn main() {
-    // Range 1 to 4 (exclusive)
-    for i in 1..5 {
-        println!("{i}");
-    }
-
-    // Range 1 to 5 (inclusive)
-    for i in 1..=5 {
-        println!("{i}");
-    }
+    // Will not print 43; use 40..=43 to include last element
+    for x in 40..43 {
+        println!("{}", x);
+    } 
 }
 ```
 
----
+# Rust loops using loop
+- The ```loop``` keyword creates an infinite loop until a ```break``` is encountered
+```rust
+fn main() {
+    let mut x = 40;
+    // Change the below to 'here: loop to specify optional label for the loop
+    loop {
+        if x == 42 {
+            break; // Use break x; to return the value of x
+        }
+        x += 1;
+    }
+}
+```
+- The ```break``` statement can include an optional expression that can be used to assign the value of a ```loop``` expression
+- The ```continue``` keyword can be used to return to the top of the ```loop```
+- Loop labels can be used with ```break``` or ```continue``` and are useful when dealing with nested loops
 
-### Expression Blocks
-A block of code `{}` is also an expression. The value of the last line (without a semicolon) is the value of the block.
-
+# Rust expression blocks
+- Rust expression blocks are simply a sequence of expressions enclosed in ```{}```. The evaluated value is simply the last expression in the block
 ```rust
 fn main() {
     let x = {
-        let y = 10;
-        let z = 20;
-        y + z // Value of x is 30
+        let y = 40;
+        y + 2 // Note: ; must be omitted
     };
-    
-    println!("x is {x}");
+    // Notice the Python style printing
+    println!("{x}");
 }
 ```
-
-#### Idiomatic Returns
-In Rust, it's idiomatic to omit the `return` keyword at the end of a function.
+- Rust style is to use this to omit the ```return``` keyword in functions
 ```rust
-fn is_even(n: i32) -> bool {
-    n % 2 == 0 // Implicit return
+fn is_secret_of_life(x: u32) -> bool {
+    // Same as if x == 42 {true} else {false}
+    x == 42 // Note: ; must be omitted 
+}
+fn main() {
+    println!("{}", is_secret_of_life(42));
 }
 ```
 
-***
+

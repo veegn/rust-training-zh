@@ -20,7 +20,8 @@ stateDiagram-v2
     Complete --> [*] : Value returned
 ```
 
-> **Important:** While in the *Waiting* state the future **must** have registered the waker with an I/O source. No registration = hang forever.
+> **Important:** While in the *Waiting* state the future **must** have registered
+> the waker with an I/O source. No registration = hang forever.
 
 ### A Minimal Executor
 
@@ -73,7 +74,9 @@ fn main() {
 }
 ```
 
-> **Don't use this in production!** It busy-loops, wasting CPU. Real executors (tokio, smol) use `epoll`/`kqueue`/`io_uring` to sleep until I/O is ready. But this shows the core idea: an executor is just a loop that calls `poll()`.
+> **Don't use this in production!** It busy-loops, wasting CPU. Real executors
+> (tokio, smol) use `epoll`/`kqueue`/`io_uring` to sleep until I/O is ready.
+> But this shows the core idea: an executor is just a loop that calls `poll()`.
 
 ### Wake-Up Notifications
 
@@ -130,7 +133,7 @@ impl Future for MyFuture {
 4. **Don't poll after `Ready`** — behavior is **unspecified** (may panic, return `Pending`, or repeat `Ready`). Only `FusedFuture` guarantees safe post-completion polling
 
 <details>
-<summary><strong>🏋️ Exercise: Implement a CountdownFuture</strong></summary>
+<summary><strong>🏋️ Exercise: Implement a CountdownFuture</strong> (click to expand)</summary>
 
 **Challenge**: Implement a `CountdownFuture` that counts down from N to 0, *printing* the current count as a side-effect each time it's polled. When it reaches 0, it completes with `Ready("Liftoff!")`. (Note: a `Future` produces only **one** final value — the printing is a side-effect, not a yielded value. For multiple async values, see `Stream` in Ch. 11.)
 
@@ -216,7 +219,9 @@ async fn cpu_heavy_work(items: &[Item]) {
 }
 ```
 
-> **When to use `yield_now()`**: If your async function does CPU work in a loop without any `.await` points, it monopolizes the executor thread. Insert `yield_now().await` periodically to enable cooperative multitasking.
+> **When to use `yield_now()`**: If your async function does CPU work in a loop
+> without any `.await` points, it monopolizes the executor thread. Insert
+> `yield_now().await` periodically to enable cooperative multitasking.
 
 > **Key Takeaways — How Poll Works**
 > - An executor repeatedly calls `poll()` on futures that have been woken
@@ -227,3 +232,5 @@ async fn cpu_heavy_work(items: &[Item]) {
 > **See also:** [Ch 2 — The Future Trait](ch02-the-future-trait.md) for the trait definition, [Ch 5 — The State Machine Reveal](ch05-the-state-machine-reveal.md) for what the compiler generates
 
 ***
+
+

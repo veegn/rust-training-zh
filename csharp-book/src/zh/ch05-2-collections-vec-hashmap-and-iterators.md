@@ -1,86 +1,297 @@
 [English Original](../en/ch05-2-collections-vec-hashmap-and-iterators.md)
 
-# 向量、映射与迭代器
+## `Vec<T>` vs `List<T>`
 
-> **你将学到什么：** `Vec<T>` 与 `List<T>`、`HashMap` 与 `Dictionary` 的对应关系、安全访问模式（为什么 Rust 返回 `Option` 而不是抛出异常），以及集合操作与所有权之间的微妙关系。
+> **你将学到：** `Vec<T>` 与 `List<T>` 的对比，`HashMap` 与 `Dictionary` 的对比，安全访问模式（为什么 Rust 返回 `Option` 而不是抛出异常），以及集合在所有权方面的含义。
 >
 > **难度：** 🟢 初级
 
-## `Vec<T>` vs `List<T>`
-`Vec<T>` 是 Rust 对应 C# `List<T>` 的类型，但它深受所有权语法的制约。
+`Vec<T>` 是 Rust 中对应 C# `List<T>` 的类型，但它带有所有权语义。
 
-### C# vs Rust 概念传递
-在 C# 中，将 `List<T>` 传递给方法本质上是传递引用。而在 Rust 中，除非你传递引用 (`&Vec<T>`)，否则传递 `Vec<T>` 会发生**所有权转移 (Move)**。
+### C# `List<T>`
+```csharp
+// C# List<T> - 引用类型，堆上分配
+var numbers = new List<int>();
+numbers.Add(1);
+numbers.Add(2);
+numbers.Add(3);
 
+// 传给方法 - 复制引用
+ProcessList(numbers);
+Console.WriteLine(numbers.Count);  // 依然可以访问
+
+void ProcessList(List<int> list)
+{
+    list.Add(4);  // 修改原始列表
+    Console.WriteLine($"方法内的计数: {list.Count}");
+}
+```
+
+### Rust `Vec<T>`
 ```rust
-let mut numbers = vec![1, 2, 3];
-process_vec(numbers); 
-// 此处 numbers 已不再可用，所有权已经移至函数内部！
+// Rust Vec<T> - 拥有所有权的类型，堆上分配
+let mut numbers = Vec::new();
+numbers.push(1);
+numbers.push(2);
+numbers.push(3);
 
-let mut numbers = vec![1, 2, 3];
+// 获取所有权的方法 (Takes ownership)
+process_vec(numbers);
+// println!("{:?}", numbers);  // ❌ Error: numbers 已经被移动 (moved) 了
+
+// 借用的方法 (Borrows)
+let mut numbers = vec![1, 2, 3];  // 使用 vec! 宏快速创建
 process_vec_borrowed(&mut numbers);
-// numbers 仍然可以使用！
+println!("{:?}", numbers);  // ✅ 依然可以访问
+
+fn process_vec(mut vec: Vec<i32>) {  // 获取所有权
+    vec.push(4);
+    println!("方法内的计数: {}", vec.len());
+    // vec 在这里被释放 (dropped)
+}
+
+fn process_vec_borrowed(vec: &mut Vec<i32>) {  // 可变借用
+    vec.push(4);
+    println!("方法内的计数: {}", vec.len());
+}
 ```
 
-### 安全访问
-Rust 极其厌恶非预期的运行时异常。虽然 `vec[index]` 在索引越界时会发生 panic（类似于抛异常），但标准库提供的 `vec.get(index)` 则会安全地返回一个 `Option`。
+### 创建与初始化 Vector
+```csharp
+// C# List 初始化
+var numbers = new List<int> { 1, 2, 3, 4, 5 };
+var empty = new List<int>();
+var sized = new List<int>(10);  // 初始容量 (capacity)
+```
 
 ```rust
-let first = vec.get(0); // 返回 Some(&value) 或 None
+// Rust Vec 初始化
+let numbers = vec![1, 2, 3, 4, 5];  // vec! 宏
+let empty: Vec<i32> = Vec::new();   // 空 Vec 通常需要类型注解
+let sized = Vec::with_capacity(10); // 预分配容量
+
+// 从迭代器创建
+let from_range: Vec<i32> = (1..=5).collect();
 ```
 
----
+### 常用操作对比
+```csharp
+// C# List 操作
+var list = new List<int> { 1, 2, 3 };
+
+list.Add(4);                    // 添加元素
+list.Insert(0, 0);              // 在索引处插入
+list.Remove(2);                 // 删除第一个匹配项
+list.RemoveAt(1);               // 删除索引处元素
+list.Clear();                   // 清空
+
+int first = list[0];            // 索引访问
+int count = list.Count;         // 获取数量
+bool contains = list.Contains(3); // 是否包含
+```
+
+```rust
+// Rust Vec 操作
+let mut vec = vec![1, 2, 3];
+
+vec.push(4);                    // 添加元素
+vec.insert(0, 0);               // 在索引处插入
+vec.retain(|&x| x != 2);        // 删除特定元素 (函数式风格)
+vec.remove(1);                  // 删除索引处元素
+vec.clear();                    // 清空
+
+let first = vec[0];             // 索引访问 (若越界会 panic)
+let safe_first = vec.get(0);    // 安全访问，返回 Option<&T>
+let count = vec.len();          // 获取数量
+let contains = vec.contains(&3); // 是否包含
+```
+
+### 安全访问模式
+```csharp
+// C# - 基于异常的边界检查
+public int SafeAccess(List<int> list, int index)
+{
+    try
+    {
+        return list[index];
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+        return -1;  // 默认值
+    }
+}
+```
+
+```rust
+// Rust - 基于 Option 的安全访问
+fn safe_access(vec: &[i32], index: usize) -> Option<i32> {
+    vec.get(index).copied()  // 返回 Option<i32>
+}
+
+fn main() {
+    let vec = vec![1, 2, 3];
+    
+    // 匹配安全访问结果
+    match vec.get(10) {
+        Some(value) => println!("值: {}", value),
+        None => println!("索引越界"),
+    }
+    
+    // 或者使用 unwrap_or 提供默认值
+    let value = vec.get(10).copied().unwrap_or(-1);
+    println!("值: {}", value);
+}
+```
+
+***
 
 ## HashMap vs Dictionary
-`HashMap` 是 Rust 版本的 C# `Dictionary<K, V>`。
 
-### 常见操作对照表
-| **操作** | **C# Dictionary** | **Rust HashMap** |
-| :--- | :--- | :--- |
-| **添加/更新** | `dict["key"] = val` | `map.insert(key, val)` |
-| **检查键** | `dict.ContainsKey(key)` | `map.contains_key(key)` |
-| **移除** | `dict.Remove(key)` | `map.remove(key)` |
-| **安全获取** | `dict.TryGetValue(key, out v)` | `map.get(key)` -> `Option<&V>` |
+`HashMap` 是 Rust 中对应 C# `Dictionary<K,V>` 的类型。
 
-### Entry API
-Rust 的 `HashMap` 拥有一个独特且强大的 "Entry API"，专门用于高效地处理“如果不存在则插入”等逻辑。
-```rust
-// 仅当 "key" 不存在时插入 42
-map.entry("key".to_string()).or_insert(42);
+### C# Dictionary
+```csharp
+// C# Dictionary<TKey, TValue>
+var scores = new Dictionary<string, int>
+{
+    ["Alice"] = 100,
+    ["Bob"] = 85
+};
+
+// 安全访问
+if (scores.TryGetValue("Eve", out int score))
+{
+    Console.WriteLine($"Eve 的分数: {score}");
+}
 ```
 
----
+### Rust HashMap
+```rust
+use std::collections::HashMap;
 
-## 迭代器 (Rust 中的 LINQ)
-Rust 迭代器提供类似于 LINQ 的流式处理体验，但它们直接内置在核心语言中，且性能极度强悍（零成本抽象）。
+// 创建并初始化 HashMap
+let mut scores = HashMap::new();
+scores.insert("Alice".to_string(), 100);
+scores.insert("Bob".to_string(), 85);
 
-### LINQ 到 Rust 的映射
-| **LINQ** | **Rust 迭代器** | **备注** |
-| :--- | :--- | :--- |
-| `.Select(x => ...)` | `.map(|x| ...)` | 惰性计算 (Lazy) |
-| `.Where(x => ...)` | `.filter(|x| ...)` | 惰性计算 (Lazy) |
-| `.ToList()` | `.collect::<Vec<_>>()` | 立即执行 (Eager) |
-| `.Take(n)` | `.take(n)` | 惰性计算 (Lazy) |
-| `.FirstOrDefault()` | `.next()` | |
+// 或者通过迭代器创建
+let scores: HashMap<String, i32> = [
+    ("Alice".to_string(), 100),
+    ("Bob".to_string(), 85),
+].into_iter().collect();
 
-### 迭代器类型
-1.  **`.iter()`**: 为不可变引用生成迭代器 (`&T`)。
-2.  **`.iter_mut()`**: 为可变引用生成迭代器 (`&mut T`)。
-3.  **`.into_iter()`**: 消耗集合本身，并生成获取所有权的迭代器 (`T`)。
+// 安全访问
+match scores.get("Eve") {
+    Some(score) => println!("Eve 的分数: {}", score),
+    None => println!("未找到 Eve"),
+}
+```
 
----
+### Entry API 用于高效更新
+```rust
+// Rust 的 Entry API 允许进行高级的检查并更新操作
+let mut map = HashMap::new();
 
-## 练习：LINQ 改写为迭代器
-**挑战：** 将一个标准的 C# LINQ 查询（过滤、排序、选择、取前 N 名）翻译成 Rust 的惯用模式。
+// 如果不存在则插入
+map.entry("key".to_string()).or_insert(42); 
+
+// 如果存在则修改
+map.entry("key".to_string()).and_modify(|v| *v += 1); 
+```
+
+***
+
+## 迭代模式 (Iteration Patterns)
+
+### C# vs Rust 迭代对比
+```csharp
+// C# 迭代
+foreach (int num in numbers)
+{
+    Console.WriteLine(num);
+}
+
+// LINQ 方式
+var doubled = numbers.Select(x => x * 2).ToList();
+```
 
 ```rust
+// Rust 迭代
+// 1. iter() - 借用元素 (&T)
+for item in vec.iter() {
+    println!("{}", item);  // item 类型为 &i32
+}
+
+// 2. into_iter() - 获取所有权 (T)
+for item in vec.into_iter() {
+    println!("{}", item);  // item 类型为 i32
+}
+// vec 在此之后不再可用
+
+// 迭代器方法 (类似于 LINQ)
+let doubled: Vec<i32> = numbers.iter().map(|x| x * 2).collect();
+```
+
+***
+
+## 练习
+
+<details>
+<summary><strong>🏋️ 练习：从 LINQ 到迭代器</strong> (点击展开)</summary>
+
+将这段 C# LINQ 查询翻译为地道的 Rust 迭代器代码：
+
+```csharp
+var result = students
+    .Where(s => s.Grade >= 90)
+    .OrderByDescending(s => s.Grade)
+    .Select(s => $"{s.Name}: {s.Grade}")
+    .Take(3)
+    .ToList();
+```
+
+使用以下结构体：
+```rust
+struct Student { name: String, grade: u32 }
+```
+
+要求返回前 3 名分数 ≥ 90 的学生，格式为 `"Name: Grade"`。
+
+<details>
+<summary>🔑 参考答案</summary>
+
+```rust
+#[derive(Debug)]
+struct Student { name: String, grade: u32 }
+
 fn top_students(students: &mut [Student]) -> Vec<String> {
-    students.sort_by(|a, b| b.grade.cmp(&a.grade)); // 原地排序，立即执行
+    // Rust 迭代器是惰性的，但排序 (sort_by) 是及时的原地操作
+    students.sort_by(|a, b| b.grade.cmp(&a.grade)); 
+    
     students.iter()
         .filter(|s| s.grade >= 90)
         .take(3)
         .map(|s| format!("{}: {}", s.name, s.grade))
         .collect()
 }
+
+fn main() {
+    let mut students = vec![
+        Student { name: "Alice".into(), grade: 95 },
+        Student { name: "Bob".into(), grade: 88 },
+        Student { name: "Carol".into(), grade: 92 },
+        Student { name: "Dave".into(), grade: 97 },
+        Student { name: "Eve".into(), grade: 91 },
+    ];
+    let result = top_students(&mut students);
+    assert_eq!(result, vec!["Dave: 97", "Alice: 95", "Carol: 92"]);
+    println!("{result:?}");
+}
 ```
-**关键点：** Rust 的迭代器链（如 map/filter）是惰性的，但在排序这一环节，Rust 通常通过原地操作立即完成。所以你需要先排序，再衔接后续处理流程。
+
+**与 C# 的关键区别**：Rust 的迭代器也是惰性求值的（类似于 LINQ），但没有惰性的 `OrderBy`。通常先进行及时的 `sort_by` 排序，然后再链式调用惰性的过滤和映射操作。
+
+</details>
+</details>
+
+***

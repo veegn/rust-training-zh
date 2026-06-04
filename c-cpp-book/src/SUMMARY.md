@@ -1,9 +1,5 @@
 # 目录
 
-[English Version](en/ch00-introduction.md)
-
----
-
 [前言](zh/ch00-introduction.md)
 
 ---

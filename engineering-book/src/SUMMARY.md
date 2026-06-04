@@ -1,11 +1,6 @@
 # 目录
 
-[English Version](en/ch00-introduction.md)
-
----
-
 [简介](zh/ch00-introduction.md)
-
 
 ---
 
